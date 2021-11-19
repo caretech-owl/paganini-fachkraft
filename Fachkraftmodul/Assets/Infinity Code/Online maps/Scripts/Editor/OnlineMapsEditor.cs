@@ -21,7 +21,7 @@ using UnityEngine.SceneManagement;
 public class OnlineMapsEditor : Editor
 {
     private static GUIStyle _warningStyle;
-    public static readonly int[] availableSizes = { 256, 512, 1024, 2048, 4096 };
+    public static readonly int[] availableSizes = { 256, 512, 1024, 1536, 2048, 4096 };
 
 #if UNITY_WEBGL
     private SerializedProperty pUseProxy;

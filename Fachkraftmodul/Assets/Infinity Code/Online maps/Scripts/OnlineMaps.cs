@@ -44,7 +44,7 @@ public class OnlineMaps : MonoBehaviour, ISerializationCallbackReceiver, IOnline
 #elif ONLINEMAPS_MAXZOOM_21
     public const int MAXZOOM = 21;
 #else
-    public const int MAXZOOM = 20;
+    public const int MAXZOOM = 23;
 #endif
 
     #region Static Actions
