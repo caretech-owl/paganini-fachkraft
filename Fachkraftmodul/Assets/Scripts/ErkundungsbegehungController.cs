@@ -4,11 +4,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using static MediaPlayerCtrl;
+using UnityEngine.Video;
 
 public class ErkundungsbegehungController : MonoBehaviour
 {
 
-    public MediaPlayerCtrl VideoManager;
+    public VideoPlayer VideoManager;
 
     public OnlineMapsMarkerManager MapsMarkerManager;
 
@@ -33,6 +34,18 @@ public class ErkundungsbegehungController : MonoBehaviour
     public GameObject PlayIcon;
 
     public GameObject PauseIcon;
+
+    public RawImage RawImage;
+
+    public Text TitleOfMarker;
+
+    public Text DescriptionOfMarker;
+
+    public GameObject ButtonModify;
+
+    public Slider SliderPOIGage;
+
+    // PRIVATES
 
     private List<TimeMarkerObject> TimeMarkerObjects = new List<TimeMarkerObject>()
     {
@@ -148,6 +161,8 @@ public class ErkundungsbegehungController : MonoBehaviour
 
     private int SliderVideoSecondsWhenPausePressed = 0;
 
+    private TimeMarkerObject SelectedTimeMarkerObject;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -160,7 +175,8 @@ public class ErkundungsbegehungController : MonoBehaviour
                 OnlineMapsMarker omm = new OnlineMapsMarker()
                 {
                     position = new Vector2(tmo.LatLng.x, tmo.LatLng.y),
-                    texture = Marker
+                    texture = Marker,
+                    timestamp = tmo.Timestamp
                 };
 
                 omm.OnClick += OnMarkerClick;
@@ -182,17 +198,32 @@ public class ErkundungsbegehungController : MonoBehaviour
         Debug.Log("StepSize: " + StepSize);
 
         SliderVideoGage.maxValue = Duration;
+        SliderPOIGage.maxValue = Duration;
 
     }
 
     private void OnMarkerClick(OnlineMapsMarkerBase obj)
     {
         VideoPause();
-        //VideoManager.gameObject.SetActive(false);
-        VideoManager.transform.position *= 100;
-        PopupMarker.SetActive(true);
-        obj.scale = 1.5f;
+        //VideoManager.transform.position *= 100;
 
+        TitleOfMarker.gameObject.SetActive(true);
+        DescriptionOfMarker.gameObject.SetActive(true);
+        ButtonModify.SetActive(true);
+
+        TimeMarkerObject currentTMO = TimeMarkerObjects.Find(tmo => tmo.Timestamp.Equals(obj.timestamp));
+
+        SelectedTimeMarkerObject = currentTMO;
+
+        if (currentTMO != null && currentTMO.Title.Length > 0)
+            TitleOfMarker.text = currentTMO.Title;
+
+        if (currentTMO != null && currentTMO.Description.Length > 0)
+            DescriptionOfMarker.text = currentTMO.Description;
+
+        //PopupMarker.SetActive(true);
+        //obj.scale = 1.5f;
+        //RawImage.gameObject.SetActive(false);
     }
 
     // Update is called once per frame
@@ -210,14 +241,17 @@ public class ErkundungsbegehungController : MonoBehaviour
             isMouseDown = false;
         }
 
-        if (VideoManager.GetCurrentState() == MEDIAPLAYER_STATE.PAUSED)
+        if (VideoManager.isPaused)
         {
             //currentTimeStamp = SliderVideoGage.value * StepSize; // current position in seconds
             //Debug.Log("current position in seconds: " + StepSize);
         }
 
-        if (VideoManager.GetCurrentState() == MEDIAPLAYER_STATE.PLAYING)
+        if (VideoManager.isPlaying)
         {
+            TitleOfMarker.gameObject.SetActive(false);
+            DescriptionOfMarker.gameObject.SetActive(false);
+            ButtonModify.SetActive(false);
 
             var currentTimeStamp = DateTime.Now - StartTimeStamp;
             Debug.Log("Update - currentTimeStamp:" + currentTimeStamp.TotalSeconds.ToString());
@@ -244,7 +278,9 @@ public class ErkundungsbegehungController : MonoBehaviour
             Debug.Log("VideoPlay - IsVideoPaused: " + StartTimeStamp);
             Debug.Log("VideoPlay - IsVideoPaused: " + DateTime.Now);
 
-            VideoManager.m_video.time = ((int)(DateTime.Now - StartTimeStamp).TotalSeconds);
+            //VideoManager.m_video.time = ((int)(DateTime.Now - StartTimeStamp).TotalSeconds);
+
+            VideoManager.time = (((int)(DateTime.Now - StartTimeStamp).TotalSeconds));
         }
         else
         {
@@ -308,7 +344,9 @@ public class ErkundungsbegehungController : MonoBehaviour
 
     public void ShowPhotoLayer()
     {
-        if (VideoManager.GetCurrentState() == MEDIAPLAYER_STATE.PLAYING )
+        RawImage.gameObject.SetActive(true);
+
+        if (VideoManager.isPlaying)
             VideoPause();
 
         VideoManager.transform.position *= 100;
@@ -322,10 +360,10 @@ public class ErkundungsbegehungController : MonoBehaviour
     public void UpdateVideoFromGage()
     {
         if (isMouseDown)
-            if (VideoManager.GetCurrentState() == MEDIAPLAYER_STATE.PLAYING)
+            if (VideoManager.isPlaying)
                 VideoPause();
 
-        if (VideoManager.GetCurrentState() == MEDIAPLAYER_STATE.PAUSED)
+        if (VideoManager.isPaused)
         {
             int differenceInSeconds = (int)SliderVideoGage.value - SliderVideoSecondsWhenPausePressed;
 
@@ -338,5 +376,23 @@ public class ErkundungsbegehungController : MonoBehaviour
 
             Debug.Log("UpdateVideoFromGage - post calc: " + PauseTimeSpan);
         }
+    }
+
+    public void OpenPOIPanel()
+    {
+        VideoManager.transform.position *= 100;
+
+        if (SelectedTimeMarkerObject != null && SelectedTimeMarkerObject.Title.Length > 0)
+            TitleOfMarker.text = SelectedTimeMarkerObject.Title;
+
+        if (SelectedTimeMarkerObject != null && SelectedTimeMarkerObject.Description.Length > 0)
+            DescriptionOfMarker.text = SelectedTimeMarkerObject.Description;
+
+        SliderPOIGage.value = SelectedTimeMarkerObject.Timestamp - TimeMarkerObjects[0].Timestamp;
+        SliderPhotoText.text = SliderPOIGage.value + " Sek.";
+
+        PopupMarker.SetActive(true);
+        //obj.scale = 1.5f;
+        RawImage.gameObject.SetActive(false);
     }
 }

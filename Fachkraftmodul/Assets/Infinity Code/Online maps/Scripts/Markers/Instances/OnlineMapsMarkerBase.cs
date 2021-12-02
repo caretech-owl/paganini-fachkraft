@@ -82,6 +82,11 @@ public class OnlineMapsMarkerBase: IOnlineMapsInteractiveElement
     public string label = "";
 
     /// <summary>
+    /// Marker timestamp.
+    /// </summary>
+    public int timestamp;
+
+    /// <summary>
     /// Zoom range, in which the marker will be displayed.
     /// </summary>
     public OnlineMapsRange range;

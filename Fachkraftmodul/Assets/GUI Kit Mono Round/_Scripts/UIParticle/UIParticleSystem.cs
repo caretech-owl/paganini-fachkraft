@@ -7,8 +7,8 @@ namespace UnityEngine.UI.Extensions
 #if UNITY_5_3_OR_NEWER
     [ExecuteInEditMode]
     [RequireComponent(typeof(CanvasRenderer), typeof(ParticleSystem))]
-    [AddComponentMenu("UI/Effects/Extensions/UIParticleSystem")]
-    public class UIParticleSystem : MaskableGraphic
+    [AddComponentMenu("UI/Effects/Extensions/UIParticleSystem2")]
+    public class UIParticleSystem2 : MaskableGraphic
     {
         [Tooltip("Having this enabled run the system in LateUpdate rather than in Update making it faster but less precise (more clunky)")]
         public bool fixedTime = true;

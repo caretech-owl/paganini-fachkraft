@@ -5,8 +5,10 @@ using UnityEngine;
 public class TimeMarkerObject : MonoBehaviour
 {
     public Vector2 LatLng { get; set; }
-    public double Timestamp { get; set; }
+    public int Timestamp { get; set; }
     public OnlineMapsMarker Marker { get; set; }
+    public string Title { get; set; }
+    public string Description { get; set; }
 
     public TimeMarkerObject()
     {
