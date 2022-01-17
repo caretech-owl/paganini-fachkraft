@@ -2,8 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android" package="gmaps.deadmosquitogames.com.googlemaps" xmlns:tools="http://schemas.android.com/tools" android:installLocation="preferExternal" android:versionName="1.0" android:versionCode="1">
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <supports-screens android:smallScreens="true" android:normalScreens="true" android:largeScreens="true" android:xlargeScreens="true" android:anyDensity="true" />
-    <application android:theme="@style/UnityThemeSelector" android:icon="@drawable/app_icon" android:label="@string/app_name" android:debuggable="false">
-        <meta-data android:name="com.google.android.geo.API_KEY" android:value="AIzaSyCKo5_MdP3liUmFSCWhq--SsbFvRg8VbJ8" />
+    <application android:theme="@style/UnityThemeSelector" android:icon="@drawable/app_icon" android:label="@string/app_name" android:debuggable="true">
+        <meta-data android:name="com.google.android.geo.API_KEY" android:value="AIzaSyCd5sY_5bqY5kMG49zkPTtdW-L2ZPq-hgE" />
         <uses-library android:name="org.apache.http.legacy" android:required="false" />
         <activity android:name="com.unity3d.player.UnityPlayerActivity" android:label="@string/app_name">
             <intent-filter>

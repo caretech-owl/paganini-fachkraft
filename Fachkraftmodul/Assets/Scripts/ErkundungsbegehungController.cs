@@ -3,8 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using static MediaPlayerCtrl;
 using UnityEngine.Video;
+using NinevaStudios.GoogleMaps;
 
 public class ErkundungsbegehungController : MonoBehaviour
 {
@@ -13,13 +13,11 @@ public class ErkundungsbegehungController : MonoBehaviour
 
     public OnlineMapsMarkerManager MapsMarkerManager;
 
-    public Texture2D Marker;
+    public static Texture2D Marker;
 
     public Texture2D ActiveMarker;
 
     public Texture2D LeaveMarker;
-
-    public GameObject TimeMarker;
 
     public GameObject PopupMarker;
 
@@ -163,9 +161,21 @@ public class ErkundungsbegehungController : MonoBehaviour
 
     private TimeMarkerObject SelectedTimeMarkerObject;
 
+    private GoogleMapsView Map;
+
     // Start is called before the first frame update
     void Start()
     {
+        // init map
+        var cameraPosition = new CameraPosition(
+        new LatLng(TimeMarkerObjects[30].LatLng.y, TimeMarkerObjects[30].LatLng.x), 19, 0, 0);
+        var options = new GoogleMapsOptions()
+            .Camera(cameraPosition);
+
+        Map = new GoogleMapsView(options);
+        Map.Show(new Rect(900, 200, Screen.width / 2, Screen.height / 2), OnMapReady);
+
+
         var i = 0;
 
         foreach (var tmo in TimeMarkerObjects)
@@ -182,7 +192,7 @@ public class ErkundungsbegehungController : MonoBehaviour
                 omm.OnClick += OnMarkerClick;
 
                 MapsMarkerManager.Add(omm);
-                tmo.Marker = omm;
+                //tmo.Marker = omm;
             }
 
             i++;
@@ -200,6 +210,37 @@ public class ErkundungsbegehungController : MonoBehaviour
         SliderVideoGage.maxValue = Duration;
         SliderPOIGage.maxValue = Duration;
 
+    }
+
+
+    private void OnMapReady()
+    {
+        Debug.Log("The map is ready!");
+
+        var i = 0;
+
+        foreach (var tmo in TimeMarkerObjects)
+        {
+            if (i % 1 == 0)
+            {
+                var mo = new MarkerOptions()
+                    .Position(new LatLng(tmo.LatLng.y, tmo.LatLng.x));
+
+                var marker = Map.AddMarker(mo);
+                tmo.Marker = marker;
+            }
+
+            i++;
+        }
+
+
+        //// now that the map is ready we can add new things
+        //var londonMarkerOptions = new MarkerOptions()
+        //    .Position(new LatLng(TimeMarkerObjects[0].LatLng.y, TimeMarkerObjects[0].LatLng.x))
+        //    .Title("My marker in London");
+        //var markerInLondon = Map.AddMarker(londonMarkerOptions);
+
+        
     }
 
     private void OnMarkerClick(OnlineMapsMarkerBase obj)
@@ -301,15 +342,21 @@ public class ErkundungsbegehungController : MonoBehaviour
         VideoManager.Pause();
     }
 
+    static ImageDescriptor NewCustomDescriptor()
+    {
+        return ImageDescriptor.FromTexture2D(Marker);
+    }
+
     private void FindCurrentTimeObject(int currentPositionAsSecond)
     {
+
         var actualMarker = LeaveMarker;
 
         foreach (var tmo in TimeMarkerObjects)
         {
             if (currentPositionAsSecond < (tmo.Timestamp - FirstTimeMarker))
             {
-                tmo.Marker.texture = Marker;
+                tmo.Marker.SetIcon(NewCustomDescriptor());
             }
         }
 
@@ -321,16 +368,16 @@ public class ErkundungsbegehungController : MonoBehaviour
             {
                 //Debug.Log("FOUND MARKER");
                 actualMarker = Marker;
-                tmo.Marker.scale = 1.5f;
+                //tmo.Marker.scale = 1.5f;
                 break;
             }
             else
             {
-                tmo.Marker.scale = 1.0f;
+                //tmo.Marker.scale = 1.0f;
                 //tmo.Marker.texture = Marker;
             }
 
-            tmo.Marker.texture = actualMarker;
+            //tmo.Marker.texture = actualMarker;
 
         }
 

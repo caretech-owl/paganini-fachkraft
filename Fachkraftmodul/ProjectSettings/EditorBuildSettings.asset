@@ -17,4 +17,10 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/ErkundungsbegehungNewGUI.unity
     guid: 80d1f73d6e395ce44a5c732a4814c64b
+  - enabled: 0
+    path: Assets/GoogleMapsView/Example/MapView/ExampleSceneMinimal.unity
+    guid: 6dd20b6780cd6450ab0ffdd43a787fe0
+  - enabled: 0
+    path: Assets/GoogleMapsView/Example/MapView/ExampleScene.unity
+    guid: 768d9aa2932ed4a86ab959cadc015634
   m_configObjects: {}
