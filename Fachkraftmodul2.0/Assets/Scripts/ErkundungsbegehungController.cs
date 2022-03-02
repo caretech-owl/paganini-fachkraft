@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Video;
 using NinevaStudios.GoogleMaps;
+using TMPro;
 
 public class ErkundungsbegehungController : MonoBehaviour
 {
@@ -21,27 +22,15 @@ public class ErkundungsbegehungController : MonoBehaviour
 
     public Texture2D LeaveMarkerIcon;
 
-    public GameObject PopupMarker;
+    public Texture2D DefaultMarker50PercentIcon;
 
-    public GameObject PopupPhoto;
-
-    public Slider SliderPhoto;
-
-    public Text SliderPhotoText;
+    public Texture2D POIMarkerIcon;
 
     public Slider SliderVideoGage;
 
     public GameObject PlayIcon;
 
     public GameObject PauseIcon;
-
-    public RawImage RawImage;
-
-    public Text TitleOfMarker;
-
-    public Text DescriptionOfMarker;
-
-    public GameObject ButtonModify;
 
     // Info
 
@@ -56,6 +45,27 @@ public class ErkundungsbegehungController : MonoBehaviour
     public GameObject TextPOIInfo;
 
     public GameObject POIInfo;
+
+    public GameObject POIMove;
+
+    public GameObject POIImages;
+
+    public TextMeshProUGUI POIInfoText;
+
+    public HorizontalChooseImage ImageSlider;
+
+    public GameObject PhotoViewer;
+
+    public TMP_InputField InputPOIInfoTitle;
+
+    public TMP_InputField InputPOIInfoDescription;
+
+    // Image
+    public GameObject ImageLinePlaceholder;
+
+    public GameObject ImageItemPlaceholder;
+
+    public Color32 ColorHighlighted;
 
     // PRIVATES
 
@@ -186,16 +196,27 @@ public class ErkundungsbegehungController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        SelectedTimeMarkerObject = new TimeMarkerObject();
         StaticMarkerIcon = DefaultMarkerIcon;
 
+        // Demo Marker
+        TimeMarkerObjects[15].IsPOI = true;
+        TimeMarkerObjects[15].Title = "Dies ist ein Haus";
+        TimeMarkerObjects[15].Description = "Beschreibung für Marker";
+        TimeMarkerObjects[15].ImagesForPOI.Add("1.png");
+        TimeMarkerObjects[15].ImagesForPOI.Add("2.png");
+        TimeMarkerObjects[15].ImagesForPOI.Add("3.png");
+        TimeMarkerObjects[15].ImagesForPOI.Add("4.png");
+
         // init map
+        int moveMapForPhone = 0;
         var cameraPosition = new CameraPosition(
         new LatLng(TimeMarkerObjects[30].LatLng.y, TimeMarkerObjects[30].LatLng.x), 19, 0, 0);
         var options = new GoogleMapsOptions()
             .Camera(cameraPosition);
 
         Map = new GoogleMapsView(options);
-        Map.Show(new Rect(830, 120, 1050, 750), OnMapReady);
+        Map.Show(new Rect(830 + moveMapForPhone, 120, 1050 + moveMapForPhone, 750), OnMapReady);
 
         FirstTimeMarker = (int)TimeMarkerObjects[0].Timestamp;
         Debug.Log("FirstTimeMarker:" + FirstTimeMarker);
@@ -207,6 +228,94 @@ public class ErkundungsbegehungController : MonoBehaviour
         Debug.Log("StepSize: " + StepSize);
 
         SliderVideoGage.maxValue = Duration;
+
+        // load images
+        var _path = Application.streamingAssetsPath + "/1.png";
+        UnityEngine.Networking.UnityWebRequest www = UnityEngine.Networking.UnityWebRequest.Get(_path);
+        www.SendWebRequest();
+        while (!www.downloadHandler.isDone)
+        {
+        }
+
+        //create a texture and load byte array to it
+        // Texture size does not matter 
+        Texture2D sampleTexture = new Texture2D(2, 2);
+        // the size of the texture will be replaced by image size
+        bool isLoaded = sampleTexture.LoadImage(www.downloadHandler.data);
+        // apply this texure as per requirement on image or material
+        GameObject img = ImageItemPlaceholder.transform.Find("RawImage").gameObject;
+        if (isLoaded)
+        {
+            ImageItemPlaceholder.name = "1.png";
+            img.GetComponentInChildren<RawImage>().texture = sampleTexture;
+        }
+
+        GameObject newImage = Instantiate(ImageItemPlaceholder, ImageLinePlaceholder.transform, true);
+
+        _path = Application.streamingAssetsPath + "/2.png";
+        www = UnityEngine.Networking.UnityWebRequest.Get(_path);
+        www.SendWebRequest();
+        while (!www.downloadHandler.isDone)
+        {
+        }
+
+        //create a texture and load byte array to it
+        // Texture size does not matter 
+        sampleTexture = new Texture2D(2, 2);
+        // the size of the texture will be replaced by image size
+        isLoaded = sampleTexture.LoadImage(www.downloadHandler.data);
+        // apply this texure as per requirement on image or material
+        img = newImage.transform.Find("RawImage").gameObject;
+        if (isLoaded)
+        {
+            newImage.name = "2.png";
+            img.GetComponentInChildren<RawImage>().texture = sampleTexture;
+        }
+
+        GameObject newLine = Instantiate(ImageLinePlaceholder, ImageLinePlaceholder.transform.parent.transform, true);
+
+        newImage = newLine.transform.GetChild(0).gameObject;
+        _path = Application.streamingAssetsPath + "/3.png";
+        www = UnityEngine.Networking.UnityWebRequest.Get(_path);
+        www.SendWebRequest();
+        while (!www.downloadHandler.isDone)
+        {
+        }
+
+        //create a texture and load byte array to it
+        // Texture size does not matter 
+        sampleTexture = new Texture2D(2, 2);
+        // the size of the texture will be replaced by image size
+        isLoaded = sampleTexture.LoadImage(www.downloadHandler.data);
+        // apply this texure as per requirement on image or material
+        img = newImage.transform.Find("RawImage").gameObject;
+        if (isLoaded)
+        {
+            newImage.name = "3.png";
+            img.GetComponentInChildren<RawImage>().texture = sampleTexture;
+        }
+
+        newImage = newLine.transform.GetChild(1).gameObject;
+        _path = Application.streamingAssetsPath + "/4.png";
+        www = UnityEngine.Networking.UnityWebRequest.Get(_path);
+        www.SendWebRequest();
+        while (!www.downloadHandler.isDone)
+        {
+        }
+
+        //create a texture and load byte array to it
+        // Texture size does not matter 
+        sampleTexture = new Texture2D(2, 2);
+        // the size of the texture will be replaced by image size
+        isLoaded = sampleTexture.LoadImage(www.downloadHandler.data);
+        // apply this texure as per requirement on image or material
+        img = newImage.transform.Find("RawImage").gameObject;
+        if (isLoaded)
+        {
+            newImage.name = "4.png";
+            img.GetComponentInChildren<RawImage>().texture = sampleTexture;
+        }
+
     }
 
 
@@ -224,10 +333,18 @@ public class ErkundungsbegehungController : MonoBehaviour
             {
                 var mo = new MarkerOptions()
                     .Position(new LatLng(tmo.LatLng.y, tmo.LatLng.x));
+
+                if (tmo.IsPOI)
+                    StaticMarkerIcon = POIMarkerIcon;
+                else
+                    StaticMarkerIcon = DefaultMarkerIcon;
+
                 mo.Icon(NewCustomDescriptor());
 
-                var marker = Map.AddMarker(mo);
-                tmo.Marker = marker;
+                tmo.IdFromMarker = Map.AddMarker(mo).Id;
+                //marker.Timestamp = tmo.Timestamp;
+
+                //tmo.Marker = marker;
             }
 
             i++;
@@ -244,25 +361,61 @@ public class ErkundungsbegehungController : MonoBehaviour
         LabelPOIInfo.SetActive(ShowOrHide);
         TextPOIInfo.SetActive(ShowOrHide);
 
+        // check for info text and images
+        if (ShowOrHide)
+        {
+            if (SelectedTimeMarkerObject.Title != null && SelectedTimeMarkerObject.Title.Length > 0
+                || SelectedTimeMarkerObject.Description != null && SelectedTimeMarkerObject.Description.Length > 0)
+                POIInfoText.text = SelectedTimeMarkerObject.Title + "\r\n" + SelectedTimeMarkerObject.Description;
+            else
+                POIInfoText.text = "Keine Informationen vorhanden";
+
+            if (SelectedTimeMarkerObject.ImagesForPOI != null && SelectedTimeMarkerObject.ImagesForPOI.Count > 0)
+            {
+                ImageSlider.objs = SelectedTimeMarkerObject.ImagesForPOI;
+
+                PhotoViewer.SetActive(ShowOrHide); //show
+                VideoManager.gameObject.SetActive(!ShowOrHide); //hide
+            }
+            else
+            {
+                ImageSlider.objs = new List<string>();
+                PhotoViewer.SetActive(!ShowOrHide); //hide
+                VideoManager.gameObject.SetActive(ShowOrHide); //show
+            }
+        }
+        else
+        {
+            POIInfoText.text = "Keine Informationen vorhanden";
+            ImageSlider.objs = new List<string>();
+            PhotoViewer.SetActive(ShowOrHide); // hide
+            VideoManager.gameObject.SetActive(!ShowOrHide); //show
+        }
     }
 
     private void OnMarkerClick(Marker marker)
     {
         VideoPause();
 
-        HandlePOIInfo(true);
-
         // reset marker
         if (CurrentTouchedMarker != null)
         {
-            StaticMarkerIcon = DefaultMarkerIcon;
+            if (SelectedTimeMarkerObject.IsPOI)
+                StaticMarkerIcon = POIMarkerIcon;
+            else
+                StaticMarkerIcon = DefaultMarkerIcon;
+
             CurrentTouchedMarker.SetIcon(NewCustomDescriptor());
         }
 
+        SelectedTimeMarkerObject = TimeMarkerObjects.Find(tmo => tmo.IdFromMarker.Equals(marker.Id));
 
         StaticMarkerIcon = ActiveMarkerIcon;
         marker.SetIcon(NewCustomDescriptor());
         CurrentTouchedMarker = marker;
+
+        // show POI info objects
+        HandlePOIInfo(true);
 
         //    //VideoManager.transform.position *= 100;
 
@@ -270,9 +423,7 @@ public class ErkundungsbegehungController : MonoBehaviour
         //    DescriptionOfMarker.gameObject.SetActive(true);
         //    ButtonModify.SetActive(true);
 
-        //    TimeMarkerObject currentTMO = TimeMarkerObjects.Find(tmo => tmo.Timestamp.Equals(obj.timestamp));
 
-        //    SelectedTimeMarkerObject = currentTMO;
 
         //    if (currentTMO != null && currentTMO.Title.Length > 0)
         //        TitleOfMarker.text = currentTMO.Title;
@@ -283,6 +434,9 @@ public class ErkundungsbegehungController : MonoBehaviour
         //    //PopupMarker.SetActive(true);
         //    //obj.scale = 1.5f;
         //    //RawImage.gameObject.SetActive(false);
+
+
+
     }
 
     // Update is called once per frame
@@ -302,21 +456,35 @@ public class ErkundungsbegehungController : MonoBehaviour
 
         if (VideoManager.isPaused)
         {
+            if (SelectedTimeMarkerObject.Timestamp > 0)
+                VideoManager.time = SelectedTimeMarkerObject.Timestamp - FirstTimeMarker;
         }
 
         if (VideoManager.isPlaying)
         {
-            var currentTimeStamp = DateTime.Now - StartTimeStamp;
-            Debug.Log("Update - currentTimeStamp:" + currentTimeStamp.TotalSeconds.ToString());
+            //var currentTimeStamp = DateTime.Now - StartTimeStamp;
+            //Debug.Log("Update - currentTimeStamp:" + currentTimeStamp.TotalSeconds.ToString());
 
-            if ((int)currentTimeStamp.TotalSeconds < Duration)
-            {
+            //if ((int)currentTimeStamp.TotalSeconds < Duration)
+            //{
+            //    // set current value for video gage
+            //    SliderVideoGage.value = (int)currentTimeStamp.TotalSeconds;
+
+            //    // mark actual and last marker in map
+            //    MarkActualAndLastMarker((int)currentTimeStamp.TotalSeconds, false, false);
+            //}
+
+            //var currentTimeStamp = FirstTimeMarker + SliderVideoGage.value;
+           // Debug.Log("Update - currentTimeStamp:" + currentTimeStamp.ToString());
+
+           // if ((int)currentTimeStamp < Duration)
+           // {
                 // set current value for video gage
-                SliderVideoGage.value = (int)currentTimeStamp.TotalSeconds;
+                SliderVideoGage.value = (int)VideoManager.time;
 
                 // mark actual and last marker in map
-                MarkActualAndLastMarker((int)currentTimeStamp.TotalSeconds, false);
-            }
+                MarkActualAndLastMarker((int)VideoManager.time, false, false);
+           // }
         }
     }
 
@@ -343,7 +511,12 @@ public class ErkundungsbegehungController : MonoBehaviour
 
             //VideoManager.m_video.time = ((int)(DateTime.Now - StartTimeStamp).TotalSeconds);
 
-            VideoManager.time = (((int)(DateTime.Now - StartTimeStamp).TotalSeconds));
+            //VideoManager.time = (((int)(DateTime.Now - StartTimeStamp).TotalSeconds));
+
+            if (SelectedTimeMarkerObject.Timestamp > 0)
+                VideoManager.time = SelectedTimeMarkerObject.Timestamp - FirstTimeMarker;
+            else
+                VideoManager.time = 0;
         }
         else
         {
@@ -363,6 +536,52 @@ public class ErkundungsbegehungController : MonoBehaviour
 
         if (!showOrHide)
             PauseIcon.SetActive(showOrHide);
+
+        // check for info text and images
+        if (showOrHide)
+        {
+            if (SelectedTimeMarkerObject.Title != null && SelectedTimeMarkerObject.Title.Length > 0
+                || SelectedTimeMarkerObject.Description != null && SelectedTimeMarkerObject.Description.Length > 0)
+            {
+                InputPOIInfoTitle.text = SelectedTimeMarkerObject.Title;
+                InputPOIInfoDescription.text = SelectedTimeMarkerObject.Description;
+            }
+
+            else
+            {
+                InputPOIInfoTitle.text = "";
+                InputPOIInfoDescription.text = "";
+            }
+
+        }
+        else
+        {
+            InputPOIInfoTitle.text = "";
+            InputPOIInfoDescription.text = "";
+        }
+    }
+
+    public void HandlePOIMovePanel(bool showOrHide)
+    {
+        POIMove.SetActive(showOrHide);
+
+        SliderVideoGage.gameObject.SetActive(!showOrHide);
+        PlayIcon.SetActive(!showOrHide);
+
+        if (!showOrHide)
+            PauseIcon.SetActive(showOrHide);
+
+        // check for info text and images
+        if (showOrHide)
+        {
+            MarkActualAndLastMarker(SelectedTimeMarkerObject.Timestamp - TimeMarkerObjects[0].Timestamp, true, true);
+
+        }
+        else
+        {
+            InputPOIInfoTitle.text = "";
+            InputPOIInfoDescription.text = "";
+        }
     }
 
     public void VideoPause()
@@ -381,7 +600,7 @@ public class ErkundungsbegehungController : MonoBehaviour
         return ImageDescriptor.FromTexture2D(StaticMarkerIcon);
     }
 
-    private void MarkActualAndLastMarker(int currentPositionAsSecond, bool refreshAllMarker)
+    private void MarkActualAndLastMarker(int currentPositionAsSecond, bool refreshAllMarker, bool isMoveEnabled)
     {
 
         Marker LastActualMarker = ActualMarker;
@@ -391,20 +610,49 @@ public class ErkundungsbegehungController : MonoBehaviour
             if ((tmo.Timestamp - FirstTimeMarker) < currentPositionAsSecond)
             {
                 if (tmo.Marker != null)
+                {
+                    SelectedTimeMarkerObject = tmo;
                     ActualMarker = tmo.Marker;
+                }
+                    
 
                 if (refreshAllMarker)
                 {
-                    StaticMarkerIcon = LeaveMarkerIcon;
-                    tmo.Marker.SetIcon(NewCustomDescriptor());
+                    if (isMoveEnabled)
+                        StaticMarkerIcon = DefaultMarker50PercentIcon;
+                    else
+                        StaticMarkerIcon = LeaveMarkerIcon;
+
+                    if (tmo.Marker != null)
+                    {
+                        tmo.Marker.SetIcon(NewCustomDescriptor());
+                    }
+
                 }
             }
             else
             {
                 if (refreshAllMarker)
                 {
-                    StaticMarkerIcon = DefaultMarkerIcon;
-                    tmo.Marker.SetIcon(NewCustomDescriptor());
+                    if (tmo.IsPOI)
+                    {
+                        if (isMoveEnabled)
+                            StaticMarkerIcon = DefaultMarker50PercentIcon;
+                        else
+                            StaticMarkerIcon = POIMarkerIcon;
+                    }
+                    else
+                    {
+                        if (isMoveEnabled)
+                            StaticMarkerIcon = DefaultMarker50PercentIcon;
+                        else
+                            StaticMarkerIcon = DefaultMarkerIcon;
+                    }
+
+                    if (tmo.Marker != null)
+                    {
+                        tmo.Marker.SetIcon(NewCustomDescriptor());
+                    }
                 }
                 else
                 {
@@ -417,7 +665,10 @@ public class ErkundungsbegehungController : MonoBehaviour
         // mark last marker as leave marker
         if (LastActualMarker != null)
         {
-            StaticMarkerIcon = LeaveMarkerIcon;
+            if (isMoveEnabled)
+                StaticMarkerIcon = DefaultMarker50PercentIcon;
+            else
+                StaticMarkerIcon = LeaveMarkerIcon;
 
             if (!LastActualMarker.Equals(ActualMarker))
             {
@@ -428,7 +679,9 @@ public class ErkundungsbegehungController : MonoBehaviour
         // mark current marker as active marker
         StaticMarkerIcon = ActiveMarkerIcon;
         if (ActualMarker != null)
+        {
             ActualMarker.SetIcon(NewCustomDescriptor());
+        }
 
     }
 
@@ -439,16 +692,6 @@ public class ErkundungsbegehungController : MonoBehaviour
 
     public void ShowPhotoLayer()
     {
-        RawImage.gameObject.SetActive(true);
-
-        if (VideoManager.isPlaying)
-            VideoPause();
-
-        VideoManager.transform.position *= 100;
-        PopupPhoto.SetActive(true);
-
-        SliderPhoto.value = 0.2f;
-        SliderPhotoText.text = "2:10 Min";
 
     }
 
@@ -460,41 +703,127 @@ public class ErkundungsbegehungController : MonoBehaviour
 
         if (VideoManager.isPaused)
         {
-            int differenceInSeconds = (int)SliderVideoGage.value - SliderVideoSecondsWhenPausePressed;
+            //int differenceInSeconds = (int)SliderVideoGage.value - SliderVideoSecondsWhenPausePressed;
 
-            Debug.Log("UpdateVideoFromGage - pre calc: " + PauseTimeSpan);
+            //Debug.Log("UpdateVideoFromGage - pre calc: " + PauseTimeSpan);
 
-            if (differenceInSeconds < 0) //backward
-                OffsetTimeSpan = PauseTimeSpan - new TimeSpan(0, 0, differenceInSeconds * (-1));
-            else // forward
-                OffsetTimeSpan = PauseTimeSpan + new TimeSpan(0, 0, differenceInSeconds);
+            //if (differenceInSeconds < 0) //backward
+            //    OffsetTimeSpan = PauseTimeSpan - new TimeSpan(0, 0, differenceInSeconds * (-1));
+            //else // forward
+            //    OffsetTimeSpan = PauseTimeSpan + new TimeSpan(0, 0, differenceInSeconds);
 
-            Debug.Log("UpdateVideoFromGage - post calc: " + PauseTimeSpan);
-
-            MarkActualAndLastMarker((int)SliderVideoGage.value, true);
+            Debug.Log("UpdateVideoFromGage - post calc: " + (int)SliderVideoGage.value);
+            VideoManager.time = (int)SliderVideoGage.value;
+            MarkActualAndLastMarker((int)SliderVideoGage.value, true, false);
         }
     }
 
     public void OpenPOIPanel()
     {
         VideoManager.transform.position *= 100;
-
-        if (SelectedTimeMarkerObject != null && SelectedTimeMarkerObject.Title.Length > 0)
-            TitleOfMarker.text = SelectedTimeMarkerObject.Title;
-
-        if (SelectedTimeMarkerObject != null && SelectedTimeMarkerObject.Description.Length > 0)
-            DescriptionOfMarker.text = SelectedTimeMarkerObject.Description;
-
-        //SliderPOIGage.value = SelectedTimeMarkerObject.Timestamp - TimeMarkerObjects[0].Timestamp;
-        //SliderPhotoText.text = SliderPOIGage.value + " Sek.";
-
-        PopupMarker.SetActive(true);
-        //obj.scale = 1.5f;
-        RawImage.gameObject.SetActive(false);
     }
 
     public void OnSceneChange()
     {
         Map.IsVisible = false;
+    }
+
+    public void AddOrRemoveImageToPOI(GameObject obj)
+    {
+        //SelectedTimeMarkerObject = TimeMarkerObjects[0];
+
+        if (SelectedTimeMarkerObject.ImagesForPOI != null && SelectedTimeMarkerObject.ImagesForPOI.Count > 0)
+        {
+            if (SelectedTimeMarkerObject.ImagesForPOI.Contains(obj.name)) // remove from list and set button
+            {
+                SelectedTimeMarkerObject.ImagesForPOI.Remove(obj.name);
+                obj.transform.Find("Text").gameObject.GetComponent<TextMeshProUGUI>().text = "HINZUFÜGEN";
+                obj.GetComponent<Image>().color = new Color32(46, 204, 113, 255);
+            }
+            else //add to list and set button
+            {
+                SelectedTimeMarkerObject.IsPOI = true;
+                SelectedTimeMarkerObject.ImagesForPOI.Add(obj.name);
+                obj.transform.Find("Text").gameObject.GetComponent<TextMeshProUGUI>().text = "ENTFERNEN";
+                obj.GetComponent<Image>().color = new Color32(231, 76, 60, 255);
+            }
+        }
+        else
+        {
+            //add to list and set button
+            SelectedTimeMarkerObject.IsPOI = true;
+            SelectedTimeMarkerObject.ImagesForPOI.Add(obj.name);
+            obj.transform.Find("Text").gameObject.GetComponent<TextMeshProUGUI>().text = "ENTFERNEN";
+            obj.GetComponent<Image>().color = new Color32(231, 76, 60, 255);
+        }
+
+        ImageSlider.objs = SelectedTimeMarkerObject.ImagesForPOI;
+        ImageSlider.index = 0;
+    }
+
+    public void HandlePOIImages(bool showOrHide)
+    {
+        Map.IsVisible = !showOrHide;
+        VideoManager.gameObject.SetActive(!showOrHide);
+
+        var _path = Application.streamingAssetsPath + "/placeholder.png";
+        UnityEngine.Networking.UnityWebRequest www = UnityEngine.Networking.UnityWebRequest.Get(_path);
+        www.SendWebRequest();
+        while (!www.downloadHandler.isDone)
+        {
+        }
+
+        ImageSlider.image.sprite.texture.LoadImage(www.downloadHandler.data);
+        ImageSlider.index = 0;
+
+
+        POIImages.SetActive(showOrHide);
+
+        SliderVideoGage.gameObject.SetActive(!showOrHide);
+        PlayIcon.SetActive(!showOrHide);
+
+        if (!showOrHide)
+            PauseIcon.SetActive(showOrHide);
+
+        if (showOrHide)
+            PhotoViewer.SetActive(showOrHide);
+    }
+
+    public void SavePOIInfoTitle(GameObject titelObj)
+    {
+        string title = "";
+
+        title = titelObj.GetComponent<TMP_InputField>().text;
+
+
+        Debug.Log("SavePOIInfoTitle: " + title);
+
+
+        SelectedTimeMarkerObject.Title = title;
+        SelectedTimeMarkerObject.IsPOI = true;
+
+        if (SelectedTimeMarkerObject.Title != null && SelectedTimeMarkerObject.Title.Length > 0
+    || SelectedTimeMarkerObject.Description != null && SelectedTimeMarkerObject.Description.Length > 0)
+            POIInfoText.text = SelectedTimeMarkerObject.Title + "\r\n" + SelectedTimeMarkerObject.Description;
+        else
+            POIInfoText.text = "Keine Informationen vorhanden";
+    }
+
+    public void SavePOIInfoDesription(GameObject descObj)
+    {
+        string desc = "";
+
+        desc = descObj.GetComponent<TMP_InputField>().text;
+
+        Debug.Log("SavePOIInfoDesription: " + desc);
+
+        SelectedTimeMarkerObject.Description = desc;
+        SelectedTimeMarkerObject.IsPOI = true;
+
+        if (SelectedTimeMarkerObject.Title != null && SelectedTimeMarkerObject.Title.Length > 0
+    || SelectedTimeMarkerObject.Description != null && SelectedTimeMarkerObject.Description.Length > 0)
+            POIInfoText.text = SelectedTimeMarkerObject.Title + "\r\n" + SelectedTimeMarkerObject.Description;
+        else
+            POIInfoText.text = "Keine Informationen vorhanden";
     }
 }
