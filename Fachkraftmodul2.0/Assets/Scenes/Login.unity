@@ -4125,7 +4125,7 @@ MonoBehaviour:
   Input_Username: {fileID: 5196038864972814006}
   Input_Password: {fileID: 1108182513}
   containerAnimator: {fileID: 127676076}
-  SceneAfterLogin: Erkundungsbegehung
+  SceneAfterLogin: Fachkraftkonfiguration
   Loading: {fileID: 1193278194}
   Hide: {fileID: 1579668184}
   FLoading: 1.5

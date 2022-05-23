@@ -165,7 +165,7 @@ public static class DemoUtils
 	{
 		return new CircleOptions()
 			.Center(point)
-			.Radius(1000000)
+			.Radius(10)
 			.FillColor(ColorUtils.RandomColor())
 			.StrokeColor(ColorUtils.RandomColor());
 	}

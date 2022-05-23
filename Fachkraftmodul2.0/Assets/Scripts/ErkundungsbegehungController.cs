@@ -6,6 +6,7 @@ using UnityEngine.UI;
 using UnityEngine.Video;
 using NinevaStudios.GoogleMaps;
 using TMPro;
+using UnityEngine.EventSystems;
 
 public class ErkundungsbegehungController : MonoBehaviour
 {
@@ -25,6 +26,14 @@ public class ErkundungsbegehungController : MonoBehaviour
     public Texture2D DefaultMarker50PercentIcon;
 
     public Texture2D POIMarkerIcon;
+
+    public Texture2D POILandmarkMarkerIcon;
+
+    public Texture2D POIReassuranceMarkerIcon;
+
+    public Texture2D SimpleViewDefaultMarkerIcon;
+
+    public Texture2D SimpleViewActiveMarkerIcon;
 
     public Slider SliderVideoGage;
 
@@ -66,6 +75,10 @@ public class ErkundungsbegehungController : MonoBehaviour
     public GameObject ImageItemPlaceholder;
 
     public Color32 ColorHighlighted;
+
+    public Slider SliderReassurance;
+
+    public GameObject MapAsImage;
 
     // PRIVATES
 
@@ -193,6 +206,9 @@ public class ErkundungsbegehungController : MonoBehaviour
 
     private Marker LastMarker;
 
+    private bool IsSimpleView = false;
+    private bool firstHit = true;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -318,7 +334,6 @@ public class ErkundungsbegehungController : MonoBehaviour
 
     }
 
-
     private void OnMapReady()
     {
         Debug.Log("The map is ready!");
@@ -341,16 +356,18 @@ public class ErkundungsbegehungController : MonoBehaviour
 
                 mo.Icon(NewCustomDescriptor());
 
-                tmo.IdFromMarker = Map.AddMarker(mo).Id;
+                tmo.Marker = Map.AddMarker(mo);
+                tmo.IdFromMarker = tmo.Marker.Id;
                 //marker.Timestamp = tmo.Timestamp;
 
-                //tmo.Marker = marker;
+
             }
 
             i++;
         }
 
         Map.SetOnMarkerClickListener(marker => OnMarkerClick(marker), false);
+
     }
 
     private void HandlePOIInfo(bool ShowOrHide)
@@ -475,16 +492,16 @@ public class ErkundungsbegehungController : MonoBehaviour
             //}
 
             //var currentTimeStamp = FirstTimeMarker + SliderVideoGage.value;
-           // Debug.Log("Update - currentTimeStamp:" + currentTimeStamp.ToString());
+            // Debug.Log("Update - currentTimeStamp:" + currentTimeStamp.ToString());
 
-           // if ((int)currentTimeStamp < Duration)
-           // {
-                // set current value for video gage
-                SliderVideoGage.value = (int)VideoManager.time;
+            // if ((int)currentTimeStamp < Duration)
+            // {
+            // set current value for video gage
+            SliderVideoGage.value = (int)VideoManager.time;
 
-                // mark actual and last marker in map
-                MarkActualAndLastMarker((int)VideoManager.time, false, false);
-           // }
+            // mark actual and last marker in map
+            MarkActualAndLastMarker((int)VideoManager.time, false, false);
+            // }
         }
     }
 
@@ -609,26 +626,29 @@ public class ErkundungsbegehungController : MonoBehaviour
         {
             if ((tmo.Timestamp - FirstTimeMarker) < currentPositionAsSecond)
             {
+
+                Debug.Log("MarkActualAndLastMarker: " + (tmo.Timestamp - FirstTimeMarker));
+
                 if (tmo.Marker != null)
                 {
                     SelectedTimeMarkerObject = tmo;
                     ActualMarker = tmo.Marker;
                 }
-                    
 
-                if (refreshAllMarker)
-                {
-                    if (isMoveEnabled)
-                        StaticMarkerIcon = DefaultMarker50PercentIcon;
-                    else
-                        StaticMarkerIcon = LeaveMarkerIcon;
 
-                    if (tmo.Marker != null)
-                    {
-                        tmo.Marker.SetIcon(NewCustomDescriptor());
-                    }
+                //if (refreshAllMarker)
+                //{
+                if (isMoveEnabled)
+                    StaticMarkerIcon = DefaultMarker50PercentIcon;
+                else if (IsSimpleView)
+                    StaticMarkerIcon = SimpleViewDefaultMarkerIcon;
+                else
+                    StaticMarkerIcon = LeaveMarkerIcon;
 
-                }
+                tmo.Marker.SetIcon(NewCustomDescriptor());
+
+                Debug.Log("MarkActualAndLastMarker: mo.Marker.SetIcon(NewCustomDescriptor());");
+                // }
             }
             else
             {
@@ -645,14 +665,13 @@ public class ErkundungsbegehungController : MonoBehaviour
                     {
                         if (isMoveEnabled)
                             StaticMarkerIcon = DefaultMarker50PercentIcon;
+                        else if (IsSimpleView)
+                            StaticMarkerIcon = SimpleViewDefaultMarkerIcon;
                         else
                             StaticMarkerIcon = DefaultMarkerIcon;
                     }
 
-                    if (tmo.Marker != null)
-                    {
-                        tmo.Marker.SetIcon(NewCustomDescriptor());
-                    }
+                    tmo.Marker.SetIcon(NewCustomDescriptor());
                 }
                 else
                 {
@@ -667,6 +686,8 @@ public class ErkundungsbegehungController : MonoBehaviour
         {
             if (isMoveEnabled)
                 StaticMarkerIcon = DefaultMarker50PercentIcon;
+            else if (IsSimpleView)
+                StaticMarkerIcon = SimpleViewDefaultMarkerIcon;
             else
                 StaticMarkerIcon = LeaveMarkerIcon;
 
@@ -678,6 +699,9 @@ public class ErkundungsbegehungController : MonoBehaviour
 
         // mark current marker as active marker
         StaticMarkerIcon = ActiveMarkerIcon;
+        if (IsSimpleView)
+            StaticMarkerIcon = SimpleViewActiveMarkerIcon;
+
         if (ActualMarker != null)
         {
             ActualMarker.SetIcon(NewCustomDescriptor());
@@ -825,5 +849,70 @@ public class ErkundungsbegehungController : MonoBehaviour
             POIInfoText.text = SelectedTimeMarkerObject.Title + "\r\n" + SelectedTimeMarkerObject.Description;
         else
             POIInfoText.text = "Keine Informationen vorhanden";
+    }
+
+
+    public void HandleSimpleView(bool isActive)
+    {
+        if (IsSimpleView)
+            IsSimpleView = false;
+        else
+            IsSimpleView = true;
+
+        if (IsSimpleView)
+        {
+            Map.SetOnCircleClickListener(circle =>
+            {
+                Debug.Log("Circle clicked: " + circle);
+                SliderReassurance.gameObject.SetActive(true);
+            });
+
+            Map.SetOnLongMapClickListener(point =>
+            {
+                Debug.Log("Map long clicked: " + point);
+                //Map.AddCircle(DemoUtils.RandomColorCircleOptions(point));
+
+                var mo = new MarkerOptions()
+                        .Position(point);
+
+                StaticMarkerIcon = POIReassuranceMarkerIcon;
+
+
+                mo.Icon(NewCustomDescriptor());
+
+                Map.AddMarker(mo);
+
+                Map.AddCircle(DemoUtils.RandomColorCircleOptions(point));
+
+            });
+
+           
+        }
+    }
+
+    public void MakeMapToImage()
+    {
+        if (firstHit)
+        {
+            firstHit = false;
+
+            Map.TakeSnapshot(texture =>
+            {
+                Debug.Log("Snapshot captured: " + texture.width + " x " + texture.height);
+                MapAsImage.GetComponent<Image>().sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero); ;
+            });
+
+            MapAsImage.SetActive(true);
+            Map.IsVisible = false;
+
+
+        }
+    }
+
+    public void ResetMyMapNico()
+    {
+            firstHit = true;
+            Map.IsVisible = true;
+            MapAsImage.SetActive(false);
     }
 }
