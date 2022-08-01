@@ -80,6 +80,16 @@ public class ErkundungsbegehungController : MonoBehaviour
 
     public GameObject MapAsImage;
 
+    public GameObject MapAsImageBorder;
+
+    public GameObject MapAsImageOverlay;
+
+    public Canvas canvas;
+
+    public GameObject ReMarker;
+
+    public ToggleController ToggleSwitch;
+
     // PRIVATES
 
     private List<TimeMarkerObject> TimeMarkerObjects = new List<TimeMarkerObject>()
@@ -209,11 +219,15 @@ public class ErkundungsbegehungController : MonoBehaviour
     private bool IsSimpleView = false;
     private bool firstHit = true;
 
+    private Vector3 ReMarkerInitialPosition;
+
     // Start is called before the first frame update
     void Start()
     {
         SelectedTimeMarkerObject = new TimeMarkerObject();
         StaticMarkerIcon = DefaultMarkerIcon;
+
+        ReMarkerInitialPosition = ReMarker.transform.position;
 
         // Demo Marker
         TimeMarkerObjects[15].IsPOI = true;
@@ -859,6 +873,8 @@ public class ErkundungsbegehungController : MonoBehaviour
         else
             IsSimpleView = true;
 
+        ReMarker.SetActive(IsSimpleView);
+
         if (IsSimpleView)
         {
             Map.SetOnCircleClickListener(circle =>
@@ -896,17 +912,64 @@ public class ErkundungsbegehungController : MonoBehaviour
         {
             firstHit = false;
 
+            MapAsImageOverlay.SetActive(true);
+            MapAsImageBorder.SetActive(true);
+
             Map.TakeSnapshot(texture =>
             {
                 Debug.Log("Snapshot captured: " + texture.width + " x " + texture.height);
                 MapAsImage.GetComponent<Image>().sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), Vector2.zero); ;
             });
 
+
             MapAsImage.SetActive(true);
             Map.IsVisible = false;
 
 
         }
+    }
+
+    public void MakeMapToImageHideOverlay(BaseEventData eventData)
+    {
+        //  
+
+        PointerEventData pointerEventData = (PointerEventData)eventData;
+
+        Vector2 position;
+
+        RectTransformUtility.ScreenPointToLocalPointInRectangle(
+            (RectTransform)canvas.transform,
+            pointerEventData.position,
+            canvas.worldCamera,
+            out position);
+
+        LatLng latLng = Map.Projection.FromScreenLocation(new Vector2Int((int)position.x, (int)position.y));
+
+        Debug.Log("Map clicked: " + latLng);
+
+        var mo = new MarkerOptions()
+                .Position(latLng);
+
+        StaticMarkerIcon = POIReassuranceMarkerIcon;
+
+
+        mo.Icon(NewCustomDescriptor());
+
+        Map.AddMarker(mo);
+
+        Map.AddCircle(DemoUtils.RandomColorCircleOptions(latLng));
+
+
+        // show Map
+
+        firstHit = true;
+        Map.IsVisible = true;
+        MapAsImage.SetActive(false);
+        MapAsImageBorder.SetActive(false);
+
+        ReMarker.transform.position = ReMarkerInitialPosition;
+
+
     }
 
     public void ResetMyMapNico()

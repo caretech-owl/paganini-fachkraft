@@ -12,14 +12,6 @@ public class DragAndDropUIElement : MonoBehaviour
     [SerialisedField]
     public Canvas canvas;
 
-    Point cursorPos = new Point();
-
-    [DllImport("user32.dll")]
-    public static extern bool SetCursorPos(int X, int Y);
-    [DllImport("user32.dll")]
-    public static extern bool GetCursorPos(out Point pos);
-
-
     public void DragHandler(BaseEventData data)
     {
 
@@ -34,9 +26,5 @@ public class DragAndDropUIElement : MonoBehaviour
             out position);
        
         transform.position = canvas.transform.TransformPoint(position);
-
-        GetCursorPos(out cursorPos);
-
-        Debug.Log("MousePos: " + cursorPos.X + " : " + cursorPos.Y);
     }
 }
