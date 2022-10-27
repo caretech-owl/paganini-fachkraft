@@ -9,7 +9,8 @@ public class InternalDataModel
 {
     public bool isLoggedIn { get; set; }
 
+    public string videoFileName { get; set; }
 
-
+    public List<TimeMarkerObject> timeMarkerObjects { get; set; }
 }
 

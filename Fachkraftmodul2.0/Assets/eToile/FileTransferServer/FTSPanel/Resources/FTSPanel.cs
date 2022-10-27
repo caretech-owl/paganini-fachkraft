@@ -1,11 +1,24 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections.Generic;
-
+using Assets.Scripts;
+using System.IO;
+using System.Xml;
+using System.Xml.Serialization;
+using UnityEngine.SceneManagement;
+using TMPro;
 
 public class FTSPanel : MonoBehaviour
 {
     public GameObject fileBrowserPrefab;            // The prefab of the file browser.
+
+
+    public GameObject WegeScrollView;
+    public GameObject WegVorlage;
+
+
+
+
     GameObject _fileBrowserInstance;
 
     FileTransferServer _fts;                        // The FTS associated to.
@@ -174,7 +187,9 @@ public class FTSPanel : MonoBehaviour
     /// <summary>Closes the browser window</summary>
     public void Close()
     {
-        GameObject.Destroy(gameObject);
+        SceneManager.LoadScene("Fachkraftkonfiguration");
+        //GameObject.Destroy(gameObject);
+
     }
 
     /**************
@@ -270,8 +285,106 @@ public class FTSPanel : MonoBehaviour
     // Download from the selected device:
     public void A_DownloadFile()
     {
-        if (!string.IsNullOrEmpty(_actInputRemote.text))
-            _fts.RequestFile(_devicesDropdown.value, _actInputRemote.text);
+         //if (!string.IsNullOrEmpty(_actInputRemote.text))
+            //    _fts.RequestFile(_devicesDropdown.value, _actInputRemote.text);
+
+            _fts.RequestFile(_devicesDropdown.value, "waysForExport.xml");
+
+        List<DetailedWayExport> listOfWays = new List<DetailedWayExport>();
+
+        if (File.Exists((FileManagement.persistentDataPath + "/" + _fts._downloadFolder + "/" + "waysForExport.xml")))
+        {
+            Debug.Log(FileManagement.persistentDataPath + "/" + _fts._downloadFolder + "/" + "waysForExport.xml exist!");
+
+            using (var xmlReader = new XmlTextReader(FileManagement.persistentDataPath + "/" + _fts._downloadFolder + "/" + "waysForExport.xml"))
+            {
+                var xmlSerializer = new XmlSerializer(typeof(List<DetailedWayExport>));
+                listOfWays = (List<DetailedWayExport>)xmlSerializer.Deserialize(xmlReader);
+            }
+        }
+        else
+        {
+            Debug.LogWarning(FileManagement.persistentDataPath + "/" + _fts._downloadFolder + "/" + "waysForExport.xml does not exist!");
+        }
+
+        WegVorlage.SetActive(true);
+
+        foreach (var way in listOfWays)
+        {
+            if (way != null)
+            {
+
+                GameObject name = WegVorlage.transform.Find("Label").gameObject;
+                name.GetComponentInChildren<TextMeshProUGUI>().text = way.Name;
+
+                WegVorlage = Instantiate(WegVorlage, WegVorlage.transform.parent.transform, true);
+                WegVorlage.transform.position = new Vector3(WegVorlage.transform.position.x, WegVorlage.transform.position.y - 75, WegVorlage.transform.position.z);
+
+               // WegVorlage.SetActive(true);
+
+                //foreach (var file in way.Files)
+                //{
+
+
+                //    
+                //    _fts.RequestFile(_devicesDropdown.value, new FileInfo(file.File).Name);
+                //}
+            }
+            
+        }
+
+
+    }
+
+    // Download from the selected device:
+    public void A_DownloadFileSingleWay(GameObject go)
+    {
+
+        List<DetailedWayExport> listOfWays = new List<DetailedWayExport>();
+
+        if (File.Exists((FileManagement.persistentDataPath + "/" + _fts._downloadFolder + "/" + "waysForExport.xml")))
+        {
+            Debug.Log(FileManagement.persistentDataPath + "/" + _fts._downloadFolder + "/" + "waysForExport.xml exist!");
+
+            using (var xmlReader = new XmlTextReader(FileManagement.persistentDataPath + "/" + _fts._downloadFolder + "/" + "waysForExport.xml"))
+            {
+                var xmlSerializer = new XmlSerializer(typeof(List<DetailedWayExport>));
+                listOfWays = (List<DetailedWayExport>)xmlSerializer.Deserialize(xmlReader);
+            }
+        }
+        else
+        {
+            Debug.LogWarning(FileManagement.persistentDataPath + "/" + _fts._downloadFolder + "/" + "waysForExport.xml does not exist!");
+        }
+
+
+        var nameToFind = go.GetComponentInChildren<TextMeshProUGUI>().text;
+        DetailedWayExport dwe = listOfWays.Find(x => x.Name.Equals(nameToFind));
+
+        foreach (var file in dwe.Files)
+        {
+            FileInfo fi = new FileInfo(file.File);
+            _fts.RequestFile(_devicesDropdown.value, fi.Name);
+
+            Debug.Log("Video file extension is: " + fi.Extension);
+            if (fi.Extension.Equals(".mp4"))
+            {
+                Debug.Log("Video file is: " + fi.Name);
+                InternalDataModelController.GetInternalDataModelController().idm.videoFileName = fi.Name;
+            }
+        }
+
+        InternalDataModelController.GetInternalDataModelController().idm.timeMarkerObjects = new List<TimeMarkerObject>();
+
+        foreach (var point in dwe.Points)
+        {
+            InternalDataModelController.GetInternalDataModelController().idm.timeMarkerObjects.Add(new TimeMarkerObject() { LatLng = new Vector2((float)point.Latitude, (float)point.Longitude), Timestamp = (int)point.Timestamp });
+        }
+        
+
+        go.transform.parent.Find("ButtonOpen").gameObject.SetActive(true);
+        go.transform.parent.Find("ButtonImport").gameObject.SetActive(false);
+
     }
     // Update download statistics:
     public void A_UpdateStats(float time, float transferRate)
@@ -521,5 +634,26 @@ public class FTSPanel : MonoBehaviour
         _request.Dispose();
         _request = null;
         _confirmCanvas.enabled = false;
+    }
+
+    public class DetailedWayExport
+    {
+        public string Folder { get; set; }
+        public List<DetailedWayExportFiles> Files { get; set; }
+        public List<Pathpoint> Points { get; set; }
+        public int Id { set; get; }
+        public string Start { set; get; }
+        public string Destination { set; get; }
+        public string StartType { set; get; }
+        public string DestinationType { set; get; }
+        public string Name { set; get; }
+        public string Description { set; get; }
+        public int Status { set; get; }
+    }
+
+    public class DetailedWayExportFiles
+    {
+        public string File { get; set; }
+        public byte[] Checksum { get; set; }
     }
 }

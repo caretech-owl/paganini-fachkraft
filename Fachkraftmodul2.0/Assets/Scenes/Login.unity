@@ -1140,6 +1140,88 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 877845450}
   m_CullTransparentMesh: 1
+--- !u!1 &926389815
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 926389817}
+  - component: {fileID: 926389816}
+  m_Layer: 0
+  m_Name: GameObject
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &926389816
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 926389815}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3f4a3db3ff73d89408aa0215cfe47ed7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _settingsSaveFile: FTS_Settings.ini
+  _ip: 
+  _port: 60000
+  deviceName: Tablet
+  sharedFolder: RawDownloads
+  sharedIsFullPath: 0
+  downloadFolder: RawDownloads
+  downloadIsFullPath: 0
+  serverEnabled: 1
+  autoDownload: 1
+  _ftsPanel: {fileID: 115894, guid: db1ee680eb76ab841a8d950090d32aa3, type: 3}
+  _showPanelAtStart: 1
+  onError:
+    m_PersistentCalls:
+      m_Calls: []
+  onDevicesListUpdate:
+    m_PersistentCalls:
+      m_Calls: []
+  onFileDownload:
+    m_PersistentCalls:
+      m_Calls: []
+  onFileNotFound:
+    m_PersistentCalls:
+      m_Calls: []
+  onForcedDownload:
+    m_PersistentCalls:
+      m_Calls: []
+  onFileTimeout:
+    m_PersistentCalls:
+      m_Calls: []
+  onUploadBegin:
+    m_PersistentCalls:
+      m_Calls: []
+  onUpload:
+    m_PersistentCalls:
+      m_Calls: []
+  onUploadTimeout:
+    m_PersistentCalls:
+      m_Calls: []
+--- !u!4 &926389817
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 926389815}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -44.957214, y: 16.07813, z: 91.18934}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0

@@ -13,15 +13,12 @@ class InternalDataModelController
     private static readonly InternalDataModelController instance = new InternalDataModelController();
 
     private string dataModelXml = Application.streamingAssetsPath + "/dataModel.xml";
-    private List<InternalDataModel> _idm;
+    private InternalDataModel _idm;
     // Note: constructor is 'private'
     private InternalDataModelController()
     {
-        _idm = new List<InternalDataModel>();
-        _idm.Add(new InternalDataModel
-        {
-            isLoggedIn = true
-        });
+        _idm = new InternalDataModel();
+        _idm.isLoggedIn = true;
 
         SerializeDataModel();
     }
@@ -31,7 +28,7 @@ class InternalDataModelController
         return instance;
     }
 
-    public List<InternalDataModel> idm
+    public InternalDataModel idm
     {
         get { return _idm; }
         set { _idm = value; }
@@ -64,8 +61,8 @@ class InternalDataModelController
         {
             using (var xmlReader = new XmlTextReader(dataModelXml))
             {
-                var xmlSerializer = new XmlSerializer(typeof(List<InternalDataModel>));
-                idm = (List<InternalDataModel>)xmlSerializer.Deserialize(xmlReader);
+                var xmlSerializer = new XmlSerializer(typeof(InternalDataModel));
+                idm = (InternalDataModel)xmlSerializer.Deserialize(xmlReader);
             }
         }
     }
