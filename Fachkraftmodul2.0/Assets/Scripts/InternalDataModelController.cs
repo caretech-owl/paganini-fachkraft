@@ -12,15 +12,12 @@ class InternalDataModelController
 {
     private static readonly InternalDataModelController instance = new InternalDataModelController();
 
-    private string dataModelXml = Application.streamingAssetsPath + "/dataModel.xml";
-    private InternalDataModel _idm;
+    private string dataModelXml = Application.streamingAssetsPath + "/dataModelVersion1.0.xml";
+    private List<InternalDataModel> _idm;
     // Note: constructor is 'private'
     private InternalDataModelController()
     {
-        _idm = new InternalDataModel();
-        _idm.isLoggedIn = true;
-
-        SerializeDataModel();
+        DeserializeDataModel();
     }
 
     public static InternalDataModelController GetInternalDataModelController()
@@ -30,13 +27,12 @@ class InternalDataModelController
 
     public InternalDataModel idm
     {
-        get { return _idm; }
-        set { _idm = value; }
+        get { return _idm.First(); }
     }
 
-    public void SerializeDataModel()
+    private void SerializeDataModel()
     {
-        var objType = idm.GetType();
+        var objType = _idm.GetType();
 
         try
         {
@@ -46,24 +42,45 @@ class InternalDataModelController
                 xmlWriter.IndentChar = ' ';
                 xmlWriter.Formatting = Formatting.Indented;
                 var xmlSerializer = new XmlSerializer(objType);
-                xmlSerializer.Serialize(xmlWriter, idm);
+                xmlSerializer.Serialize(xmlWriter, _idm);
             }
         }
         catch (IOException)
         {
-
+            // todo: call error handler here
         }
     }
 
-    public void DeserializeDataModel()
+    private void DeserializeDataModel()
     {
-        if (File.Exists(dataModelXml))
+        try
         {
-            using (var xmlReader = new XmlTextReader(dataModelXml))
+            Debug.Log("DeserializeDataModel:" + dataModelXml);
+
+            _idm = new List<InternalDataModel>();
+
+            if (File.Exists(dataModelXml))
             {
-                var xmlSerializer = new XmlSerializer(typeof(InternalDataModel));
-                idm = (InternalDataModel)xmlSerializer.Deserialize(xmlReader);
+                using (var xmlReader = new XmlTextReader(dataModelXml))
+                {
+                    var xmlSerializer = new XmlSerializer(typeof(List<InternalDataModel>));
+                    _idm = (List<InternalDataModel>)xmlSerializer.Deserialize(xmlReader);
+                }
             }
+            else
+            {
+                // fill with empty placeholder
+                _idm.Add(new InternalDataModel());
+                idm.exploritoryRouteWalks = new List<InternalDataModel.DataOfExploritoryRouteWalks>();
+            }
+        }
+        catch (IOException)
+        {
+            // todo: call error handler here
+
+            // fill with empty placeholder
+            _idm.Add(new InternalDataModel());
+            idm.exploritoryRouteWalks = new List<InternalDataModel.DataOfExploritoryRouteWalks>();
         }
     }
 }

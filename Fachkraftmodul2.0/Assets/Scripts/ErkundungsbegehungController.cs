@@ -225,8 +225,8 @@ public class ErkundungsbegehungController : MonoBehaviour
     void Start()
     {
 
-        VideoManager.url =  FileManagement.persistentDataPath + "/RawDownloads/" + InternalDataModelController.GetInternalDataModelController().idm.videoFileName;
-        TimeMarkerObjects = InternalDataModelController.GetInternalDataModelController().idm.timeMarkerObjects;
+        //VideoManager.url =  FileManagement.persistentDataPath + "/RawDownloads/" + InternalDataModelController.GetInternalDataModelController().idm.videoFileName;
+        //TimeMarkerObjects = InternalDataModelController.GetInternalDataModelController().idm.timeMarkerObjects;
 
         SelectedTimeMarkerObject = new TimeMarkerObject();
         StaticMarkerIcon = DefaultMarkerIcon;

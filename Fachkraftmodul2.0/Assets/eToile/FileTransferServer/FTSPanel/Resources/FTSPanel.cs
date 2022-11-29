@@ -374,12 +374,14 @@ public class FTSPanel : MonoBehaviour
             }
         }
 
-        InternalDataModelController.GetInternalDataModelController().idm.timeMarkerObjects = new List<TimeMarkerObject>();
+        //InternalDataModelController.GetInternalDataModelController().idm.timeMarkerObjects = new List<TimeMarkerObject>();
 
-        foreach (var point in dwe.Points)
-        {
-            InternalDataModelController.GetInternalDataModelController().idm.timeMarkerObjects.Add(new TimeMarkerObject() { LatLng = new Vector2((float)point.Latitude, (float)point.Longitude), Timestamp = (int)point.Timestamp });
-        }
+        _fts.RequestFile(_devicesDropdown.value, dwe.Points);
+
+        //foreach (var point in dwe.Points)
+        //{
+        //    InternalDataModelController.GetInternalDataModelController().idm[0].timeMarkerObjects.Add(new TimeMarkerObject() { LatLng = new Vector2((float)point.Latitude, (float)point.Longitude), Timestamp = (int)point.Timestamp });
+        //}
         
 
         go.transform.parent.Find("ButtonOpen").gameObject.SetActive(true);
@@ -640,7 +642,7 @@ public class FTSPanel : MonoBehaviour
     {
         public string Folder { get; set; }
         public List<DetailedWayExportFiles> Files { get; set; }
-        public List<Pathpoint> Points { get; set; }
+        public string Points { get; set; }
         public int Id { set; get; }
         public string Start { set; get; }
         public string Destination { set; get; }
