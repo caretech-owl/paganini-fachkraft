@@ -49,6 +49,16 @@ public class SynchronizationHandler : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        // Delete all files in sharing folder
+        try
+        {
+            foreach (var file in Directory.GetFiles(FileManagement.persistentDataPath + "/" + FTS._sharedFolder))
+            {
+                File.Delete(file);
+            }
+        }
+        catch { }
+
         File.Create(FileManagement.persistentDataPath + "/" + FTS._sharedFolder + "/CONNECTIONALLOWED").Close();
     }
 
@@ -107,7 +117,7 @@ public class SynchronizationHandler : MonoBehaviour
         erw.Description = dwe.Description;
         erw.Destination = dwe.Destination;
         erw.DestinationType = dwe.DestinationType;
-        erw.Folder = dwe.Folder; 
+        erw.Folder = dwe.Folder;
         erw.Id = dwe.Id;
         erw.Name = dwe.Name;
         erw.Start = dwe.Start;
@@ -125,7 +135,7 @@ public class SynchronizationHandler : MonoBehaviour
             if (fi.Extension.Equals(".mp4"))
             {
                 Debug.Log("Video file is: " + fi.Name);
-                erw.Videos.Add(fi.Name); 
+                erw.Videos.Add(fi.Name);
             }
             else
             {
@@ -178,14 +188,11 @@ public class SynchronizationHandler : MonoBehaviour
 
         if (fileUpload.GetName().Equals("CONNECTIONALLOWED"))
         {
+            FTS.RequestFile(0, "waysForExport.xml");
+
             GameObject.Find("TextOverviewPanelAskForConnection").GetComponent<TMP_Text>().text = "Die Geräte sind verbunden.";
             GameObject.Find("SVGImageSearchPanelAskForConnection").SetActive(false);
 
-            UI_SyncOverview.SetActive(true);
-
-            FillSyncOverviewList();
-
-            wasCalled2 = false;
         }
     }
 
@@ -257,6 +264,11 @@ public class SynchronizationHandler : MonoBehaviour
         {
             fileInfo = file;
 
+            UI_SyncOverview.SetActive(true);
+
+            FillSyncOverviewList();
+
+            wasCalled2 = false;
         }
         else
         {

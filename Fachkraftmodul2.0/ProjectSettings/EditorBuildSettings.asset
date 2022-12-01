@@ -11,13 +11,4 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/paganiniDesign/Overview.unity
     guid: bb0b87456491f1e44bd76585a5029dc8
-  - enabled: 1
-    path: Assets/Scenes/Fachkraftkonfiguration.unity
-    guid: 7502085d562b7d448b8d04b085fb9368
-  - enabled: 1
-    path: Assets/Scenes/Login.unity
-    guid: 287cbbc2ec0f8b142baa2f34fabd4afb
-  - enabled: 1
-    path: Assets/Scenes/Erkundungsbegehung.unity
-    guid: 537bdbb5a3f38ef4c94d04812ee35ce5
   m_configObjects: {}
