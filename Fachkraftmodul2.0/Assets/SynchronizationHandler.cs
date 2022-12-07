@@ -170,9 +170,12 @@ Bestätige die Synchronisierung auf dem Smartphone.";
         }
 
         // get coordinates
-        FTS.RequestFile(0, dwe.Points);
+        FileInfo fiPoints = new FileInfo(dwe.Points);
+        FTS.RequestFile(0, fiPoints.Name);
 
         InternalDataModelController.GetInternalDataModelController().idm.exploritoryRouteWalks.Add(erw);
+
+        FTS.RequestFile(0, "ENDOFSYNC"); 
 
     }
 
@@ -310,6 +313,10 @@ Bestätige die Synchronisierung auf dem Smartphone.";
             FillSyncOverviewList();
 
             wasCalled2 = false;
+        }
+        else if (file._sourceName.Equals("ENDOFSYNC"))
+        {
+            UI_PanelEnd.SetActive(true);
         }
         else
         {
