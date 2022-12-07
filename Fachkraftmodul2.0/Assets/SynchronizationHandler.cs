@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Assets;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
@@ -20,6 +21,9 @@ public class SynchronizationHandler : MonoBehaviour
     public GameObject SmartphoneAskForConnectionText;
     public GameObject OverviewList;
     public GameObject SyncOverviewList;
+    public GameObject TextOverviewPanelAskForConnection;
+    public GameObject SVGImageSearchPanelAskForConnection;
+
 
 
     public FileTransferServer FTS;
@@ -49,6 +53,16 @@ public class SynchronizationHandler : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+
+        // Reset overview list
+        ResetOverviewLists();
+
+        // Check existence of shared folder
+        if (!Directory.Exists(FileManagement.persistentDataPath + "/" + FTS._sharedFolder))
+        {
+            Directory.CreateDirectory(FileManagement.persistentDataPath + "/" + FTS._sharedFolder);
+        }
+
         // Delete all files in sharing folder
         try
         {
@@ -57,7 +71,10 @@ public class SynchronizationHandler : MonoBehaviour
                 File.Delete(file);
             }
         }
-        catch { }
+        catch (Exception ex)
+        {
+            ErrorHandlerSingleton.GetErrorHandler().AddNewError("SynchronizationHandler:Start(): Error in 'Delete all files in sharing folder'", ex.Message, false);
+        }
 
         File.Create(FileManagement.persistentDataPath + "/" + FTS._sharedFolder + "/CONNECTIONALLOWED").Close();
     }
@@ -87,6 +104,12 @@ public class SynchronizationHandler : MonoBehaviour
         UI_SyncOverview.SetActive(false);
         UI_PanelFileTransferrunning.SetActive(false);
         UI_PanelEnd.SetActive(false);
+
+        TextOverviewPanelAskForConnection.GetComponent<TMP_Text>().text = @"Verbindung wird aufgebaut ...
+
+Bestätige die Synchronisierung auf dem Smartphone.";
+
+        SVGImageSearchPanelAskForConnection.SetActive(true);
     }
 
     public void SyncWayFromMobilePhone(int id)
@@ -108,6 +131,7 @@ public class SynchronizationHandler : MonoBehaviour
         else
         {
             Debug.LogWarning(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + "waysForExport.xml does not exist!");
+            ErrorHandlerSingleton.GetErrorHandler().AddNewError("SynchronizationHandler:SyncWayFromMobilePhone(): ", FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + "waysForExport.xml does not exist!");
         }
 
         DataOfExploritoryRouteWalks erw = new DataOfExploritoryRouteWalks();
@@ -154,6 +178,9 @@ public class SynchronizationHandler : MonoBehaviour
 
     public void FillOverviewList()
     {
+        // Reset overview list
+        ResetOverviewLists();
+
         foreach (var erw in InternalDataModelController.GetInternalDataModelController().idm.exploritoryRouteWalks)
         {
             if (!alternate)
@@ -164,11 +191,21 @@ public class SynchronizationHandler : MonoBehaviour
             }
             else
             {
-                GameObject go = Instantiate(SyncOverviewListContentPrefab, OverviewList.transform);
+                GameObject go = Instantiate(SyncOverviewListContentAlternatePrefab, OverviewList.transform);
                 go.GetComponent<SyncOverviewElement>().InstantiateSyncOverviewElement(erw.Id, erw.Start, erw.Destination, DateTime.Now.ToString(), "Noch nicht bearbeitet", this);
                 alternate = false;
             }
         }
+    }
+
+    private void ResetOverviewLists()
+    {
+        // Reset all overview lists with objects of type 'SyncOverviewElement'
+        while (GameObject.FindObjectsOfType(typeof(SyncOverviewElement)).Length > 0)
+        {
+            DestroyImmediate(((SyncOverviewElement)FindObjectsOfType(typeof(SyncOverviewElement))[0]).transform.gameObject, true);
+        }
+
     }
 
     public void SearchSmartphone()
@@ -190,8 +227,8 @@ public class SynchronizationHandler : MonoBehaviour
         {
             FTS.RequestFile(0, "waysForExport.xml");
 
-            GameObject.Find("TextOverviewPanelAskForConnection").GetComponent<TMP_Text>().text = "Die Geräte sind verbunden.";
-            GameObject.Find("SVGImageSearchPanelAskForConnection").SetActive(false);
+            TextOverviewPanelAskForConnection.GetComponent<TMP_Text>().text = "Die Geräte sind verbunden.";
+            SVGImageSearchPanelAskForConnection.SetActive(false);
 
         }
     }
@@ -214,7 +251,11 @@ public class SynchronizationHandler : MonoBehaviour
         else
         {
             Debug.LogWarning(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + "waysForExport.xml does not exist!");
+            ErrorHandlerSingleton.GetErrorHandler().AddNewError("SynchronizationHandler:FillSyncOverviewList(): ", FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + "waysForExport.xml does not exist!");
         }
+
+        // Reset overview list
+        ResetOverviewLists();
 
         // Sync overview list
         foreach (DetailedWayExport dwe in listOfWays)
