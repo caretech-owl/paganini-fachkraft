@@ -370,7 +370,7 @@ public class FTSPanel : MonoBehaviour
             if (fi.Extension.Equals(".mp4"))
             {
                 Debug.Log("Video file is: " + fi.Name);
-                InternalDataModelController.GetInternalDataModelController().idm.videoFileName = fi.Name;
+                //InternalDataModelController.GetInternalDataModelController().idm.videoFileName = fi.Name;
             }
         }
 

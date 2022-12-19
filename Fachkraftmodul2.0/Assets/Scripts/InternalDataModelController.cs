@@ -12,7 +12,7 @@ class InternalDataModelController
 {
     private static readonly InternalDataModelController instance = new InternalDataModelController();
 
-    private string dataModelXml = Application.streamingAssetsPath + "/dataModelVersion1.0.xml";
+    private string dataModelXml = FileManagement.persistentDataPath + "/dataModelVersion1.0.xml";
     private List<InternalDataModel> _idm;
     // Note: constructor is 'private'
     private InternalDataModelController()
@@ -30,8 +30,17 @@ class InternalDataModelController
         get { return _idm.First(); }
     }
 
+    public void CheckDirtyFlagsAndSave()
+    {
+        SerializeDataModel();
+    }
+
     private void SerializeDataModel()
     {
+
+        Debug.Log("SerializeDataModel:" + dataModelXml);
+
+
         var objType = _idm.GetType();
 
         try

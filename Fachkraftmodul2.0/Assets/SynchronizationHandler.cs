@@ -1,4 +1,5 @@
 ﻿using Assets;
+using Assets.Scripts;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -40,15 +41,13 @@ public class SynchronizationHandler : MonoBehaviour
 
     bool alternate = false;
     bool alternateSync = false;
-
-
-
     bool wasCalled2 = true;
-
     bool wasSendPollRequestCalled = false;
 
     List<string> FileListToSyncronize = new List<string>();
     FTSCore.FileRequest fileInfo;
+
+    string currentWayFolderName;
 
     // Start is called before the first frame update
     void Start()
@@ -77,6 +76,11 @@ public class SynchronizationHandler : MonoBehaviour
         }
 
         File.Create(FileManagement.persistentDataPath + "/" + FTS._sharedFolder + "/CONNECTIONALLOWED").Close();
+
+        // load ways
+        FillOverviewList();
+
+        Debug.Log("SynchronizationHandler - Start() called!");
     }
 
     // Update is called once per frame
@@ -134,48 +138,62 @@ Bestätige die Synchronisierung auf dem Smartphone.";
             ErrorHandlerSingleton.GetErrorHandler().AddNewError("SynchronizationHandler:SyncWayFromMobilePhone(): ", FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + "waysForExport.xml does not exist!");
         }
 
-        DataOfExploritoryRouteWalks erw = new DataOfExploritoryRouteWalks();
-        DetailedWayExport dwe = listOfWays.Find(x => x.Id.Equals(id));
+        DataOfExploritoryRouteWalks erw = InternalDataModelController.GetInternalDataModelController().idm.exploritoryRouteWalks.Find(x => x.Id.Equals(id));
 
-        // fill ERW
-        erw.Description = dwe.Description;
-        erw.Destination = dwe.Destination;
-        erw.DestinationType = dwe.DestinationType;
-        erw.Folder = dwe.Folder;
-        erw.Id = dwe.Id;
-        erw.Name = dwe.Name;
-        erw.Start = dwe.Start;
-        erw.StartType = dwe.StartType;
-        erw.Status = dwe.Status;
-        erw.Videos = new List<string>();
-        erw.Photos = new List<string>();
-
-        foreach (var file in dwe.Files)
+        if (erw == null) //NEW AND INSERT
         {
-            FileInfo fi = new FileInfo(file.File);
-            FTS.RequestFile(0, fi.Name);
+            erw = new DataOfExploritoryRouteWalks();
 
-            Debug.Log("Video file extension is: " + fi.Extension);
-            if (fi.Extension.Equals(".mp4"))
+            DetailedWayExport dwe = listOfWays.Find(x => x.Id.Equals(id));
+
+            // fill ERW
+            erw.Description = dwe.Description;
+            erw.Destination = dwe.Destination;
+            erw.DestinationType = dwe.DestinationType;
+            erw.Folder = dwe.Folder;
+            erw.Id = dwe.Id;
+            erw.Name = dwe.Name;
+            erw.Start = dwe.Start;
+            erw.StartType = dwe.StartType;
+            erw.Status = dwe.Status;
+            erw.Videos = new List<string>();
+            erw.Photos = new List<string>();
+
+            currentWayFolderName = erw.Folder;
+
+            foreach (var file in dwe.Files)
             {
-                Debug.Log("Video file is: " + fi.Name);
-                erw.Videos.Add(fi.Name);
-            }
-            else
-            {
-                erw.Photos.Add(fi.Name);
+                FileInfo fi = new FileInfo(file.File);
+                FTS.RequestFile(0, fi.Name);
+
+                Debug.Log("Video file extension is: " + fi.Extension);
+                if (fi.Extension.Equals(".mp4"))
+                {
+                    Debug.Log("Video file is: " + fi.Name);
+                    erw.Videos.Add(fi.Name);
+                }
+                else
+                {
+                    erw.Photos.Add(fi.Name);
+                }
+
+                FileListToSyncronize.Add(fi.Name);
             }
 
-            FileListToSyncronize.Add(fi.Name);
+            // get coordinates
+            FileInfo fiPoints = new FileInfo(dwe.Points);
+            FTS.RequestFile(0, fiPoints.Name);
+
+            InternalDataModelController.GetInternalDataModelController().idm.exploritoryRouteWalks.Add(erw);
+        }
+        else //UPDATE
+        {
+            currentWayFolderName = erw.Folder;
         }
 
-        // get coordinates
-        FileInfo fiPoints = new FileInfo(dwe.Points);
-        FTS.RequestFile(0, fiPoints.Name);
+        InternalDataModelController.GetInternalDataModelController().CheckDirtyFlagsAndSave();
 
-        InternalDataModelController.GetInternalDataModelController().idm.exploritoryRouteWalks.Add(erw);
-
-        FTS.RequestFile(0, "ENDOFSYNC"); 
+        FTS.RequestFile(0, "ENDOFSYNC");
 
     }
 
@@ -317,6 +335,69 @@ Bestätige die Synchronisierung auf dem Smartphone.";
         else if (file._sourceName.Equals("ENDOFSYNC"))
         {
             UI_PanelEnd.SetActive(true);
+        }
+        else if (file._sourceName.EndsWith(".mp4"))
+        {
+            // check for base folder
+            if (!Directory.Exists(FileManagement.persistentDataPath + "/" + currentWayFolderName))
+                Directory.CreateDirectory(FileManagement.persistentDataPath + "/" + currentWayFolderName);
+
+            // check for video folder
+            if (!Directory.Exists(FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Video"))
+                Directory.CreateDirectory(FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Video");
+
+            // copy video file
+            File.Copy(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + file._sourceName, FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Video/" + file._sourceName);
+
+            Debug.Log("OnFileDownload - copy video file:" + file._sourceName);
+        }
+        else if (file._sourceName.EndsWith(".jpg"))
+        {
+            // check for base folder
+            if (!Directory.Exists(FileManagement.persistentDataPath + "/" + currentWayFolderName))
+                Directory.CreateDirectory(FileManagement.persistentDataPath + "/" + currentWayFolderName);
+
+            // check for photo folder
+            if (!Directory.Exists(FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Foto"))
+                Directory.CreateDirectory(FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Foto");
+
+            // copy photo file
+            File.Copy(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + file._sourceName, FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Foto/" + file._sourceName);
+
+            Debug.Log("OnFileDownload - copy photo file:" + file._sourceName);
+        }
+        else if (file._sourceName.EndsWith("-coordinates.xml"))
+        {
+            try
+            {
+                Debug.Log("OnFileDownload - deserialize coordinates:" + file._sourceName);
+
+                List<Pathpoint> ppoints = new List<Pathpoint>();
+
+                if (File.Exists(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + file._sourceName))
+                {
+                    using (var xmlReader = new XmlTextReader(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + file._sourceName))
+                    {
+                        var xmlSerializer = new XmlSerializer(typeof(List<Pathpoint>));
+                        ppoints = (List<Pathpoint>)xmlSerializer.Deserialize(xmlReader);
+                    }
+
+                    InternalDataModel.DataOfExploritoryRouteWalks erw = InternalDataModelController.GetInternalDataModelController().idm.exploritoryRouteWalks.FindLast(x => x.Id == ppoints[0].Erw_id);
+
+                    erw.Pathpoints = ppoints;
+
+
+                    Debug.Log("OnFileDownload - deserialize erw.Pathpoints:" + erw.Pathpoints[0].Erw_id);
+
+                    InternalDataModelController.GetInternalDataModelController().CheckDirtyFlagsAndSave();
+
+                }
+            }
+            catch (IOException ex)
+            {
+                // todo: call error handler here
+                Debug.LogError("OnFileDownload - deserialize coordinates:" + file._sourceName + "Error message: " + ex.Message);
+            }
         }
         else
         {

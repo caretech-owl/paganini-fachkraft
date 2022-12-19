@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Assets.Scripts;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,24 +12,33 @@ public class InternalDataModel
     /// Local data model to handle user settings 
     /// and data of the exploritory route walks
     /// </summary>
-  
+
 
     /// USER AND APPLICATION SETTINGS
     public bool isLoginRemembered { get; set; }
     public string lastSavedDate { get; set; }
 
-    public string videoFileName { get; set; }
+    public int currentIdOfWay { get; set; }
 
     public List<DataOfExploritoryRouteWalks> exploritoryRouteWalks { get; set; }
 
     /// CLASSES FOR DATA OF THE EXPLORITORY ROUTE WALKS
- 
+
     public class DataOfExploritoryRouteWalks
     {
-        public string Folder { get; set; }
+        private string _Folder;
+        public string Folder
+        {
+            get { return _Folder; }
+            set
+            {
+                IsDirty = true;
+                _Folder = value;
+            }
+        }
         public List<string> Videos { get; set; }
         public List<string> Photos { get; set; }
-        public List<PathpointAPI> Pathpoints { get; set; }
+        public List<Pathpoint> Pathpoints { get; set; }
         public int Id { set; get; }
         public string Start { set; get; }
         public string Destination { set; get; }
@@ -37,6 +47,7 @@ public class InternalDataModel
         public string Name { set; get; }
         public string Description { set; get; }
         public int Status { set; get; }
+        public bool IsDirty { set; get; }
     }
 }
 
