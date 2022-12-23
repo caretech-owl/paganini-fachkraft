@@ -889,6 +889,10 @@ MonoBehaviour:
   WayName: {fileID: 745054087}
   VideoManager: {fileID: 1735377900}
   DefaultMarkerIcon: {fileID: 2800000, guid: b9d7d6f4fdf0de74aafe6362d937731e, type: 3}
+  POILandmarkMarkerIcon: {fileID: 2800000, guid: 7d4e52e15b2814d43893bf1828c456f1,
+    type: 3}
+  POIReassuranceMarkerIcon: {fileID: 2800000, guid: a9fa8b1f8294b3e46bbc5c26f24b0138,
+    type: 3}
 --- !u!4 &468170650
 Transform:
   m_ObjectHideFlags: 0

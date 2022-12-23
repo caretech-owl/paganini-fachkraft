@@ -44,7 +44,7 @@ public class SynchronizationHandler : MonoBehaviour
     bool wasCalled2 = true;
     bool wasSendPollRequestCalled = false;
 
-    List<string> FileListToSyncronize = new List<string>();
+    List<string> FileListToSyncronize;
     FTSCore.FileRequest fileInfo;
 
     string currentWayFolderName;
@@ -114,6 +114,8 @@ public class SynchronizationHandler : MonoBehaviour
 Bestätige die Synchronisierung auf dem Smartphone.";
 
         SVGImageSearchPanelAskForConnection.SetActive(true);
+
+        FileListToSyncronize = null;
     }
 
     public void SyncWayFromMobilePhone(int id)
@@ -121,6 +123,7 @@ Bestätige die Synchronisierung auf dem Smartphone.";
         UI_PanelFileTransferrunning.SetActive(true);
 
         List<DetailedWayExport> listOfWays = new List<DetailedWayExport>();
+        FileListToSyncronize = new List<string>();
 
         if (File.Exists((FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + "waysForExport.xml")))
         {
@@ -183,6 +186,7 @@ Bestätige die Synchronisierung auf dem Smartphone.";
             // get coordinates
             FileInfo fiPoints = new FileInfo(dwe.Points);
             FTS.RequestFile(0, fiPoints.Name);
+            FileListToSyncronize.Add(fiPoints.Name);
 
             InternalDataModelController.GetInternalDataModelController().idm.exploritoryRouteWalks.Add(erw);
         }
@@ -193,7 +197,7 @@ Bestätige die Synchronisierung auf dem Smartphone.";
 
         InternalDataModelController.GetInternalDataModelController().CheckDirtyFlagsAndSave();
 
-        FTS.RequestFile(0, "ENDOFSYNC");
+        
 
     }
 
@@ -399,8 +403,8 @@ Bestätige die Synchronisierung auf dem Smartphone.";
                 Debug.LogError("OnFileDownload - deserialize coordinates:" + file._sourceName + "Error message: " + ex.Message);
             }
         }
-        else
-        {
+        //else
+        //{
             Debug.Log("CheckForMetadataFile: " + FileListToSyncronize.Count + " = FileListToSyncronize");
 
             if (FileListToSyncronize != null)
@@ -410,9 +414,12 @@ Bestätige die Synchronisierung auf dem Smartphone.";
                     FileListToSyncronize.Remove(file._sourceName);
 
                 if (FileListToSyncronize.Count == 0)
+                {
                     UI_PanelEnd.SetActive(true);
+                    FTS.RequestFile(0, "ENDOFSYNC");
+                }
             }
-        }
+        //}
     }
 
     public class DetailedWayExport
