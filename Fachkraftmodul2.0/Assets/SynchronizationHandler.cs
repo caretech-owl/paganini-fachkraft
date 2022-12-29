@@ -4,9 +4,11 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using TMPro;
+using UnityEditorInternal.VersionControl;
 using UnityEngine;
 using UnityEngine.UI;
 using static FTSCore;
@@ -36,6 +38,7 @@ public class SynchronizationHandler : MonoBehaviour
     public GameObject UI_SyncOverview;
     public GameObject UI_PanelFileTransferrunning;
     public GameObject UI_PanelEnd;
+    public GameObject UI_Overwrite;
 
 
 
@@ -44,10 +47,15 @@ public class SynchronizationHandler : MonoBehaviour
     bool wasCalled2 = true;
     bool wasSendPollRequestCalled = false;
 
-    List<string> FileListToSyncronize;
+
+    List<DetailedWayExportFiles> FileListToSyncronize;
+    List<DetailedWayExportFiles> FileListProcessed;
     FTSCore.FileRequest fileInfo;
 
     string currentWayFolderName;
+
+    DataOfExploritoryRouteWalks erw;
+    DetailedWayExport selectedDwe;
 
     // Start is called before the first frame update
     void Start()
@@ -56,6 +64,17 @@ public class SynchronizationHandler : MonoBehaviour
         // Reset overview list
         ResetOverviewLists();
 
+        // Initialise folder
+        ResetSynchronisationFolders();
+
+        // load ways
+        FillOverviewList();
+
+        Debug.Log("SynchronizationHandler - Start() called!");
+    }
+
+    private void ResetSynchronisationFolders()
+    {
         // Check existence of shared folder
         if (!Directory.Exists(FileManagement.persistentDataPath + "/" + FTS._sharedFolder))
         {
@@ -76,11 +95,6 @@ public class SynchronizationHandler : MonoBehaviour
         }
 
         File.Create(FileManagement.persistentDataPath + "/" + FTS._sharedFolder + "/CONNECTIONALLOWED").Close();
-
-        // load ways
-        FillOverviewList();
-
-        Debug.Log("SynchronizationHandler - Start() called!");
     }
 
     // Update is called once per frame
@@ -116,6 +130,9 @@ Bestätige die Synchronisierung auf dem Smartphone.";
         SVGImageSearchPanelAskForConnection.SetActive(true);
 
         FileListToSyncronize = null;
+        FileListProcessed = null;
+
+        ResetSynchronisationFolders();
     }
 
     public void SyncWayFromMobilePhone(int id)
@@ -123,7 +140,8 @@ Bestätige die Synchronisierung auf dem Smartphone.";
         UI_PanelFileTransferrunning.SetActive(true);
 
         List<DetailedWayExport> listOfWays = new List<DetailedWayExport>();
-        FileListToSyncronize = new List<string>();
+        FileListToSyncronize = new List<DetailedWayExportFiles>();
+        FileListProcessed = new List<DetailedWayExportFiles>();
 
         if (File.Exists((FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + "waysForExport.xml")))
         {
@@ -141,65 +159,251 @@ Bestätige die Synchronisierung auf dem Smartphone.";
             ErrorHandlerSingleton.GetErrorHandler().AddNewError("SynchronizationHandler:SyncWayFromMobilePhone(): ", FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + "waysForExport.xml does not exist!");
         }
 
-        DataOfExploritoryRouteWalks erw = InternalDataModelController.GetInternalDataModelController().idm.exploritoryRouteWalks.Find(x => x.Id.Equals(id));
+        erw = InternalDataModelController.GetInternalDataModelController().idm.exploritoryRouteWalks.Find(x => x.Id.Equals(id));
+
+        selectedDwe = listOfWays.Find(x => x.Id.Equals(id));
 
         if (erw == null) //NEW AND INSERT
         {
             erw = new DataOfExploritoryRouteWalks();
-
-            DetailedWayExport dwe = listOfWays.Find(x => x.Id.Equals(id));
-
-            // fill ERW
-            erw.Description = dwe.Description;
-            erw.Destination = dwe.Destination;
-            erw.DestinationType = dwe.DestinationType;
-            erw.Folder = dwe.Folder;
-            erw.Id = dwe.Id;
-            erw.Name = dwe.Name;
-            erw.Start = dwe.Start;
-            erw.StartType = dwe.StartType;
-            erw.Status = dwe.Status;
-            erw.Videos = new List<string>();
-            erw.Photos = new List<string>();
-
-            currentWayFolderName = erw.Folder;
-
-            foreach (var file in dwe.Files)
-            {
-                FileInfo fi = new FileInfo(file.File);
-                FTS.RequestFile(0, fi.Name);
-
-                Debug.Log("Video file extension is: " + fi.Extension);
-                if (fi.Extension.Equals(".mp4"))
-                {
-                    Debug.Log("Video file is: " + fi.Name);
-                    erw.Videos.Add(fi.Name);
-                }
-                else
-                {
-                    erw.Photos.Add(fi.Name);
-                }
-
-                FileListToSyncronize.Add(fi.Name);
-            }
-
-            // get coordinates
-            FileInfo fiPoints = new FileInfo(dwe.Points);
-            FTS.RequestFile(0, fiPoints.Name);
-            FileListToSyncronize.Add(fiPoints.Name);
-
             InternalDataModelController.GetInternalDataModelController().idm.exploritoryRouteWalks.Add(erw);
+            RequestAllFiles();
         }
         else //UPDATE
         {
             currentWayFolderName = erw.Folder;
+
+            UI_Overwrite.SetActive(true);
+            UI_SyncOverview.SetActive(false);
+        }
+
+    }
+
+    private void RequestAllFiles()
+    {
+        DetailedWayExport dwe = selectedDwe;
+
+        // fill ERW
+        erw.Description = dwe.Description;
+        erw.Destination = dwe.Destination;
+        erw.DestinationType = dwe.DestinationType;
+        erw.Folder = dwe.Folder;
+        erw.Id = dwe.Id;
+        erw.Name = dwe.Name;
+        erw.Start = dwe.Start;
+        erw.StartType = dwe.StartType;
+        erw.Status = dwe.Status;
+        erw.Videos = new List<string>();
+        erw.Photos = new List<string>();
+
+        currentWayFolderName = erw.Folder;
+
+        foreach (var file in dwe.Files)
+        {
+            FileListToSyncronize.Add(file);
+        }
+
+        // get coordinates
+        FileInfo fiPoints = new FileInfo(dwe.Points);
+        FTS.RequestFile(0, fiPoints.Name);
+
+        DetailedWayExportFiles dwePoints = new DetailedWayExportFiles();
+        dwePoints.File = fiPoints.Name;
+        FileListProcessed.Add(dwePoints);
+
+        
+
+        InternalDataModelController.GetInternalDataModelController().CheckDirtyFlagsAndSave();
+
+    }
+
+    public void OverwriteRoute()
+    {        
+        Directory.Delete(FileManagement.persistentDataPath + "/" + currentWayFolderName, true);
+        RequestAllFiles();
+    }
+
+    public void CancelSynchronisation()
+    {
+        Debug.Log("CancelSynchronisation: Requesting ENDOFSYNC");
+        FTS.RequestFile(0, "ENDOFSYNC");
+    }
+
+    private void RequestNextFile()
+    {
+        if (FileListToSyncronize.Count > 0) { 
+            DetailedWayExportFiles firstItem = FileListToSyncronize[0];
+            FileInfo fi = new FileInfo(firstItem.File);
+            FTS.RequestFile(0, fi.Name);
+            FileListProcessed.Add(firstItem);
+            FileListToSyncronize.RemoveAt(0);
+        }
+        else
+        {
+            Debug.Log("RequestNextFile: Nothing left; Requesting ENDOFSYNC");
+            FTS.RequestFile(0, "ENDOFSYNC");
+        }
+
+    }
+
+
+    public void ProcessDownloadedData()
+    {
+        // check for base folder
+        if (!Directory.Exists(FileManagement.persistentDataPath + "/" + currentWayFolderName))
+            Directory.CreateDirectory(FileManagement.persistentDataPath + "/" + currentWayFolderName);
+
+        // check for video folder
+        if (!Directory.Exists(FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Video"))
+            Directory.CreateDirectory(FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Video");
+
+        // check for photo folder
+        if (!Directory.Exists(FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Foto"))
+            Directory.CreateDirectory(FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Foto");
+
+        // Reassemble file chunks
+        ReassembleFilesInFolder(FileManagement.persistentDataPath + "/" + FTS._downloadFolder);
+
+        foreach (DetailedWayExportFiles file in FileListProcessed)
+        {
+            FileInfo fi = new FileInfo(file.File);
+            string fileName = fi.Name;
+
+            Debug.Log("ProcessDownloadedData - fileName: " + fileName);
+
+            // get the original name, the chunk belongs to
+            if (fileName.EndsWith(".chunk"))
+            {
+                fileName = Path.GetFileNameWithoutExtension(fileName);
+                string[] fileNameComponents = fileName.Split('.');
+                fileName = String.Join(".", fileNameComponents.Take(fileNameComponents.Length - 1));
+            }            
+
+            if (fileName.EndsWith(".mp4"))
+            {
+                // Check whether we already processed the video
+                if (erw.Videos.Contains(fileName)) continue;
+
+                erw.Videos.Add(fileName);
+                File.Copy(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + fileName,
+                    FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Video/" + fileName);
+
+            }
+            else if (fileName.EndsWith(".jpg"))
+            {
+                erw.Photos.Add(fileName);
+                File.Copy(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + fileName,
+                    FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Foto/" + fileName);
+
+            }
+            else if (fileName.EndsWith("-coordinates.xml"))
+            {
+                ProcessPathpoints(fileName);
+            }
         }
 
         InternalDataModelController.GetInternalDataModelController().CheckDirtyFlagsAndSave();
 
-        
-
     }
+
+
+    private void ProcessPathpoints(string fileName)
+    {
+        try
+        {
+            List<Pathpoint> ppoints = new List<Pathpoint>();
+
+            if (File.Exists(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + fileName))
+            {
+                using (var xmlReader = new XmlTextReader(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + fileName))
+                {
+                    var xmlSerializer = new XmlSerializer(typeof(List<Pathpoint>));
+                    ppoints = (List<Pathpoint>)xmlSerializer.Deserialize(xmlReader);
+                }
+
+                erw.Pathpoints = ppoints;
+
+                Debug.Log("ProcessPathpoints - deserialize erw.Pathpoints: " + erw.Pathpoints[0].Erw_id);
+
+            }
+        }
+        catch (IOException ex)
+        {
+            // todo: call error handler here
+            Debug.LogError("ProcessPathpoints - deserialize coordinates:" + fileName + "Error message: " + ex.Message);
+        }
+    }
+
+
+    private void ReassembleFilesInFolder(string folder)
+    {
+
+        HashSet<string> processedFiles = new HashSet<string>();
+
+        int ChunkSize = 50 * 1024 * 1024;
+        // Get a list of all chunk files in the folder
+        string[] chunkFiles = Directory.GetFiles(folder, "*.chunk");
+
+        foreach (string chunkFile in chunkFiles)
+        {
+            // Get the original file name and chunk count from the chunk file name
+            string fileName = Path.GetFileNameWithoutExtension(chunkFile);
+            string[] fileNameComponents = fileName.Split('.');
+            string originalFileName = String.Join(".", fileNameComponents.Take(fileNameComponents.Length - 1));
+            Debug.Log("filenameComponents:" + fileNameComponents.Last());
+            int chunkCount = int.Parse(fileNameComponents.Last().Split('-').Last());
+            
+            if (!processedFiles.Contains(originalFileName))
+            {
+                // Reassemble the file
+                ReassembleFile(folder, originalFileName, chunkCount, ChunkSize);
+
+                // Add the file name to the processed files set
+                processedFiles.Add(originalFileName);
+            }
+
+        }
+    }
+
+
+    private void ReassembleFile(string folder, string file,  int chunkCount, double ChunkSize)
+    {
+        Debug.Log("filename to ressemble: " + file);
+
+        // Create a buffer for reading chunks
+        byte[] buffer = new byte[(int)ChunkSize];
+
+        // Construct the full path of the output file
+        string outputFile = Path.Combine(folder, file);
+
+        // Create a new FileStream for the output file
+        using (FileStream outputStream = new FileStream(outputFile, FileMode.Create))
+        {
+            for (int i = 0; i < chunkCount; i++)
+            {
+                // Construct the chunk file name
+                string chunkFileName = Path.Combine(folder, $"{new FileInfo(file).Name}.part{i + 1}-{chunkCount}.chunk");
+
+                // Open the chunk file for reading
+                using (FileStream inputStream = new FileStream(chunkFileName, FileMode.Open))
+                {
+                    // Read the chunk into the buffer
+                    int chunkSize = inputStream.Read(buffer, 0, buffer.Length);
+
+                    // Write the chunk to the output file
+                    outputStream.Write(buffer, 0, chunkSize);
+                }
+            }
+        }
+
+        // Delete the chunk files
+        for (int i = 0; i < chunkCount; i++)
+        {
+            string chunkFileName = Path.Combine(folder, $"{new FileInfo(file).Name}.part{i + 1}-{chunkCount}.chunk");
+            File.Delete(chunkFileName);
+        }
+    }
+
 
     public void FillOverviewList()
     {
@@ -339,87 +543,86 @@ Bestätige die Synchronisierung auf dem Smartphone.";
         else if (file._sourceName.Equals("ENDOFSYNC"))
         {
             UI_PanelEnd.SetActive(true);
+            ProcessDownloadedData();
+            return;
         }
-        else if (file._sourceName.EndsWith(".mp4"))
+        else if (file._sourceName.EndsWith(".mp4") ||
+            file._sourceName.EndsWith(".chunk") ||
+            file._sourceName.EndsWith(".jpg") ||
+            file._sourceName.EndsWith("-coordinates.xml"))
         {
-            // check for base folder
-            if (!Directory.Exists(FileManagement.persistentDataPath + "/" + currentWayFolderName))
-                Directory.CreateDirectory(FileManagement.persistentDataPath + "/" + currentWayFolderName);
-
-            // check for video folder
-            if (!Directory.Exists(FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Video"))
-                Directory.CreateDirectory(FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Video");
-
-            // copy video file
-            File.Copy(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + file._sourceName, FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Video/" + file._sourceName);
-
-            Debug.Log("OnFileDownload - copy video file:" + file._sourceName);
+            RequestNextFile();
         }
-        else if (file._sourceName.EndsWith(".jpg"))
-        {
-            // check for base folder
-            if (!Directory.Exists(FileManagement.persistentDataPath + "/" + currentWayFolderName))
-                Directory.CreateDirectory(FileManagement.persistentDataPath + "/" + currentWayFolderName);
 
-            // check for photo folder
-            if (!Directory.Exists(FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Foto"))
-                Directory.CreateDirectory(FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Foto");
-
-            // copy photo file
-            File.Copy(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + file._sourceName, FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Foto/" + file._sourceName);
-
-            Debug.Log("OnFileDownload - copy photo file:" + file._sourceName);
-        }
-        else if (file._sourceName.EndsWith("-coordinates.xml"))
-        {
-            try
-            {
-                Debug.Log("OnFileDownload - deserialize coordinates:" + file._sourceName);
-
-                List<Pathpoint> ppoints = new List<Pathpoint>();
-
-                if (File.Exists(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + file._sourceName))
-                {
-                    using (var xmlReader = new XmlTextReader(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + file._sourceName))
-                    {
-                        var xmlSerializer = new XmlSerializer(typeof(List<Pathpoint>));
-                        ppoints = (List<Pathpoint>)xmlSerializer.Deserialize(xmlReader);
-                    }
-
-                    InternalDataModel.DataOfExploritoryRouteWalks erw = InternalDataModelController.GetInternalDataModelController().idm.exploritoryRouteWalks.FindLast(x => x.Id == ppoints[0].Erw_id);
-
-                    erw.Pathpoints = ppoints;
-
-
-                    Debug.Log("OnFileDownload - deserialize erw.Pathpoints:" + erw.Pathpoints[0].Erw_id);
-
-                    InternalDataModelController.GetInternalDataModelController().CheckDirtyFlagsAndSave();
-
-                }
-            }
-            catch (IOException ex)
-            {
-                // todo: call error handler here
-                Debug.LogError("OnFileDownload - deserialize coordinates:" + file._sourceName + "Error message: " + ex.Message);
-            }
-        }
-        //else
+        //else if (file._sourceName.EndsWith(".mp4") || file._sourceName.EndsWith(".chunk"))
         //{
-            Debug.Log("CheckForMetadataFile: " + FileListToSyncronize.Count + " = FileListToSyncronize");
+        //    // check for base folder
+        //    if (!Directory.Exists(FileManagement.persistentDataPath + "/" + currentWayFolderName))
+        //        Directory.CreateDirectory(FileManagement.persistentDataPath + "/" + currentWayFolderName);
 
-            if (FileListToSyncronize != null)
-            {
+        //    // check for video folder
+        //    if (!Directory.Exists(FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Video"))
+        //        Directory.CreateDirectory(FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Video");
 
-                if (FileListToSyncronize.Contains(file._sourceName))
-                    FileListToSyncronize.Remove(file._sourceName);
+        //    // copy video file
+        //    File.Copy(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + file._sourceName, FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Video/" + file._sourceName);
 
-                if (FileListToSyncronize.Count == 0)
-                {
-                    UI_PanelEnd.SetActive(true);
-                    FTS.RequestFile(0, "ENDOFSYNC");
-                }
-            }
+        //    Debug.Log("OnFileDownload - copy video file:" + file._sourceName);
+
+        //    RequestNextFile();
         //}
+        //else if (file._sourceName.EndsWith(".jpg"))
+        //{
+        //    // check for base folder
+        //    if (!Directory.Exists(FileManagement.persistentDataPath + "/" + currentWayFolderName))
+        //        Directory.CreateDirectory(FileManagement.persistentDataPath + "/" + currentWayFolderName);
+
+        //    // check for photo folder
+        //    if (!Directory.Exists(FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Foto"))
+        //        Directory.CreateDirectory(FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Foto");
+
+        //    // copy photo file
+        //    File.Copy(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + file._sourceName, FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Foto/" + file._sourceName);
+
+        //    Debug.Log("OnFileDownload - copy photo file:" + file._sourceName);
+
+        //    RequestNextFile();
+        //}
+        //else if (file._sourceName.EndsWith("-coordinates.xml"))
+        //{
+        //    try
+        //    {
+        //        Debug.Log("OnFileDownload - deserialize coordinates:" + file._sourceName);
+
+        //        List<Pathpoint> ppoints = new List<Pathpoint>();
+
+        //        if (File.Exists(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + file._sourceName))
+        //        {
+        //            using (var xmlReader = new XmlTextReader(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + file._sourceName))
+        //            {
+        //                var xmlSerializer = new XmlSerializer(typeof(List<Pathpoint>));
+        //                ppoints = (List<Pathpoint>)xmlSerializer.Deserialize(xmlReader);
+        //            }
+
+        //            erw = InternalDataModelController.GetInternalDataModelController().idm.exploritoryRouteWalks.FindLast(x => x.Id == ppoints[0].Erw_id);
+
+        //            erw.Pathpoints = ppoints;
+
+
+        //            Debug.Log("OnFileDownload - deserialize erw.Pathpoints:" + erw.Pathpoints[0].Erw_id);
+
+        //           // InternalDataModelController.GetInternalDataModelController().CheckDirtyFlagsAndSave();
+
+        //        }
+        //    }
+        //    catch (IOException ex)
+        //    {
+        //        // todo: call error handler here
+        //        Debug.LogError("OnFileDownload - deserialize coordinates:" + file._sourceName + "Error message: " + ex.Message);
+        //    }
+        //}
+
+
     }
 
     public class DetailedWayExport
