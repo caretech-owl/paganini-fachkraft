@@ -8,7 +8,7 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Serialization;
 using TMPro;
-using UnityEditorInternal.VersionControl;
+//using UnityEditorInternal.VersionControl;
 using UnityEngine;
 using UnityEngine.UI;
 using static FTSCore;
@@ -95,6 +95,7 @@ public class SynchronizationHandler : MonoBehaviour
         }
 
         File.Create(FileManagement.persistentDataPath + "/" + FTS._sharedFolder + "/CONNECTIONALLOWED").Close();
+        File.Create(FileManagement.persistentDataPath + "/" + FTS._sharedFolder + "/REQUEST-ERW-READY").Close();
     }
 
     // Update is called once per frame
@@ -137,27 +138,10 @@ Bestätige die Synchronisierung auf dem Smartphone.";
 
     public void SyncWayFromMobilePhone(int id)
     {
+ 
         UI_PanelFileTransferrunning.SetActive(true);
 
-        List<DetailedWayExport> listOfWays = new List<DetailedWayExport>();
-        FileListToSyncronize = new List<DetailedWayExportFiles>();
-        FileListProcessed = new List<DetailedWayExportFiles>();
-
-        if (File.Exists((FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + "waysForExport.xml")))
-        {
-            Debug.Log(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + "waysForExport.xml exist!");
-
-            using (var xmlReader = new XmlTextReader(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + "waysForExport.xml"))
-            {
-                var xmlSerializer = new XmlSerializer(typeof(List<DetailedWayExport>));
-                listOfWays = (List<DetailedWayExport>)xmlSerializer.Deserialize(xmlReader);
-            }
-        }
-        else
-        {
-            Debug.LogWarning(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + "waysForExport.xml does not exist!");
-            ErrorHandlerSingleton.GetErrorHandler().AddNewError("SynchronizationHandler:SyncWayFromMobilePhone(): ", FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + "waysForExport.xml does not exist!");
-        }
+        List<DetailedWayExport> listOfWays = ParseDWEFile("waysForExport.xml");        
 
         erw = InternalDataModelController.GetInternalDataModelController().idm.exploritoryRouteWalks.Find(x => x.Id.Equals(id));
 
@@ -167,7 +151,7 @@ Bestätige die Synchronisierung auf dem Smartphone.";
         {
             erw = new DataOfExploritoryRouteWalks();
             InternalDataModelController.GetInternalDataModelController().idm.exploritoryRouteWalks.Add(erw);
-            RequestAllFiles();
+            RequestSelectedERW();
         }
         else //UPDATE
         {
@@ -179,9 +163,44 @@ Bestätige die Synchronisierung auf dem Smartphone.";
 
     }
 
-    private void RequestAllFiles()
+    private List<DetailedWayExport> ParseDWEFile(string fileName)
     {
-        DetailedWayExport dwe = selectedDwe;
+        List<DetailedWayExport> listOfWays = new List<DetailedWayExport>();
+
+        if (File.Exists((FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + fileName)))
+        {
+            Debug.Log(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + fileName + " exist!");
+
+            using (var xmlReader = new XmlTextReader(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + fileName))
+            {
+                var xmlSerializer = new XmlSerializer(typeof(List<DetailedWayExport>));
+                listOfWays = (List<DetailedWayExport>)xmlSerializer.Deserialize(xmlReader);
+            }
+        }
+        else
+        {
+            Debug.LogWarning(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + fileName +  " does not exist!");
+            ErrorHandlerSingleton.GetErrorHandler().AddNewError("SynchronizationHandler:ParseDWEFile(): ", FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + fileName + " does not exist!");
+        }
+
+        return listOfWays;
+    }
+
+
+    private void RequestSelectedERW()
+    {
+        string msg = $"REQUEST-ERW-{selectedDwe.Id}";
+        FTS.RequestFile(0, msg);
+    }
+
+    private void PrepareFilesToDownload()
+    {
+
+        FileListToSyncronize = new List<DetailedWayExportFiles>();
+        FileListProcessed = new List<DetailedWayExportFiles>();
+
+        List<DetailedWayExport> list = ParseDWEFile($"{selectedDwe.Name}-manifest.xml");
+        DetailedWayExport dwe = list.First();
 
         // fill ERW
         erw.Description = dwe.Description;
@@ -213,14 +232,14 @@ Bestätige die Synchronisierung auf dem Smartphone.";
 
         
 
-        InternalDataModelController.GetInternalDataModelController().CheckDirtyFlagsAndSave();
+       // InternalDataModelController.GetInternalDataModelController().CheckDirtyFlagsAndSave();
 
     }
 
     public void OverwriteRoute()
     {        
         Directory.Delete(FileManagement.persistentDataPath + "/" + currentWayFolderName, true);
-        RequestAllFiles();
+        RequestSelectedERW();
     }
 
     public void CancelSynchronisation()
@@ -452,6 +471,8 @@ Bestätige die Synchronisierung auf dem Smartphone.";
     {
         Debug.Log("OnFileUpload:fileUpload: " + fileUpload.GetName());
 
+        // The phone app accepted the connection
+        // so we can proceed downloading the list of ways-ERW
         if (fileUpload.GetName().Equals("CONNECTIONALLOWED"))
         {
             FTS.RequestFile(0, "waysForExport.xml");
@@ -459,6 +480,13 @@ Bestätige die Synchronisierung auf dem Smartphone.";
             TextOverviewPanelAskForConnection.GetComponent<TMP_Text>().text = "Die Geräte sind verbunden.";
             SVGImageSearchPanelAskForConnection.SetActive(false);
 
+        }
+        // The ERW manifest we requested is ready to be downloaded
+        // This includes the files to be downloaded
+        else if (fileUpload.GetName().Equals("REQUEST-ERW-READY"))
+        {            
+            string msg = $"{selectedDwe.Name}-manifest.xml";
+            FTS.RequestFile(0, msg);
         }
     }
 
@@ -544,7 +572,17 @@ Bestätige die Synchronisierung auf dem Smartphone.";
         {
             UI_PanelEnd.SetActive(true);
             ProcessDownloadedData();
-            return;
+        }
+        else if (file._sourceName.StartsWith("REQUEST-ERW-"))
+        {
+            //RequestAllFiles();
+            // We don't do anything. We wait for the client to
+            // prepare the ERW data, and inform us via a
+            // a request (REQUEST-ERW-READY)
+        }
+        else if (file._sourceName.EndsWith("-manifest.xml"))
+        {
+            PrepareFilesToDownload();            
         }
         else if (file._sourceName.EndsWith(".mp4") ||
             file._sourceName.EndsWith(".chunk") ||
@@ -553,75 +591,6 @@ Bestätige die Synchronisierung auf dem Smartphone.";
         {
             RequestNextFile();
         }
-
-        //else if (file._sourceName.EndsWith(".mp4") || file._sourceName.EndsWith(".chunk"))
-        //{
-        //    // check for base folder
-        //    if (!Directory.Exists(FileManagement.persistentDataPath + "/" + currentWayFolderName))
-        //        Directory.CreateDirectory(FileManagement.persistentDataPath + "/" + currentWayFolderName);
-
-        //    // check for video folder
-        //    if (!Directory.Exists(FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Video"))
-        //        Directory.CreateDirectory(FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Video");
-
-        //    // copy video file
-        //    File.Copy(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + file._sourceName, FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Video/" + file._sourceName);
-
-        //    Debug.Log("OnFileDownload - copy video file:" + file._sourceName);
-
-        //    RequestNextFile();
-        //}
-        //else if (file._sourceName.EndsWith(".jpg"))
-        //{
-        //    // check for base folder
-        //    if (!Directory.Exists(FileManagement.persistentDataPath + "/" + currentWayFolderName))
-        //        Directory.CreateDirectory(FileManagement.persistentDataPath + "/" + currentWayFolderName);
-
-        //    // check for photo folder
-        //    if (!Directory.Exists(FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Foto"))
-        //        Directory.CreateDirectory(FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Foto");
-
-        //    // copy photo file
-        //    File.Copy(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + file._sourceName, FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Foto/" + file._sourceName);
-
-        //    Debug.Log("OnFileDownload - copy photo file:" + file._sourceName);
-
-        //    RequestNextFile();
-        //}
-        //else if (file._sourceName.EndsWith("-coordinates.xml"))
-        //{
-        //    try
-        //    {
-        //        Debug.Log("OnFileDownload - deserialize coordinates:" + file._sourceName);
-
-        //        List<Pathpoint> ppoints = new List<Pathpoint>();
-
-        //        if (File.Exists(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + file._sourceName))
-        //        {
-        //            using (var xmlReader = new XmlTextReader(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + file._sourceName))
-        //            {
-        //                var xmlSerializer = new XmlSerializer(typeof(List<Pathpoint>));
-        //                ppoints = (List<Pathpoint>)xmlSerializer.Deserialize(xmlReader);
-        //            }
-
-        //            erw = InternalDataModelController.GetInternalDataModelController().idm.exploritoryRouteWalks.FindLast(x => x.Id == ppoints[0].Erw_id);
-
-        //            erw.Pathpoints = ppoints;
-
-
-        //            Debug.Log("OnFileDownload - deserialize erw.Pathpoints:" + erw.Pathpoints[0].Erw_id);
-
-        //           // InternalDataModelController.GetInternalDataModelController().CheckDirtyFlagsAndSave();
-
-        //        }
-        //    }
-        //    catch (IOException ex)
-        //    {
-        //        // todo: call error handler here
-        //        Debug.LogError("OnFileDownload - deserialize coordinates:" + file._sourceName + "Error message: " + ex.Message);
-        //    }
-        //}
-
 
     }
 
