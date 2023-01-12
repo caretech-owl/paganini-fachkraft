@@ -103,6 +103,11 @@ public class SynchronizationHandler : MonoBehaviour
         FillOverviewList();
 
         Log("SynchronizationHandler - Start() called!");
+
+        // TODO: The social worker profile should be
+        // available in the environment. This should
+        // be the name of the logged in user
+        FTS._deviceName = "Social Worker";
     }
 
 
