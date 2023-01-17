@@ -39,6 +39,7 @@ public class SynchronizationHandler : MonoBehaviour
     public GameObject UI_PanelEnd;
     public GameObject UI_Overwrite;
     public GameObject UI_PanelError;
+    public GameObject UI_PanelDenied;
 
     public TMPro.TMP_Text TextLog;
 
@@ -107,7 +108,7 @@ public class SynchronizationHandler : MonoBehaviour
         // TODO: The social worker profile should be
         // available in the environment. This should
         // be the name of the logged in user
-        FTS._deviceName = "Social Worker";
+        FTS._deviceName = "Social Worker,SWR";
     }
 
 
@@ -140,6 +141,7 @@ public class SynchronizationHandler : MonoBehaviour
         UI_PanelEnd.SetActive(false);
         UI_Overwrite.SetActive(false);
         UI_PanelError.SetActive(false);
+        UI_PanelDenied.SetActive(false);
 
         TextOverviewPanelAskForConnection.GetComponent<TMP_Text>().text = @"Verbindung wird aufgebaut ...
 
@@ -156,6 +158,10 @@ Bestätige die Synchronisierung auf dem Smartphone.";
         CurrentStatus = SyncStatus.LISTEN;
 
         logs = new List<string>();
+
+        // We prevent the screen from dimming out while the process is active        
+        Screen.sleepTimeout = SleepTimeout.NeverSleep;
+
     }
 
     /// <summary>
@@ -243,6 +249,9 @@ Bestätige die Synchronisierung auf dem Smartphone.";
     /// </summary>
     public void FillOverviewList()
     {
+        // Restore screen to dimming default
+        Screen.sleepTimeout = AppState.screenSleepTimeout;
+
         // Reset overview list
         ResetOverviewLists();
 
@@ -495,7 +504,9 @@ Bestätige die Synchronisierung auf dem Smartphone.";
         }
 
         File.Create(FileManagement.persistentDataPath + "/" + FTS._sharedFolder + "/CONNECTIONALLOWED").Close();
+        File.Create(FileManagement.persistentDataPath + "/" + FTS._sharedFolder + "/CONNECTIONDENIED").Close();
         File.Create(FileManagement.persistentDataPath + "/" + FTS._sharedFolder + "/REQUEST-ERW-READY").Close();
+        File.Create(FileManagement.persistentDataPath + "/" + FTS._sharedFolder + "/CANCELSYNC").Close();
     }
 
     /// <summary>
@@ -509,6 +520,7 @@ Bestätige die Synchronisierung auf dem Smartphone.";
         FTS.ResetDeviceList();
         isCurrentDeviceConnected = false;
         currentDeviceName = null;
+        wasSendPollRequestCalled = false;
 
     }
 
@@ -572,7 +584,7 @@ Bestätige die Synchronisierung auf dem Smartphone.";
     }
 
     /// <summary>
-    /// FTS event listener for file uploading (On File Download ()). This is
+    /// FTS event listener for file uploading (On File Upload ()). This is
     /// a callback that informs us of incoming requests from the connected device.
     /// </summary>
     /// <param name="fileUpload">FileUpload representing incoming request. </param>
@@ -598,6 +610,22 @@ Bestätige die Synchronisierung auf dem Smartphone.";
             SVGImageSearchPanelAskForConnection.SetActive(false);
 
             CurrentStatus = SyncStatus.WAIT_ERW_LIST;
+
+        }
+        else if (fileUpload.GetName().Equals("CONNECTIONDENIED"))
+        {
+
+            // Check that the peer is sending the message according to
+            // the state machine of the protocol
+            if (CurrentStatus != SyncStatus.WAIT_CONNECT_RESPONSE)
+            {
+                LogError($"CONNECTIONALLOWED: Process status is {CurrentStatus.ToString()} when WAIT_CONNECT_RESPONSE was expected ");
+            }
+            UI_PanelAskForConnection.SetActive(false);
+            UI_PanelDenied.SetActive(true);
+
+            CurrentStatus = SyncStatus.CANCEL; // DENIED
+            ResetOrDisposeProcessProtocol();
 
         }
         // The ERW manifest we requested is ready to be downloaded
@@ -626,7 +654,7 @@ Bestätige die Synchronisierung auf dem Smartphone.";
     /// currently connected devices. </param>
     public void OnUpdateDevicesList(List<FTSCore.RemoteDevice> devices)
     {
-        List<string> list = FTS.GetDeviceNamesList();
+        List<string> list = GetPhoneNamesList();
 
         isCurrentDeviceConnected = true;
         connectionAttemps = 0;
@@ -638,8 +666,9 @@ Bestätige die Synchronisierung auf dem Smartphone.";
 
             if (list.Count > 0)
             {
-                SmartphoneFoundPrefab.GetComponentInChildren<TMP_Text>().text = list[0];
-                SmartphoneAskForConnectionText.GetComponent<TMP_Text>().text = list[0];
+                string [] comp = list[0].Split(',');
+                SmartphoneFoundPrefab.GetComponentInChildren<TMP_Text>().text = comp[0];
+                SmartphoneAskForConnectionText.GetComponent<TMP_Text>().text = comp[0];
                 UI_PanelFound.SetActive(true);
 
                 currentDeviceName = list[0];
@@ -790,13 +819,35 @@ Bestätige die Synchronisierung auf dem Smartphone.";
     }
 
     /// <summary>
+    ///  Obtains the list of connected phones, from the dynamic list of
+    ///  FTS connected devices.
+    /// </summary>
+    /// <returns>List of connected phone apps</returns>
+    private List<string> GetPhoneNamesList()
+    {
+        var list = FTS.GetDeviceNamesList();
+        var phones = new List<string>();
+
+        foreach(var device in list){
+            // Log("Device: "+ device);
+            string [] comp = device.Split(','); // name,type
+            if (comp.Length == 2 && comp[1] == "USR"){
+                phones.Add(device);
+            }
+
+        }
+        return phones;
+    }    
+
+
+    /// <summary>
     ///  Checks whether the remote device is reponsive (connected). This is based
     ///  on delayed polling requests, as FTS does not have a primitive for
     ///  checking the status of a remote device.
     /// </summary>
     private IEnumerator CheckDeviceConnection()
     {
-        while (isCurrentDeviceConnected || connectionAttemps < 2)
+        while (isCurrentDeviceConnected || connectionAttemps < 3)
         {
             int device = GetCurrentDeviceIndex();
             string deviceIp = FTS.GetDevice(device).ip;

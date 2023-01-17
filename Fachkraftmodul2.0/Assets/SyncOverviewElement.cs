@@ -91,6 +91,6 @@ public class SyncOverviewElement : MonoBehaviour
         //}
 
         InternalDataModelController.GetInternalDataModelController().idm.currentIdOfWay = Id;
-        SceneController.GetSceneController().LoadScene("Review");
+        SceneController.GetSceneController().LoadScene("ReviewLab");
     }
 }
