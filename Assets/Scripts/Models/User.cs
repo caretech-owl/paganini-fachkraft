@@ -1,5 +1,5 @@
 using System.Collections.Generic;
-using SQLite;
+using SQLite4Unity3d;
 
 public class User
 {

@@ -29,9 +29,9 @@ public class LoginController : MonoBehaviour
         var list = AuthToken.GetAll<AuthToken>();
 
         AuthToken authToken = null;
-        while (list.MoveNext())
+        foreach (var token in list)
         {
-            authToken = list.Current;
+            authToken = token;
             break;
         }
 

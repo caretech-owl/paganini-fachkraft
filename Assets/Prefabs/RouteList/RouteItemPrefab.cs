@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
@@ -5,8 +6,9 @@ using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.Events;
 
+
 [System.Serializable]
-public class RouteItemEvent : UnityEvent<Route>
+public class RouteItemEvent : UnityEvent<Way,Route>
 {
 }
 
@@ -46,10 +48,12 @@ public class RouteItemPrefab : MonoBehaviour
 
     public void FillWayRoute(Way way, Route route)
     {
+        LandmarkIcon.LandmarkType startIcon = Enum.Parse<LandmarkIcon.LandmarkType>(way.StartType);
+        LandmarkIcon.LandmarkType destIcon = Enum.Parse<LandmarkIcon.LandmarkType>(way.DestinationType);
         TitleCell.FillCell(way.Name);
-        StartCell.FillCell(way.Start);
-        DestinatitonCell.FillCell(way.Destination);
-        DateCell.FillCell(route.Date.ToString());
+        StartCell.FillCell(way.Start, startIcon);
+        DestinatitonCell.FillCell(way.Destination, destIcon);
+        DateCell.FillCell(route.Date.ToString("dd/MM/yyyy HH:mm"));
         StatusCell.FillCell(route.Status.ToString());
 
         NewFlag.SetActive(!route.FromAPI);
@@ -64,7 +68,7 @@ public class RouteItemPrefab : MonoBehaviour
     {
         if (OnSelected != null)
         {
-            OnSelected.Invoke(RouteItem);
+            OnSelected.Invoke(WayItem, RouteItem);
         }
 
         Debug.Log("Item RouteItem " + RouteItem.Id);

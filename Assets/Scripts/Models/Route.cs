@@ -1,6 +1,7 @@
 using System.Collections.Generic;
-using SQLite;
-using SQLiteNetExtensions.Attributes;
+using System.Linq;
+using SQLite4Unity3d;
+//using SQLiteNetExtensions.Attributes;
 
 
 public class Route : BaseModel
@@ -12,11 +13,13 @@ public class Route : BaseModel
     public System.DateTime Date { set; get; }
     public int Pin { set; get; }
     public int Status { set; get; }
+    public string LocalVideoFilename { set; get; }
 
-    [Indexed]
+    //[Indexed]
     public int WayId { get; set; }
 
-    [OneToMany(CascadeOperations = CascadeOperation.All)]
+    //[OneToMany(CascadeOperations = CascadeOperation.All)]
+    [Ignore]
     public List<Pathpoint> Pathpoints { get; set; }
 
     public override string ToString()
@@ -57,4 +60,18 @@ public class Route : BaseModel
         };
         return erw;
     }
+
+    public static List<Route> GetRouteListByWay(int wayId)
+    {
+        List<Route> routes;
+
+        var conn = DBConnector.Instance.GetConnection();
+
+        // Query all Ways and their related Routes using sqlite-net's built-in mapping functionality
+
+        routes = conn.Table<Route>().Where(r => r.WayId == wayId).ToList();
+
+        return routes;
+    }
+    
 }

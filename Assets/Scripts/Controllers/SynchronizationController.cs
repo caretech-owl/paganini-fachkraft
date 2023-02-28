@@ -474,6 +474,7 @@ Bestätige die Synchronisierung auf dem Smartphone.";
         w.Destination = erw.Destination;
         w.DestinationType = erw.DestinationType;
         w.FromAPI = erw.FromAPI;
+        w.IsDirty = true;
         w.Insert();
 
         int routeId = w.Id * 10000 + System.DateTime.UtcNow.Millisecond;
@@ -484,12 +485,15 @@ Bestätige die Synchronisierung auf dem Smartphone.";
         r.Date = erw.RecordingDate;
         r.Status = (Int32)Route.RouteStatus.New;
         r.WayId = w.Id;
+        r.LocalVideoFilename = currentWayFolderName + "/Video/" + erw.Videos[0];
+        r.IsDirty = true;
         r.Insert();
 
         foreach (var pp in erw.Pathpoints)
         {
             pp.Id = - routeId++;
             pp.RouteId = r.Id;
+            pp.IsDirty = true;
             pp.Insert();
 
             if (pp.PhotoFilename != null)
@@ -500,6 +504,7 @@ Bestätige die Synchronisierung auf dem Smartphone.";
                 ppf.Id = pp.Id;
                 ppf.PathpointId = pp.Id;
                 ppf.Photo = File.ReadAllBytes(filename);
+                ppf.IsDirty = true;
                 ppf.Insert();
             }
 

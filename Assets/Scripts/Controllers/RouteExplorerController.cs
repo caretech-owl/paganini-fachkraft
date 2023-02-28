@@ -27,14 +27,33 @@ public class RouteExplorerController : MonoBehaviour
     }
 
 
+    /// <summary>
+    /// Displays the list of routes
+    /// </summary>
     public void DisplayRoutes()
     {
-        var list = Way.GetAllWaysAndRoutes();
+        var list = Way.GetWayListByUser(AppState.CurrentUser.Id);
         foreach (var way in list)
         {
+            way.Routes = Route.GetRouteListByWay(way.Id);
             RouteList.AddItem(way);
         }
     }
+
+    /// <summary>
+    /// This function processes the selected route, and opens it in the editor
+    /// scene.
+    /// </summary>
+    /// <param name="route">The selected route.</param>
+    public void LoadRoute(Way way, Route route)
+    {
+        AppState.CurrentWay = way;
+        AppState.CurrentRoute = route;
+        SceneSwitcher.LoadRouteEditor();
+    }
+
+
+
 
     /// <summary>
     /// This function is called when the GetAll method of the User class in the PaganiniRestAPI namespace succeeds.
@@ -42,18 +61,8 @@ public class RouteExplorerController : MonoBehaviour
     /// <param name="users">The list of users returned by the API.</param>
     private void GetWaySucceeded(WayAPIList list)
     {
-        //List<Way> list = Way.ToModelList<WayAPI, Way>(ways.ways, api => new Way(api));
-
-        //foreach (var item in list)
-        //{
-        //    RouteList.AddItem(item);
-        //}
-
-        //Debug.Log("Ways:" + list.Count);
-
         UpdateLocalRoutes(list.ways);
         DisplayRoutes();
-
     }
 
     /// <summary>
@@ -65,16 +74,6 @@ public class RouteExplorerController : MonoBehaviour
 
     }
 
-    /// <summary>
-    /// This function processes the selected user, sets the current user in the user session, and load the next
-    /// scene.
-    /// </summary>
-    /// <param name="user">The selected user.</param>
-    public void LoadRoute(Way way)
-    {
-        //AppState.CurrentUser = user;
-        //SceneSwitcher.LoadRouteExplorer();
-    }
 
 
 
@@ -90,6 +89,7 @@ public class RouteExplorerController : MonoBehaviour
         {
             // Insert new way
             Way w = new Way(wres);
+            w.UserId = AppState.CurrentUser.Id;
             w.Insert();
 
             if (wres.routes != null)

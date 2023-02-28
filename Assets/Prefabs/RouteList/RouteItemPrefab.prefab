@@ -754,6 +754,10 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 4516020428826031144, guid: 26652f0ab6bac4d04ae51a25b32197a1, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 4611340190051584249, guid: 26652f0ab6bac4d04ae51a25b32197a1, type: 3}
       propertyPath: m_Name
       value: StatusRouteItemCell
@@ -876,6 +880,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 3161306590434821789}
     m_Modifications:
     - target: {fileID: 1198823077422134362, guid: 26652f0ab6bac4d04ae51a25b32197a1, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4516020428826031144, guid: 26652f0ab6bac4d04ae51a25b32197a1, type: 3}
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
@@ -1005,6 +1013,10 @@ PrefabInstance:
     m_TransformParent: {fileID: 3161306590434821789}
     m_Modifications:
     - target: {fileID: 1198823077422134362, guid: 26652f0ab6bac4d04ae51a25b32197a1, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4516020428826031144, guid: 26652f0ab6bac4d04ae51a25b32197a1, type: 3}
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}

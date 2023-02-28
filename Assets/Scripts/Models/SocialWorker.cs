@@ -1,4 +1,4 @@
-using SQLite;
+using SQLite4Unity3d;
 
 public class SocialWorker : BaseModel
 {

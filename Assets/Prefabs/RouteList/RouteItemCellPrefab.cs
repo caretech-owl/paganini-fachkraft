@@ -8,7 +8,7 @@ public class RouteItemCellPrefab : MonoBehaviour
 {
     public GameObject CellStatus;
     public TMPro.TMP_Text CellText;
-    public SVGImage Icon;
+    public LandmarkIcon Icon;
 
 
 
@@ -20,10 +20,10 @@ public class RouteItemCellPrefab : MonoBehaviour
 
     }
 
-    public void FillCell(string text, Sprite icon)
+    public void FillCell(string text, LandmarkIcon.LandmarkType iconType)
     {
         SetCellText(text);
-        SetCellIcon(icon);
+        SetCellIcon(iconType);
     }
 
     public void FillCell(string text, RouteStatus status )
@@ -42,9 +42,9 @@ public class RouteItemCellPrefab : MonoBehaviour
         //CellStatus.SetActive(status);
     }
 
-    public void SetCellIcon(Sprite icon)
+    public void SetCellIcon(LandmarkIcon.LandmarkType iconType)
     {
-        Icon.sprite = icon;
+        Icon.SelectedLandmarkType = iconType;
     }
 
 

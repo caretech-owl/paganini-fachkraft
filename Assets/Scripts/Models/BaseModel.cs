@@ -21,10 +21,10 @@ public class BaseModel
         conn.InsertOrReplace(this);        
     }
 
-    public static IEnumerator<T> GetAll<T>() where T : BaseModel, new()
+    public static List<T> GetAll<T>() where T : BaseModel, new()
     {
         var conn = DBConnector.Instance.GetConnection();
-        return conn.Table<T>().GetEnumerator();
+        return conn.Table<T>().ToList();
     }
     
     public static T Get<T>(object pk) where T : BaseModel, new()

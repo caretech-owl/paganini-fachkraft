@@ -44,7 +44,6 @@ public class UserListPrefab : MonoBehaviour
 
     public void AddItem(User u)
     {
-
         var neu = Instantiate(ItemPrefab, Content.transform);
 
         UserItemPrefab item = neu.GetComponent<UserItemPrefab>();

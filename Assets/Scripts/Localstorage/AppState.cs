@@ -10,5 +10,7 @@ public class AppState
     public static int ScreenSleepTimeout = Screen.sleepTimeout;
 
     public static User CurrentUser = null;
+    public static Route CurrentRoute = null;
+    public static Way CurrentWay = null;
 
 }

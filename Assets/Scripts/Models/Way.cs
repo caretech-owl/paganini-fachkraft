@@ -1,7 +1,8 @@
 using System.Collections.Generic;
-using SQLite;
-using SQLiteNetExtensions.Attributes;
-using SQLiteNetExtensions.Extensions;
+using System.Linq;
+using SQLite4Unity3d;
+//using SQLiteNetExtensions.Attributes;
+//using SQLiteNetExtensions.Extensions;
 
 public class Way : BaseModel
 {
@@ -15,8 +16,10 @@ public class Way : BaseModel
     public string Name { set; get; }
     public string Description { set; get; }
     public int Status { set; get; }
+    public int UserId { set; get; }
 
-    [OneToMany(CascadeOperations = CascadeOperation.All)]
+    //[OneToMany(CascadeOperations = CascadeOperation.All)]
+    [Ignore]
     public List<Route> Routes { get; set; }
 
     public enum WayStatus
@@ -72,15 +75,28 @@ public class Way : BaseModel
         return way;
     }
 
-    public static List<Way> GetAllWaysAndRoutes()
+    //public static List<Way> GetAllWaysAndRoutes()
+    //{
+    //    List<Way> ways;
+
+    //    var conn = DBConnector.Instance.GetConnection();
+
+    //    // Query all Ways and their related Routes using sqlite-net's built-in mapping functionality
+    //     ways = conn.GetAllWithChildren<Way>(recursive: true);
+
+
+    //    return ways;
+    //}
+
+    public static List<Way> GetWayListByUser(int userId)
     {
         List<Way> ways;
 
         var conn = DBConnector.Instance.GetConnection();
 
         // Query all Ways and their related Routes using sqlite-net's built-in mapping functionality
-         ways = conn.GetAllWithChildren<Way>(recursive: true);
 
+        ways = conn.Table<Way>().Where(w => w.UserId == userId).ToList();
 
         return ways;
     }
