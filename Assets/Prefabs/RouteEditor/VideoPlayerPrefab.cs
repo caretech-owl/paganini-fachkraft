@@ -12,6 +12,7 @@ public class VideoPlayerPrefab : MonoBehaviour
     public Button PlayButton;
 
     private string VideoUrl;
+    private double VideoTimestamp;
 
     // Start is called before the first frame update
     void Start()
@@ -27,9 +28,12 @@ public class VideoPlayerPrefab : MonoBehaviour
 
     public void SkipToVideoFrame(double timestamp)
     {
-        VideoManager.time = timestamp;
+        VideoManager.Play();
         VideoManager.Pause();
+        VideoManager.time = timestamp;
         PlayButton.gameObject.SetActive(true);
+
+        Debug.Log("Timestamp: " + timestamp);
     }
 
     public void LoadVideo(string url)
@@ -37,10 +41,23 @@ public class VideoPlayerPrefab : MonoBehaviour
         if (VideoManager != null)
         {
             VideoManager.url = url;
-            VideoManager.Play();
-            SkipToVideoFrame(0);
+            if (isActiveAndEnabled)
+            {
+                SkipToVideoFrame(0);
+            }            
         }
         VideoUrl = url;
+    }
+
+    public void PauseVideo()
+    {
+        VideoTimestamp = VideoManager.time;
+        VideoManager.Pause();
+    }
+
+    public void ResumeVideo()
+    {
+        SkipToVideoFrame(VideoTimestamp);
     }
 
 
