@@ -5,8 +5,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.Video;
-using static UnityEditor.Progress;
 
 
 public class RouteEditorController : MonoBehaviour
@@ -38,18 +36,48 @@ public class RouteEditorController : MonoBehaviour
     {
         LoadRouteData();
 
-        //LoadMap(19);
+        LoadMap(19);
 
         LoadPathpointList();
 
         LoadVideo();
     }
 
+    /**********************
+     *  Public UI events (and utilities)  *
+     **********************/
 
+    /// <summary>
+    /// Moves the VideoPlayback to the pathpoint timestamp, so as to
+    /// see the video around the current pathpoint
+    /// </summary>
+    /// <param name="pathpoint">Pathpoint to synchronize with</param> 
     public void SyncVideoToPathpoint(Pathpoint pathpoint)
     {
         double skipTime = (pathpoint.Timestamp - PathpointList[0].Timestamp) / 1000;
         VideoManager.SkipToVideoFrame(skipTime);
+    }
+
+    /// <summary>
+    /// Toggle the route video representation, where active turns on video and inactive the map
+    /// </summary>
+    /// <param name="videoActive">Whether video should be active</param> 
+    public void ToggleRouteRepresentation(bool videoActive)
+    {
+        if (videoActive)
+        {
+            // Activating the component, and then resuming to the last timestamp
+            VideoManager.gameObject.SetActive(videoActive);
+            VideoManager.ResumeVideo();
+        }
+        else // videoActive = false
+        {
+            // Pausing the component to get the current timestamp,
+            // and then disabling the component
+            VideoManager.PauseVideo();
+            VideoManager.gameObject.SetActive(videoActive);
+        }
+        
     }
 
 
