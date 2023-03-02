@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 8429d6c8c69ce4e0f89a996effb85262
+guid: 35a8bd686fd894804a1b58198a6096cc
 ScriptedImporter:
   internalIDToNameTable: []
   externalObjects: {}
@@ -8,12 +8,12 @@ ScriptedImporter:
   assetBundleName: 
   assetBundleVariant: 
   script: {fileID: 11500000, guid: a57477913897c46af95d590f580878bd, type: 3}
-  svgType: 2
+  svgType: 4
   texturedSpriteMeshType: 0
   svgPixelsPerUnit: 100
   gradientResolution: 64
-  alignment: 1
-  customPivot: {x: 0, y: 1}
+  alignment: 0
+  customPivot: {x: 0, y: 0}
   generatePhysicsShape: 0
   viewportOptions: 0
   preserveViewport: 0
@@ -39,16 +39,16 @@ ScriptedImporter:
   spriteData:
     TessellationDetail: 0
     SpriteRect:
-      name: Switch View 1Sprite
+      name: 
       originalName: 
-      pivot: {x: 0, y: 1}
-      alignment: 1
-      border: {x: 5, y: 5, z: 5, w: 5}
+      pivot: {x: 0, y: 0}
+      alignment: 0
+      border: {x: 0, y: 0, z: 0, w: 0}
       rect:
         serializedVersion: 2
         x: 0
         y: 0
-        width: 367
-        height: 188
-      spriteID: 5909897a039de43ddba51ea919665bed
+        width: 0
+        height: 0
+      spriteID: 00958417c8e4a49cf9f125930125b901
     PhysicsOutlines: []

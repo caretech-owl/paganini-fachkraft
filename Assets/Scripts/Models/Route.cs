@@ -12,7 +12,7 @@ public class Route : BaseModel
     public string Name { set; get; }
     public System.DateTime Date { set; get; }
     public int Pin { set; get; }
-    public int Status { set; get; }
+    public RouteStatus Status { set; get; }
     public string LocalVideoFilename { set; get; }
 
     //[Indexed]
@@ -37,6 +37,16 @@ public class Route : BaseModel
         Discarded
     }
 
+    public static Dictionary<RouteStatus, string> RouteStatusDescriptions = new Dictionary<RouteStatus, string>()
+    {
+        { RouteStatus.New, "New route" },
+        { RouteStatus.DraftPrepared, "Draft prepared" },
+        { RouteStatus.DraftNegotiated, "Draft negotiated" },
+        { RouteStatus.Training, "Training in progress" },
+        { RouteStatus.Completed, "Route completed" },
+        { RouteStatus.Discarded, "Route discarded" },
+    };
+
     public Route() { }
     public Route(RouteAPI erw)
     {
@@ -45,7 +55,8 @@ public class Route : BaseModel
         this.Name = erw.erw_name;
         this.Date = System.DateTime.Parse(erw.erw_date);
         this.Pin = erw.erw_pin;
-        this.Status = (int)Way.WayStatus.FromAPI;
+        this.Status = (RouteStatus)erw.status.erw_status_id;
+        this.FromAPI = true;
     }
 
     public RouteAPI ToAPI()
