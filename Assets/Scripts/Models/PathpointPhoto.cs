@@ -1,6 +1,7 @@
 using SQLite4Unity3d;
 using System.Linq;
 using System.Collections.Generic;
+using System;
 //using SQLiteNetExtensions.Attributes;
 
 public class PathpointPhoto : BaseModel
@@ -10,6 +11,9 @@ public class PathpointPhoto : BaseModel
     public int PathpointId { set; get; }
     public string Description { set; get; }
     public PhotoFeedback Feedback { set; get; }
+
+    //[Ignore]
+    //public string PhotoFilename { set; get; }
 
     public byte[] Photo { set; get; }
 
@@ -34,5 +38,33 @@ public class PathpointPhoto : BaseModel
         photos = conn.Table<PathpointPhoto>().Where(p => p.PathpointId == pathpointId).ToList();
 
         return photos;
+    }
+
+
+    public PathpointPhotoAPI ToAPI()
+    {
+
+        PathpointPhotoAPI photo;
+        // For an update statement
+        if (FromAPI)
+        {
+            photo = new PathpointPhotoAPIUpdate();
+            photo.pphoto_id = Id;
+            photo.IsNew = false;
+        }
+        // For a post statement
+        else
+        {
+            photo = new PathpointPhotoAPI();
+            photo.IsNew = true;
+        }
+
+
+        photo.pphoto_description = Description;
+        //photo.photo = Convert.ToBase64String(Photo);
+
+
+        return photo;
+
     }
 }

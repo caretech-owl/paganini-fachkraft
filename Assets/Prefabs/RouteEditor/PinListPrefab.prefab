@@ -613,10 +613,10 @@ RectTransform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 641.1, y: -100.81055}
-  m_SizeDelta: {x: 750, y: 1001.6211}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!222 &8373585571611126739
 CanvasRenderer:
@@ -701,6 +701,7 @@ MonoBehaviour:
   ScrollView: {fileID: 8373585571595677485}
   Content: {fileID: 8373585571015316776}
   ItemPrefab: {fileID: 6771049847362702508, guid: 6852c361cf50b4440897cefefbd07e2e, type: 3}
+  DetailsPrefab: {fileID: 0}
   BlankState: {fileID: 0}
   OnItemSelected:
     m_PersistentCalls:

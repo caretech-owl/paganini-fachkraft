@@ -1,5 +1,7 @@
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
+using PaganiniRestAPI;
 using SQLite4Unity3d;
 //using SQLiteNetExtensions.Attributes;
 
@@ -48,7 +50,7 @@ public class Route : BaseModel
     };
 
     public Route() { }
-    public Route(RouteAPI erw)
+    public Route(RouteAPIResult erw)
     {
         this.Id = erw.erw_id;
         this.WayId = erw.way_id;
@@ -63,12 +65,22 @@ public class Route : BaseModel
     {
         RouteAPI erw = new RouteAPI
         {
-            erw_id = this.Id,
             way_id = this.WayId,
             erw_name = this.Name,
-            erw_date = this.Date.Year + "-" + this.Date.Month + "-" + this.Date.Day,
-            erw_pin = this.Pin,
+            erw_date = Date.ToString("yyyy-MM-dd HH:mm:ss"),
+            erw_pin = this.Pin
         };
+
+        // Tag whether needs to be updated
+        if (!FromAPI)
+        {
+            erw.IsNew = true;
+        }
+        else
+        {
+            erw.erw_id = this.Id;
+        }
+
         return erw;
     }
 
@@ -84,5 +96,19 @@ public class Route : BaseModel
 
         return routes;
     }
-    
+
+    public static void ChangeParent(int oldWayId, int newWayId)
+    {
+        // Open the SQLliteConnection
+        var conn = DBConnector.Instance.GetConnection();
+
+        // Create the SQL command with the update query and parameters
+        string cmdText = "UPDATE Route SET WayId = ? WHERE WayId = ?";
+        SQLiteCommand cmd = conn.CreateCommand(cmdText, newWayId, oldWayId);
+
+        // Execute the command
+        cmd.ExecuteNonQuery();
+
+    }
+
 }

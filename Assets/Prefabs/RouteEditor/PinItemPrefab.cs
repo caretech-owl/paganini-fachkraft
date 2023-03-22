@@ -43,11 +43,11 @@ public class PinItemPrefab : MonoBehaviour
         RenderPicture(preview);
 
         // render Icon
-        if (pathpoint.POIType == (int)Pathpoint.POIsType.Landmark)
+        if (pathpoint.POIType == Pathpoint.POIsType.Landmark)
         {
             PinIcon.SelectedLandmarkType = LandmarkIcon.LandmarkType.PinLandmark;
         }
-        else if (pathpoint.POIType == (int)Pathpoint.POIsType.Reassurance)
+        else if (pathpoint.POIType == Pathpoint.POIsType.Reassurance)
         {
             PinIcon.SelectedLandmarkType = LandmarkIcon.LandmarkType.PinReassurance;
         }

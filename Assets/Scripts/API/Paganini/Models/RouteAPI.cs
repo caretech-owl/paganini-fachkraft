@@ -1,8 +1,16 @@
-﻿[System.Serializable]
-public class RouteAPI
+﻿using System;
+using Newtonsoft.Json;
+using UnityEngine;
+
+[System.Serializable]
+public class RouteAPI : BaseAPI
 {
-	public int erw_id;
-	public int way_id;
+    [JsonIgnore]
+    public int erw_id;
+
+    [JsonIgnore]
+    public int way_id;
+
     public string erw_name;
 	public string erw_date;
 	public int erw_pin;
@@ -10,13 +18,24 @@ public class RouteAPI
 }
 
 [System.Serializable]
-public class RouteStatusAPI
+public class RouteAPIResult : RouteAPI
 {
-    public int erw_status_id;
-    public int erw_status_name;
+    [JsonProperty]
+    public int erw_id;
+
+    [JsonProperty]
+    public int way_id;
 }
 
 public class RouteAPIList
 {
-    public RouteAPI[] erw;
+    public RouteAPIResult[] erw;
+}
+
+
+[System.Serializable]
+public class RouteStatusAPI
+{
+    public int erw_status_id;
+    public string erw_status_name;
 }

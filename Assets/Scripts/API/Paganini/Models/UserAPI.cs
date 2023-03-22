@@ -1,5 +1,5 @@
 ﻿[System.Serializable]
-public class UserAPI
+public class UserAPI : BaseAPI
 {
     public int user_id;
     public string user_mnemonic_token;

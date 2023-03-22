@@ -34,19 +34,30 @@ public class SynchronizationController : MonoBehaviour
 
 
     [Header("Synchronisation Screens")]
-    public GameObject UI_Overview;
     public GameObject UI_PanelStart;
     public GameObject UI_PanelSearch;
     public GameObject UI_PanelFound;
     public GameObject UI_PanelAskForConnection;
     public GameObject UI_SyncOverview;
     public GameObject UI_PanelFileTransferrunning;
+    public GameObject UI_PanelProcessingData;
     public GameObject UI_PanelEnd;
     public GameObject UI_Overwrite;
     public GameObject UI_PanelError;
     public GameObject UI_PanelDenied;
 
     public TMPro.TMP_Text TextLog;
+
+
+    [Header("GPS Cleaning Configuration")]
+    public double ToleranceSimplify = 0.001;
+    public double MaxAccuracyRadio = 15;
+    public double DistanceOutlier = 100;
+    public int SegmentSplit = 300;
+    public double OutlierFactor = 1.5;
+    public double MinEvenly = 4;
+    public double MaxEvenly = 8;
+    public double POIClusterDistance = 10;
 
 
 
@@ -463,6 +474,10 @@ Bestätige die Synchronisierung auf dem Smartphone.";
         }
     }
 
+    /// <summary>
+    /// Save processed files to the local database
+    /// </summary>
+    /// <param name="erw">Imported route</param>
     private void SaveToLocalStorage(DataOfImportedERW erw)
     {
         Way w = new Way();
@@ -477,10 +492,11 @@ Bestätige die Synchronisierung auf dem Smartphone.";
         w.IsDirty = true;
         w.Insert();
 
+        // replace with timestamp
         int routeId = w.Id * 10000 + System.DateTime.UtcNow.Millisecond;
 
         Route r = new Route();
-        r.Id = - routeId;
+        r.Id = -routeId;
         r.Name = erw.RecordingName;
         r.Date = erw.RecordingDate;
         r.Status = (Int32)Route.RouteStatus.New;
@@ -489,29 +505,57 @@ Bestätige die Synchronisierung auf dem Smartphone.";
         r.IsDirty = true;
         r.Insert();
 
-        foreach (var pp in erw.Pathpoints)
+        List<Pathpoint> ppList = CleanRoutePathpoints(erw.Pathpoints);
+
+
+        foreach (var pp in ppList)
         {
-            pp.Id = - routeId++;
+            pp.Id = -routeId++;
             pp.RouteId = r.Id;
             pp.IsDirty = true;
             pp.Insert();
+            
 
-            if (pp.PhotoFilename != null)
+            if (pp.POIType!= Pathpoint.POIsType.Point && pp.PhotoFilenames != null)
             {
-                string filename = FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Foto/" + pp.PhotoFilename;
 
-                PathpointPhoto ppf = new PathpointPhoto();
-                ppf.Id = pp.Id;
-                ppf.PathpointId = pp.Id;
-                ppf.Photo = File.ReadAllBytes(filename);
-                ppf.IsDirty = true;
-                ppf.Insert();
+                Debug.Log("Pathpoint type:" + pp.POIType + "Photo file: " + pp.PhotoFilename + " Cluster files: " + pp.PhotoFilenames);
+
+                int photoId = -pp.Id * 100 + System.DateTime.UtcNow.Millisecond;
+                foreach (var photofile in pp.PhotoFilenames)
+                {
+
+                    string filename = FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Foto/" + photofile;
+
+                    PathpointPhoto ppf = new PathpointPhoto();
+                    ppf.Id = - photoId++;
+                    ppf.PathpointId = pp.Id;
+                    ppf.Photo = File.ReadAllBytes(filename);
+                    ppf.IsDirty = true;
+                    ppf.Insert();
+                }
+
             }
 
-
         }
+    }
 
-}
+    public List<Pathpoint> CleanRoutePathpoints(List<Pathpoint> points)
+    {
+        var pipeline = new LocationUtils.GPSCleaningPipeline
+        {
+            ToleranceSimplify = ToleranceSimplify,
+            MaxAccuracyRadio = MaxAccuracyRadio,
+            DistanceOutlier = DistanceOutlier,
+            SegmentSplit = SegmentSplit,
+            OutlierFactor = OutlierFactor,
+            MinEvenly = MinEvenly,
+            MaxEvenly = MaxEvenly,
+            POIClusterDistance = POIClusterDistance
+        };
+        return pipeline.CleanRoute(points);
+    }
+
 
 
     /// <summary>
@@ -554,6 +598,7 @@ Bestätige die Synchronisierung auf dem Smartphone.";
         Log("Performing: ResetOrDisposeProcessProtocol");
         StopAllCoroutines();
         FTS.ResetDeviceList();
+        //FTS.Disconnect();
         isCurrentDeviceConnected = false;
         currentDeviceName = null;
         wasSendPollRequestCalled = false;
@@ -590,10 +635,12 @@ Bestätige die Synchronisierung auf dem Smartphone.";
         }
         else if (file._sourceName.Equals("ENDOFSYNC"))
         {
-            UI_PanelEnd.SetActive(true);
+            UI_PanelProcessingData.SetActive(true);
+            CurrentStatus = SyncStatus.FINISH;
             ProcessDownloadedData();
 
-            CurrentStatus = SyncStatus.FINISH;
+            
+            UI_PanelEnd.SetActive(true);
             ResetOrDisposeProcessProtocol();
         }
         else if (file._sourceName.StartsWith("REQUEST-ERW-"))
@@ -908,11 +955,15 @@ Bestätige die Synchronisierung auf dem Smartphone.";
             yield return new WaitForSeconds(10f);
         }
 
+        if (CurrentStatus != SyncStatus.FINISH &&
+            CurrentStatus != SyncStatus.CANCEL)
+        {
+            LogProcess($"Device {currentDeviceName} is disconnected.");
 
-        LogProcess($"Device {currentDeviceName} is disconnected.");
+            UI_PanelError.SetActive(true);
+            ResetOrDisposeProcessProtocol();
+        }
 
-        UI_PanelError.SetActive(true);
-        ResetOrDisposeProcessProtocol();
     }
 
 

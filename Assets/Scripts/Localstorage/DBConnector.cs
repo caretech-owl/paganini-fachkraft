@@ -4,6 +4,8 @@ using UnityEngine.Events;
 using UnityEngine.Networking;
 
 using SQLite4Unity3d;
+using System.Data;
+using System.IO;
 
 public class DBConnector : PersistentLazySingleton<DBConnector>
 {

@@ -5,6 +5,7 @@ using UnityEngine;
 public class RouteExplorerController : MonoBehaviour
 {
     public GameObject RouteListView;
+    public TMPro.TMP_Text WelcomeText;
     private RouteListPrefab RouteList;
 
     private void Awake()
@@ -18,6 +19,8 @@ public class RouteExplorerController : MonoBehaviour
         RouteList = RouteListView.GetComponent<RouteListPrefab>();
 
         PaganiniRestAPI.Way.GetAll(AppState.CurrentUser.Id, GetWaySucceeded, GetWayFailed);
+
+        WelcomeText.text = WelcomeText.text.Replace("[USER]", AppState.CurrentUser.Mnemonic_token);
     }
 
     // Update is called once per frame
@@ -58,7 +61,7 @@ public class RouteExplorerController : MonoBehaviour
     /// <summary>
     /// This function is called when the GetAll method of the User class in the PaganiniRestAPI namespace succeeds.
     /// </summary>
-    /// <param name="users">The list of users returned by the API.</param>
+    /// <param name="list">The list of users returned by the API.</param>
     private void GetWaySucceeded(WayAPIList list)
     {
         UpdateLocalRoutes(list.ways);
@@ -77,7 +80,7 @@ public class RouteExplorerController : MonoBehaviour
 
 
 
-    private void UpdateLocalRoutes(WayAPI [] list)
+    private void UpdateLocalRoutes(WayAPIResult [] list)
     {
         // Delete the current local copy of ways
 
@@ -85,16 +88,23 @@ public class RouteExplorerController : MonoBehaviour
         Route.DeleteNonDirtyCopies<Route>();
 
         // Create a local copy of the API results
-        foreach (WayAPI wres in list)
+        foreach (WayAPIResult wres in list)
         {
-            // Insert new way
-            Way w = new Way(wres);
-            w.UserId = AppState.CurrentUser.Id;
-            w.Insert();
+            
+            var wdirt = Way.GetAll<Way>(w => w.Id == wres.way_id);
+
+            // There is no local copy, so let's insert
+            if (wdirt == null || wdirt.Count == 0)
+            {
+                // Insert new way
+                Way w = new Way(wres);
+                w.UserId = AppState.CurrentUser.Id;
+                w.Insert();
+            }
 
             if (wres.routes != null)
             {
-                foreach (RouteAPI rres in wres.routes)
+                foreach (RouteAPIResult rres in wres.routes)
                 {
                     // Insert associated route
                     Route r = new Route(rres);

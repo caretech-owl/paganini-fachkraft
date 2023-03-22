@@ -12,18 +12,26 @@ public class PhotoListPrefab : MonoBehaviour
 
     public GameObject BlankState;
 
-    //public PathpointItemEvent OnItemSelected;
+    private RectTransform ContentRectTransform;
+    private float CurrentContentHeight;
 
     // Start is called before the first frame update
     void Start()
     {
-        
+        ContentRectTransform = Content.GetComponent<RectTransform>();
+
     }
 
     // Update is called once per frame
     void Update()
     {
-        
+        if (ContentRectTransform.rect.height != CurrentContentHeight)
+        {
+            CurrentContentHeight = ContentRectTransform.rect.height;
+            Debug.Log("Component size has changed: " + CurrentContentHeight);
+
+            ResizePanel();
+        }
     }
 
     public void Clearlist()
@@ -51,5 +59,15 @@ public class PhotoListPrefab : MonoBehaviour
 
     }
 
+    void ResizePanel()
+    {
+        // Get the height of the grid panel
+        RectTransform gridRectTransform = Content.GetComponent<RectTransform>();
+        float gridHeight = gridRectTransform.rect.height;
+
+        // Set the height of the photo panel to match the height of the grid panel
+        RectTransform photoRectTransform = GetComponent<RectTransform>();
+        photoRectTransform.sizeDelta = new Vector2(photoRectTransform.sizeDelta.x, gridHeight);
+    }
 
 }

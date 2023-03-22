@@ -1,5 +1,5 @@
 ﻿[System.Serializable]
-public class AuthTokenAPI
+public class AuthTokenAPI : BaseAPI
 {
     public string apitoken;
 }
