@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using SQLite4Unity3d;
 
-public class User
+public class User : BaseModel<User>
 {
     [PrimaryKey]
     public int Id { set; get; }

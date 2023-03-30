@@ -30,13 +30,7 @@ public class RouteEditorController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        LoadRouteData();
-
-        LoadMap();
-
-        LoadPathpointList();
-
-        LoadVideo();
+        DownloadRouteDefinition();
     }
 
     /**********************
@@ -81,6 +75,16 @@ public class RouteEditorController : MonoBehaviour
         
     }
 
+    public void LoadEditorComponents()
+    {
+        LoadRouteFromDatabase();
+
+        LoadMap();
+
+        LoadPathpointList();
+
+        LoadVideo();
+    }
 
     /// <summary>
     /// Safely terminate the editor
@@ -88,15 +92,6 @@ public class RouteEditorController : MonoBehaviour
     public void TerminateEditor()
     {
         GMap.DisableMap();
-    }
-
-
-    private void LoadRouteData()
-    {
-        CurrentWay = Way.Get<Way>(AppState.CurrentRoute.WayId);
-        CurrentRoute = AppState.CurrentRoute;
-        PathpointList = Pathpoint.GetPathpointListByRoute(CurrentRoute.Id);
-        POIList = PathpointList.Where(item => item.POIType != Pathpoint.POIsType.Point).ToList();
     }
 
     private void LoadVideo()
@@ -124,15 +119,48 @@ public class RouteEditorController : MonoBehaviour
         }
     }
 
+    private void LoadRouteFromDatabase()
+    {
+        PathpointList = Pathpoint.GetPathpointListByRoute(CurrentRoute.Id);
+        POIList = PathpointList.Where(item => item.POIType != Pathpoint.POIsType.Point).ToList();
+    }
+
 
     /**********************
      *  Data processing  *
      **********************/
 
-    public void UpdatedWayDefinition()
+    private void DownloadRouteDefinition()
+    {
+        Debug.Log("Downloading Route Definition.");
+        CurrentWay = Way.Get(AppState.CurrentRoute.WayId);
+        CurrentRoute = AppState.CurrentRoute;
+
+        if (CurrentRoute.FromAPI)
+        {
+            DownloadPathpoints();
+        }
+        else
+        {
+            LoadEditorComponents();
+        }        
+    }
+
+    private void DownloadPathpoints()
+    {
+        PaganiniRestAPI.Pathpoint.GetAll(AppState.CurrentRoute.Id, GetPathpointsSucceeded, LoadFailed);
+    }
+
+    private void DownloadPhotos()
+    {
+        PaganiniRestAPI.PathpointPOI.GetAll(AppState.CurrentRoute.Id, GetPathpointPOIsSucceeded, LoadFailed);
+    }
+
+
+    public void UploadWayDefinition()
     {
         // get latest definition from db
-        var way = Way.Get<Way>(CurrentWay.Id);
+        var way = Way.Get(CurrentWay.Id);
 
         if (way.IsDirty)
         {
@@ -140,13 +168,13 @@ public class RouteEditorController : MonoBehaviour
             return;
         }
 
-        UpdateRouteDefinition(way.Id);
+        UploadRouteDefinition(way.Id);
     }
 
-    public void UpdateRouteDefinition(int parentWayId)
+    public void UploadRouteDefinition(int parentWayId)
     {
         // get latest definition from db
-        var route = Route.Get<Route>(CurrentRoute.Id);
+        var route = Route.Get(CurrentRoute.Id);
 
         if (route.IsDirty)
         {
@@ -155,20 +183,93 @@ public class RouteEditorController : MonoBehaviour
             return;
         }
 
-        UpdateNewPathpointsPoints(route.Id);
+        UploadNewAddedPathPhotos(route.Id);
+
+
     }
 
-    public void UpdateNewPathpointsPoints(int parentRouteId)
+    // upload the new pathpoints + photos in batch the first time
+    public void UploadNewAddedPathPhotos(int parentRouteId)
+    {
+        // get new photos that belong to pathpoints (from the API) on the current route
+        var photos = PathpointPhoto.GetListByRoute(parentRouteId, true, p => p.FromAPI == false);
+
+        if (photos.Capacity > 0)
+        {
+
+            Dictionary<string, byte[]> pictures = new();
+
+            List<IPathpointPhotoAPI> photoAPIs = new List<IPathpointPhotoAPI>();
+            foreach (PathpointPhoto photo in photos)
+            {
+                // internal photo reference
+                string photoRef = string.Format("Pic{0}", Mathf.Abs(photo.Id));
+                // photo metadata
+                var photoAPI = photo.ToAPIBatchElement();
+                photoAPI.photo_reference = photoRef;
+                photoAPIs.Add(photoAPI);
+                // photo files
+                pictures.Add(photoRef, photo.Photo);
+            }
+
+            var batch = new PathpointPhotoAPIBatch
+            {
+                photos = photoAPIs.ToArray(),
+                files = pictures
+            };
+
+            PaganiniRestAPI.PathpointPhoto.BatchCreate(parentRouteId, batch, BatchCreatePathpointPhotosSucceeded, CreateOrUpdateFailed);          
+
+            return;
+        }
+
+        UploadUpdatedPathPhotos(parentRouteId);
+    }
+
+    public void UploadUpdatedPathPhotos(int parentRouteId)
+    {
+        // get updated photos that belong to pathpoints (from the API) on the current route
+        var photos = PathpointPhoto.GetListByRoute(parentRouteId, true, p => p.FromAPI == true && p.IsDirty == true);
+
+        if (photos.Capacity > 0)
+        {
+
+            Dictionary<string, byte[]> pictures = new();
+
+            List<IPathpointPhotoAPI> photoAPIs = new List<IPathpointPhotoAPI>();
+            foreach (PathpointPhoto photo in photos)
+            {
+                // internal photo reference
+                string photoRef = string.Format("Pic{0}", Mathf.Abs(photo.Id));
+                // photo metadata
+                var photoAPI = photo.ToAPIBatchElement();
+                photoAPI.photo_reference = photoRef;
+                photoAPIs.Add(photoAPI);
+                // photo files
+                pictures.Add(photoRef, photo.Photo);
+            }
+
+            var batch = new PathpointPhotoAPIBatch
+            {
+                photos = photoAPIs.ToArray(),
+                files = pictures
+            };
+
+            PaganiniRestAPI.PathpointPhoto.BatchUpdate(parentRouteId, batch, BatchUpdatePathpointPhotosSucceeded, CreateOrUpdateFailed);
+
+            return;
+        }
+
+
+        UploadNewPathpointsPoints(parentRouteId);
+    }
+
+
+
+    public void UploadNewPathpointsPoints(int parentRouteId)
     {
         var pathpoints = Pathpoint.GetPathpointListByRoute(CurrentRoute.Id, p => p.FromAPI == false && p.POIType == Pathpoint.POIsType.Point);
-
-        // prepare batch
-        List<PathpointAPI> pathpointAPIs = new();
-        foreach (var pathpoint in pathpoints)
-        {
-            pathpointAPIs.Add((PathpointAPI)pathpoint.ToAPI());
-        }
-        var batch = new PathpointAPIBatch{ pathpoints = pathpointAPIs.ToArray() };
+        var batch = PreparePathpointBatch(pathpoints);
 
         if (pathpoints.Capacity > 0)
         {
@@ -176,22 +277,16 @@ public class RouteEditorController : MonoBehaviour
             return;
         }
 
-        UpdateExistingPathpointsPoints(parentRouteId);
+        UploadExistingPathpointsPoints(parentRouteId);
     }
 
-    public void UpdateExistingPathpointsPoints(int parentRouteId)
+    public void UploadExistingPathpointsPoints(int parentRouteId)
     {
         //TODO: Here it would make sense to update all pathpoints, even those with POIs included
 
-        var pathpoints = Pathpoint.GetPathpointListByRoute(CurrentRoute.Id, p => p.FromAPI && p.IsDirty && p.POIType == Pathpoint.POIsType.Point);
+        var pathpoints = Pathpoint.GetPathpointListByRoute(CurrentRoute.Id, p => p.FromAPI && p.IsDirty);
 
-        // prepare batch
-        List<IPathpointAPI> pathpointAPIs = new ();
-        foreach (var pathpoint in pathpoints)
-        {
-            pathpointAPIs.Add(pathpoint.ToAPI());
-        }
-        var batch = new PathpointAPIBatch { pathpoints = pathpointAPIs.ToArray() };
+        var batch = PreparePathpointBatch(pathpoints);
 
         // send batch
         if (pathpoints.Capacity > 0)
@@ -202,11 +297,12 @@ public class RouteEditorController : MonoBehaviour
 
         // POIs
 
-        UpdatePathpointsPOIs(parentRouteId);
+        UploadNewPathpointsPOIs(parentRouteId);
     }
 
 
-    public void UpdatePathpointsPOIs(int parentRouteId)
+    // upload the new pathpoints + photos in batch the first time
+    public void UploadNewPathpointsPOIs(int parentRouteId)
     {
         var pathpoints = Pathpoint.GetPathpointListByRoute(CurrentRoute.Id, p => p.FromAPI == false && p.POIType != Pathpoint.POIsType.Point);
 
@@ -223,7 +319,7 @@ public class RouteEditorController : MonoBehaviour
                 poi.pathpoint = (PathpointAPI)pathpoint.ToAPI();
 
                 var photos = PathpointPhoto.GetPathpointPhotoListByPOI(pathpoint.Id);
-                List<PathpointPhotoAPI> photoAPIs = new List<PathpointPhotoAPI>();
+                List<IPathpointPhotoAPI> photoAPIs = new List<IPathpointPhotoAPI>();
                 foreach (var photo in photos)
                 {
                     // internal photo reference
@@ -250,13 +346,71 @@ public class RouteEditorController : MonoBehaviour
             return;
         }
 
-        //TODO: Here we should update photos
-        // photos updated
-        // new photos added to existing pictures
+        DownloadRouteDefinition();
+    }
+
+
+
+    private PathpointAPIBatch PreparePathpointBatch(List<Pathpoint> pathpoints)
+    {
+        // prepare batch
+        List<IPathpointAPI> pathpointAPIs = new();
+        foreach (var pathpoint in pathpoints)
+        {
+            pathpointAPIs.Add(pathpoint.ToAPI());
+        }
+        var batch = new PathpointAPIBatch { pathpoints = pathpointAPIs.ToArray() };
+        return batch;
     }
 
 
     // Event handlers
+
+    private void GetPathpointsSucceeded(PathpointAPIList res)
+    {
+        // Delete local cache
+        Pathpoint.DeleteNonDirtyCopies();        
+
+        // Insert clean verion
+        foreach (var point in res.pathpoints)
+        {
+            // Insert pathpoint only if it's not already here
+            if (!CurrentRoute.FromAPI || ! Pathpoint.CheckIfExists(p => p.IsDirty && p.Id == point.ppoint_id))
+            {
+                Pathpoint p = new Pathpoint(point);
+                p.Insert();
+            }
+
+        }
+
+        DownloadPhotos();
+    }
+
+    private void GetPathpointPOIsSucceeded(PathpointPOIAPIList res)
+    {
+        PathpointPhoto.DeleteNonDirtyCopies();
+
+        if (res != null && res.pois != null)
+        {
+            // Insert clean verion
+            foreach (var poi in res.pois)
+            {
+                foreach (var photo in poi.photos)
+                {
+                    // Insert pathpoint only if it's not already here
+                    if (!CurrentRoute.FromAPI || !PathpointPhoto.CheckIfExists(p => p.IsDirty && p.Id == photo.pphoto_id))
+                    {
+                        PathpointPhoto p = new PathpointPhoto(photo);
+                        p.Insert();
+                    }
+                }
+
+            }
+        }
+
+        // Load editor
+        LoadEditorComponents();
+    }
 
 
     /// <summary>
@@ -266,10 +420,11 @@ public class RouteEditorController : MonoBehaviour
     private void CreateOrUpdateWaySucceeded(WayAPIResult way)
     {
         // Delete Current way
-        Way.Delete<Way>(CurrentWay.Id);
+        Way.Delete(CurrentWay.Id);
 
         // Insert new definition
         var waydb = new Way(way);
+        waydb.UserId = CurrentWay.UserId;
         waydb.Insert();
 
         // We update reference of all the local routes
@@ -279,9 +434,7 @@ public class RouteEditorController : MonoBehaviour
         CurrentWay = waydb;
 
         // continue to updating the route
-        UpdateRouteDefinition(waydb.Id);
-
-        
+        UploadRouteDefinition(waydb.Id);
     }
 
     /// <summary>
@@ -291,10 +444,11 @@ public class RouteEditorController : MonoBehaviour
     private void CreateOrUpdateRouteSucceeded(RouteAPIResult route)
     {
         // Delete Current way
-        Route.Delete<Route>(CurrentRoute.Id);
+        Route.Delete(CurrentRoute.Id);
 
         // Insert new definition
         var routedb = new Route(route);
+        routedb.WayId = CurrentWay.Id;
         routedb.Insert();
 
         // We update reference of all the local routes
@@ -303,7 +457,32 @@ public class RouteEditorController : MonoBehaviour
 
         CurrentRoute = routedb;
 
-        UpdateNewPathpointsPoints(routedb.Id);
+        UploadNewAddedPathPhotos(routedb.Id);
+    }
+
+    /// <summary>
+    /// This function is called when the BatchCreate method of the PathpointPhoto class in the PaganiniRestAPI namespace succeeds.
+    /// </summary>
+    /// <param name="photoAPIList">PathpointPhotoAPIList returned from the API.</param>
+    private void BatchCreatePathpointPhotosSucceeded(PathpointPhotoAPIList photoAPIList)
+    {
+        // Delete Pathphotos for newly added pathpoints (routeId, pathpoint fromAPI, pathphoto fromAPI)
+        // TODO: This is not working
+        PathpointPhoto.DeleteFromPOIs(CurrentRoute.Id, true, false);
+
+        UploadUpdatedPathPhotos(CurrentRoute.Id);
+    }
+    
+    /// <summary>
+    /// This function is called when the BatchUpdate method of the PathpointPhoto class in the PaganiniRestAPI namespace succeeds.
+    /// </summary>
+    /// <param name="photoAPIList">PathpointPhotoAPIList returned from the API.</param>
+    private void BatchUpdatePathpointPhotosSucceeded(PathpointPhotoAPIList photoAPIList)
+    {
+        // Delete Pathphotos for newly added pathpoints (routeId, pathpoint fromAPI, pathphoto fromAPI)
+        PathpointPhoto.DeleteFromPOIs(CurrentRoute.Id, true, true);
+
+        UploadNewPathpointsPoints(CurrentRoute.Id);
     }
 
     /// <summary>
@@ -313,12 +492,12 @@ public class RouteEditorController : MonoBehaviour
     private void BatchCreatePathpointsSucceeded(PathpointAPIList pathpointList)
     {
         // Delete updated pathpoints
-
-        //Pathpoint.DeletePathpointListByRoute(CurrentRoute.Id, p => p.FromAPI == false && p.POIType == Pathpoint.POIsType.Point);
+        // We delete the local pathpoints (fromAPI=false) for the CurrentRoute, specifically those that are Point
+        Pathpoint.DeleteFromRoute(CurrentRoute.Id, new bool[] { false }, new Pathpoint.POIsType[] { Pathpoint.POIsType.Point });
 
         Debug.Log(pathpointList);
 
-        UpdateExistingPathpointsPoints(CurrentRoute.Id);
+        UploadExistingPathpointsPoints(CurrentRoute.Id);
     }
 
     /// <summary>
@@ -328,12 +507,12 @@ public class RouteEditorController : MonoBehaviour
     private void BatchUpdatePathpointsSucceeded(PathpointAPIList pathpointList)
     {
         // Delete updated pathpoints
-
-        //Pathpoint.DeletePathpointListByRoute(CurrentRoute.Id, p => p.FromAPI == false && p.POIType == Pathpoint.POIsType.Point);
+        // We delete the local caches (fromAPI=true) of the pathpoints for the CurrentRoute, all pathpointtypes
+        Pathpoint.DeleteFromRoute(CurrentRoute.Id, new bool[] { true }, null);
 
         Debug.Log(pathpointList);
 
-        UpdatePathpointsPOIs(CurrentRoute.Id);
+        UploadNewPathpointsPOIs(CurrentRoute.Id);
     }
 
     /// <summary>
@@ -344,16 +523,21 @@ public class RouteEditorController : MonoBehaviour
     {
         // Delete updated pathpoints
 
+        // Delete Pathphotos for newly uploaded pathpoints (routeId, pathpoint fromAPI, pathphoto fromAPI)
+        PathpointPhoto.DeleteFromPOIs(CurrentRoute.Id, false, false);
+
+        // Delete the newly uploaded Pathpoints POIs 
+        Pathpoint.DeleteFromRoute(CurrentRoute.Id, new bool[] { false }, new Pathpoint.POIsType[] { Pathpoint.POIsType.Landmark, Pathpoint.POIsType.Reassurance });
+
         //Pathpoint.DeletePathpointListByRoute(CurrentRoute.Id, p => p.FromAPI == false && p.POIType == Pathpoint.POIsType.Point);
 
         Debug.Log(poiAPIList);
 
-        //UpdatePathpointsPOIs(CurrentRoute.Id);
+        DownloadRouteDefinition();
     }
 
-
     /// <summary>
-    /// This function is called when the GetAll method of the User class in the PaganiniRestAPI namespace fails.
+    /// This function is called when the Upload methods fail.
     /// </summary>
     /// <param name="errorMessage">The error message returned by the API.</param>
     private void CreateOrUpdateFailed(string errorMessage)
@@ -361,6 +545,13 @@ public class RouteEditorController : MonoBehaviour
         Debug.Log(errorMessage);
     }
 
-
+    /// <summary>
+    /// This function is called when the Load methods fail.
+    /// </summary>
+    /// <param name="errorMessage">The error message returned by the API.</param>
+    private void LoadFailed(string errorMessage)
+    {
+        Debug.Log(errorMessage);
+    }
 
 }

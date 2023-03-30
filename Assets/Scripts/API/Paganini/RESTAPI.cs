@@ -2,14 +2,13 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
-using Mono.Cecil;
 using UnityEditor.PackageManager.Requests;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.Networking;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
-
+using System.Linq;
 
 
 
@@ -56,6 +55,33 @@ public class RESTAPI : PersistentLazySingleton<RESTAPI>
         StartCoroutine(PerformRequest<TResult>(request, successCallback, errorCallback));
     }
 
+    public void PutMultipart<TResult>(string endpoint, BaseAPI resource, Dictionary<string, byte[]> files, UnityAction<TResult> successCallback, UnityAction<string> errorCallback, Dictionary<string, string> headers = null)
+    {
+        string jsonData = JsonConvert.SerializeObject(resource, settings);
+
+        List<IMultipartFormSection> formData = new List<IMultipartFormSection>();
+        formData.Add(new MultipartFormDataSection("data", jsonData));
+
+        foreach (var file in files)
+        {
+            formData.Add(new MultipartFormFileSection(file.Key, file.Value, file.Key, "image/png"));
+        }
+
+        byte[] boundary = UnityWebRequest.GenerateBoundary();
+        byte[] formSections = UnityWebRequest.SerializeFormSections(formData, boundary);
+        byte[] endingBoundary = Encoding.UTF8.GetBytes("--" + Encoding.UTF8.GetString(boundary) + "--");
+
+        byte[] payload = Concatenate(formSections.ToList(), endingBoundary);
+
+        UnityWebRequest request = new UnityWebRequest(endpoint, UnityWebRequest.kHttpVerbPUT);
+        request.uploadHandler = new UploadHandlerRaw(payload);
+        request.downloadHandler = new DownloadHandlerBuffer();
+        request.SetRequestHeader("Content-Type", "multipart/form-data; boundary=" + Encoding.UTF8.GetString(boundary));
+
+        SetHeaders(request, headers);
+
+        StartCoroutine(PerformRequest<TResult>(request, successCallback, errorCallback));
+    }
 
     public void Put<TResult>(string endpoint, BaseAPI resource, UnityAction<TResult> successCallback, UnityAction<string> errorCallback, Dictionary<string, string> headers = null)
     {
@@ -127,6 +153,13 @@ public class RESTAPI : PersistentLazySingleton<RESTAPI>
 
         StartCoroutine(PerformRequest<TResult>(request, successCallback, errorCallback));
 
+    }
+
+    private byte[] Concatenate(List<byte> requestData, byte[] boundaryBytes)
+    {
+        List<byte> resultData = new List<byte>(requestData);
+        resultData.AddRange(boundaryBytes);
+        return resultData.ToArray();
     }
 
 

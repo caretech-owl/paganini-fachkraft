@@ -1,50 +1,101 @@
 ﻿using System;
+using System.Collections.Generic;
 using Newtonsoft.Json;
 using UnityEngine;
 
-[System.Serializable]
-public class PathpointPhotoAPI : BaseAPI
+public interface IPathpointPhotoAPI 
 {
-    [JsonIgnore]
-    public int pphoto_id;
+    public int pphoto_id { get; set; }
+    public int ppoint_id { get; set; }
+    public string pphoto_description { get; set; }
+    public string photo { get; set; }
+    public string photo_reference { get; set; }
+    public bool IsNew { get; set; }
+}
 
-    [JsonIgnore]
-    public int ppoint_id;
-
-	public string pphoto_description;
-
-    public string photo;
-
-    public string photo_reference;
+public class PathpointPhotoAPIBase : BaseAPI
+{
+    public string pphoto_description { get; set; }
+    public string photo { get; set; }
 }
 
 
-
 [System.Serializable]
-public class PathpointPhotoAPIResult : PathpointPhotoAPI
+public class PathpointPhotoAPI : PathpointPhotoAPIBase, IPathpointPhotoAPI
 {
-    [JsonProperty]
-    public int pphoto_id;
+    [JsonIgnore]
+    public int pphoto_id { get; set; }
+
+    [JsonIgnore]
+    public int ppoint_id { get; set; }
 
     [JsonProperty]
-    public int ppoint_id;
-
-    [NonSerialized]
-    public string photo_reference;
+    public string photo_reference { get; set; }
 }
 
 [System.Serializable]
-public class PathpointPhotoAPIUpdate : PathpointPhotoAPI
+public class PathpointPhotoAPIResult : PathpointPhotoAPIBase, IPathpointPhotoAPI
 {
     [JsonProperty]
-    public int pphoto_id;
+    public int pphoto_id { get; set; }
 
+    [JsonProperty]
+    public int ppoint_id { get; set; }
+
+    [JsonIgnore]
+    public string photo_reference { get; set; }
+}
+
+[System.Serializable]
+public class PathpointPhotoAPIUpdate : PathpointPhotoAPIBase, IPathpointPhotoAPI
+{
+    [JsonProperty]
+    public int pphoto_id { get; set; }
+
+    [JsonIgnore]
+    public int ppoint_id { get; set; }
+
+    [JsonIgnore]
+    public string photo_reference { get; set; }
+}
+
+[System.Serializable]
+public class PathpointPhotoAPIBatchCreateElement : PathpointPhotoAPIBase, IPathpointPhotoAPI
+{
+    [JsonIgnore]
+    public int pphoto_id { get; set; }
+
+    [JsonProperty]
+    public int ppoint_id { get; set; }
+
+    [JsonProperty]
+    public string photo_reference { get; set; }
+}
+
+[System.Serializable]
+public class PathpointPhotoAPIBatchUpdateElement : PathpointPhotoAPIBase, IPathpointPhotoAPI
+{
+    [JsonProperty]
+    public int pphoto_id { get; set; }
+
+    [JsonProperty]
+    public int ppoint_id { get; set; }
+
+    [JsonProperty]
+    public string photo_reference { get; set; }
 }
 
 
 public class PathpointPhotoAPIList
 {
-    public PathpointPhotoAPIResult[] erw;
+    public PathpointPhotoAPIResult[] photos;
 }
 
 
+public class PathpointPhotoAPIBatch : BaseAPI
+{
+    public IPathpointPhotoAPI[] photos;
+
+    [JsonIgnore]
+    public Dictionary<string, byte[]> files;
+}

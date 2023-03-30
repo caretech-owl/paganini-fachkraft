@@ -84,17 +84,14 @@ public class RouteExplorerController : MonoBehaviour
     {
         // Delete the current local copy of ways
 
-        Way.DeleteNonDirtyCopies<Way>();
-        Route.DeleteNonDirtyCopies<Route>();
+        Way.DeleteNonDirtyCopies();
+        Route.DeleteNonDirtyCopies();
 
         // Create a local copy of the API results
         foreach (WayAPIResult wres in list)
         {
-            
-            var wdirt = Way.GetAll<Way>(w => w.Id == wres.way_id);
-
-            // There is no local copy, so let's insert
-            if (wdirt == null || wdirt.Count == 0)
+            // Get the local copy first (not to overwrite local copy)
+            if (!Way.CheckIfExists(w => w.Id == wres.way_id))
             {
                 // Insert new way
                 Way w = new Way(wres);
@@ -106,9 +103,13 @@ public class RouteExplorerController : MonoBehaviour
             {
                 foreach (RouteAPIResult rres in wres.routes)
                 {
-                    // Insert associated route
-                    Route r = new Route(rres);
-                    r.Insert();
+                    // check for local copy
+                    if(!Route.CheckIfExists(r => r.Id == rres.erw_id))
+                    {
+                        // Insert associated route
+                        Route r = new Route(rres);
+                        r.Insert();
+                    }
                 }
             }            
         }

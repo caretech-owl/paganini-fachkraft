@@ -4,10 +4,11 @@ using System.Globalization;
 using System.Linq;
 using System.Xml.Serialization;
 using SQLite4Unity3d;
+using Unity.VisualScripting;
 //using SQLiteNetExtensions.Attributes;
 //using SQLiteNetExtensions.Extensions;
 
-public class Pathpoint : BaseModel
+public class Pathpoint : BaseModel<Pathpoint>
 {
     [PrimaryKey]
     public int Id { set; get; }
@@ -53,7 +54,9 @@ public class Pathpoint : BaseModel
         POIType = (POIsType) pathpoint.ppoint_poitype;
         Description = pathpoint.ppoint_description;
 
-        var ts = DateTime.ParseExact(pathpoint.ppoint_timestamp, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture);
+        FromAPI = true;
+
+        var ts = DateTime.ParseExact(pathpoint.ppoint_timestamp, "yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture);
         Timestamp = new DateTimeOffset(ts).ToUnixTimeMilliseconds();
     }
 
@@ -89,6 +92,49 @@ public class Pathpoint : BaseModel
         // Execute the command
         cmd.ExecuteNonQuery();
 
+    }
+
+
+    /// <summary>
+    /// Deletes Pathpoint records from the database based on the specified route ID, 'FromAPI' flags, and POI types.
+    /// </summary>
+    /// <param name="routeId">The ID of the route to which the Pathpoint records are associated.</param>
+    /// <param name="fromAPI">An array of boolean values representing the 'FromAPI' flag of the Pathpoint records to be deleted. If multiple values are provided, records matching any of the values will be deleted.</param>
+    /// <param name="types">An array of Pathpoint.POIsType enum values representing the POI types of the Pathpoint records to be deleted. If multiple values are provided, records matching any of the types will be deleted.</param>
+    /// <remarks>
+    /// The method constructs an SQL DELETE command with the specified conditions and executes it using an SQLiteCommand object.
+    /// </remarks>
+    public static void DeleteFromRoute(int routeId, bool[] fromAPI, Pathpoint.POIsType[] types)
+    {
+        // Open the SQLliteConnection
+        var conn = DBConnector.Instance.GetConnection();
+
+        // Prepare the base DELETE command text
+        string cmdText = "DELETE FROM Pathpoint WHERE RouteId = ?";
+
+        List<object> parameters = new List<object> { routeId };
+
+        // Add conditions for FromAPI
+        if (fromAPI != null && fromAPI.Length > 0)
+        {
+            var fromAPIConditions = string.Join(" OR ", fromAPI.Select((val, idx) => $"FromAPI = ?"));
+            cmdText += $" AND ({fromAPIConditions})";
+            parameters.AddRange(fromAPI);
+        }
+
+        // Add conditions for POIType
+        if (types != null && types.Length > 0)
+        {
+            var typeConditions = string.Join(" OR ", types.Select((val, idx) => $"POIType = ?"));
+            cmdText += $" AND ({typeConditions})";
+            parameters.AddRange(types);
+        }
+
+        // Prepare the SQLiteCommand with the command text and parameters
+        SQLiteCommand cmd = conn.CreateCommand(cmdText, parameters.ToArray());
+
+        // Execute the command
+        cmd.ExecuteNonQuery();
     }
 
 

@@ -6,7 +6,7 @@ using SQLite4Unity3d;
 //using SQLiteNetExtensions.Attributes;
 
 
-public class Route : BaseModel
+public class Route : BaseModel<Route>
 {
 
     [PrimaryKey]
@@ -57,7 +57,10 @@ public class Route : BaseModel
         this.Name = erw.erw_name;
         this.Date = System.DateTime.Parse(erw.erw_date);
         this.Pin = erw.erw_pin;
-        this.Status = (RouteStatus)erw.status.erw_status_id;
+        if (erw.status != null)
+        {
+            this.Status = (RouteStatus)erw.status.erw_status_id;
+        }        
         this.FromAPI = true;
     }
 

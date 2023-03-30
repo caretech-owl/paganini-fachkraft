@@ -11,7 +11,7 @@ namespace PaganiniRestAPI
     {
         //Base URL for the Rest APi
         public const string BaseUrl = "https://infinteg-main.fh-bielefeld.de/paganini/api/";
-        
+        //public const string BaseUrl = "http://192.168.178.22:3000/";
        
        
         public const string Authenticate = BaseUrl + "sw/me/authentification";
@@ -27,6 +27,7 @@ namespace PaganiniRestAPI
         public const string SwRoutesList = SwWays + "/routes";
         public const string SwRoutes = BaseUrl + "sw/routes/{0}";
 
+        public const string SwRoutePhotoList = SwRoutes + "/photos";
         public const string SwPOIList = SwRoutes + "/pois";
 
         public const string SwPathpointList = SwRoutes + "/pathpoints";
@@ -142,6 +143,18 @@ namespace PaganiniRestAPI
 
     public class Pathpoint
     {
+        public static void GetAll(Int32 routeId, UnityAction<PathpointAPIList> successCallback, UnityAction<string> errorCallback)
+        {
+            Dictionary<string, string> headers = new Dictionary<string, string>
+            {
+                { "apitoken", AppState.APIToken }
+            };
+
+            string url = string.Format(Path.SwPathpointList, routeId);
+
+            RESTAPI.Instance.Get<PathpointAPIList>(url, successCallback, errorCallback, headers);
+        }
+
         public static void BatchCreate(Int32 routeId, PathpointAPIBatch batch, UnityAction<PathpointAPIList> successCallback, UnityAction<string> errorCallback)
         {
             Dictionary<string, string> headers = new Dictionary<string, string>
@@ -168,9 +181,52 @@ namespace PaganiniRestAPI
 
     }
 
+    public class PathpointPhoto
+    {
+        public static void BatchCreate(Int32 routeId, PathpointPhotoAPIBatch batch, UnityAction<PathpointPhotoAPIList> successCallback, UnityAction<string> errorCallback)
+        {
+            Dictionary<string, string> headers = new Dictionary<string, string>
+            {
+                { "apitoken", AppState.APIToken }
+            };
+
+            // batch will need to have the list of byte[] files, with reference to the pathpoints (photo with the filename?)
+
+            string url = string.Format(Path.SwRoutePhotoList, routeId);
+            RESTAPI.Instance.PostMultipart<PathpointPhotoAPIList>(url, batch, batch.files, successCallback, errorCallback, headers);
+
+        }
+
+        public static void BatchUpdate(Int32 routeId, PathpointPhotoAPIBatch batch, UnityAction<PathpointPhotoAPIList> successCallback, UnityAction<string> errorCallback)
+        {
+            Dictionary<string, string> headers = new Dictionary<string, string>
+            {
+                { "apitoken", AppState.APIToken }
+            };
+
+            // batch will need to have the list of byte[] files, with reference to the pathpoints (photo with the filename?)
+
+            string url = string.Format(Path.SwRoutePhotoList, routeId);
+            RESTAPI.Instance.PutMultipart<PathpointPhotoAPIList>(url, batch, batch.files, successCallback, errorCallback, headers);
+
+        }
+
+    }
+
 
     public class PathpointPOI
     {
+        public static void GetAll(Int32 routeId, UnityAction<PathpointPOIAPIList> successCallback, UnityAction<string> errorCallback)
+        {
+            Dictionary<string, string> headers = new Dictionary<string, string>
+            {
+                { "apitoken", AppState.APIToken }
+            };
+
+            string url = string.Format(Path.SwPOIList, routeId);
+            RESTAPI.Instance.Get<PathpointPOIAPIList>(url, successCallback, errorCallback, headers);
+        }
+
         public static void BatchCreate(Int32 routeId, PathpointPOIAPIBatch batch, UnityAction<PathpointPOIAPIList> successCallback, UnityAction<string> errorCallback)
         {
             Dictionary<string, string> headers = new Dictionary<string, string>

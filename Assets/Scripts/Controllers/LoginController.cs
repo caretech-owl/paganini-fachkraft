@@ -26,7 +26,7 @@ public class LoginController : MonoBehaviour
     {
         //ToggleIsLoginRemembered.isOn = InternalDataModelController.GetInternalDataModelController().idm.isLoginRemembered;
 
-        var list = AuthToken.GetAll<AuthToken>();
+        var list = AuthToken.GetAll();
 
         AuthToken authToken = null;
         foreach (var token in list)

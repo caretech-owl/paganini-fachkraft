@@ -9,7 +9,7 @@ public class PathpointPOIAPI : BaseAPI
 {
     public PathpointAPI pathpoint;
 
-    public PathpointPhotoAPI [] photos;
+    public IPathpointPhotoAPI [] photos;
 }
 
 [System.Serializable]

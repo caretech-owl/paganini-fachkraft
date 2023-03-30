@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using SQLite4Unity3d;
 
-public class Way : BaseModel
+public class Way : BaseModel<Way>
 {
 
     [PrimaryKey]
@@ -30,10 +30,17 @@ public class Way : BaseModel
     public Way(WayAPIResult way)
     {
         this.Id = way.way_id;
-        this.Start = way.way_start.adr_name;
-        this.Destination = way.way_destination.adr_name;
-        this.StartType = way.way_start.adr_icon;
-        this.DestinationType = way.way_destination.adr_icon;
+        if(way.way_start != null)
+        {
+            this.Start =  way.way_start.adr_name;
+            this.StartType = way.way_start.adr_icon;
+        }
+        if (way.way_destination != null)
+        {
+            this.Destination = way.way_destination.adr_name;
+            this.DestinationType = way.way_destination.adr_icon;
+        }        
+
         this.Name = way.way_name;
         this.Description = way.way_description;
         this.FromAPI = true;

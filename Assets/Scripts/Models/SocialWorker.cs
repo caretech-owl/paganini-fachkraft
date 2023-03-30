@@ -1,6 +1,6 @@
 using SQLite4Unity3d;
 
-public class SocialWorker : BaseModel
+public class SocialWorker : BaseModel<SocialWorker>
 {
     [PrimaryKey]
     public int Id { set; get; }

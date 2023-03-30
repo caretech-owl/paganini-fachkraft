@@ -1,6 +1,6 @@
 ﻿using SQLite4Unity3d;
 
-public class AuthToken : BaseModel
+public class AuthToken : BaseModel<AuthToken>
 {
 
 	[PrimaryKey]

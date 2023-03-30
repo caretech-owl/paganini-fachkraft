@@ -1,6 +1,6 @@
 using SQLite4Unity3d;
 
-public class Address
+public class Address: BaseModel<Address>
 {
     [PrimaryKey]
     public int Id { set; get; }

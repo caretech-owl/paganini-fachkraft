@@ -483,6 +483,7 @@ Bestätige die Synchronisierung auf dem Smartphone.";
         Way w = new Way();
         w.Id = erw.Id;
         w.Name = erw.Name;
+        //w.UserId = erw.UserId;
         w.Start = erw.Start;
         w.StartType = erw.StartType;
         w.Description = erw.Description;
