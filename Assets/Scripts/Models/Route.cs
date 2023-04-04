@@ -57,6 +57,7 @@ public class Route : BaseModel<Route>
         this.Name = erw.erw_name;
         this.Date = System.DateTime.Parse(erw.erw_date);
         this.Pin = erw.erw_pin;
+        this.LocalVideoFilename = erw.erw_video_url;
         if (erw.status != null)
         {
             this.Status = (RouteStatus)erw.status.erw_status_id;
@@ -71,7 +72,9 @@ public class Route : BaseModel<Route>
             way_id = this.WayId,
             erw_name = this.Name,
             erw_date = Date.ToString("yyyy-MM-dd HH:mm:ss"),
-            erw_pin = this.Pin
+            erw_pin = this.Pin,
+            erw_video_url = this.LocalVideoFilename,
+            status = new RouteStatusAPI { erw_status_id = (int)this.Status }
         };
 
         // Tag whether needs to be updated

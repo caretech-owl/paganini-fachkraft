@@ -9,6 +9,7 @@ public interface IRouteAPI
     public string erw_name { get; set; }
     public string erw_date { get; set; }
     public int erw_pin { get; set; }
+    public string erw_video_url { get; set; }
     public RouteStatusAPI status { get; set; }
     public bool IsNew { get; set; }
 }
@@ -18,6 +19,7 @@ public class RouteAPIBase : BaseAPI
     public string erw_name { get; set; }
     public string erw_date { get; set; }
     public int erw_pin { get; set; }
+    public string erw_video_url { get; set; }
     public RouteStatusAPI status { get; set; }
 }
 

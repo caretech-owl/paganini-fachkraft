@@ -119,14 +119,23 @@ public class MapManager : MonoBehaviour
     {
         StaticMarkerIcon = DefaultMarkerIcon;
 
-        // start point
-        Pathpoint startPoint = PathpointList[0];
+
 
         // initialize Map
-        var cameraPosition = new CameraPosition(
-        new LatLng(startPoint.Latitude, startPoint.Longitude), zoom, 0, 0);
-        var options = new GoogleMapsOptions()
-        .Camera(cameraPosition);
+
+        var options = new GoogleMapsOptions();        
+
+        if (PathpointList != null && PathpointList.Capacity > 0)
+        {
+            // start point
+            Pathpoint startPoint = PathpointList[0];
+
+            // setup camera
+            var cameraPosition = new CameraPosition(
+                new LatLng(startPoint.Latitude, startPoint.Longitude), zoom, 0, 0);
+            options = options.Camera(cameraPosition);
+
+        }
 
         Map = new GoogleMapsView(options);
        

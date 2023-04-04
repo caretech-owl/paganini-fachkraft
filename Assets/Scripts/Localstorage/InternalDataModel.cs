@@ -44,7 +44,8 @@ public class InternalDataModel
         public string StartType { set; get; }
         public string DestinationType { set; get; }
         public string Name { set; get; }
-        public string Description { set; get; }        
+        public string Description { set; get; }
+        public int UserId { set; get; }
         public bool IsDirty { set; get; }
 
         public System.DateTime RecordingDate { set; get; }

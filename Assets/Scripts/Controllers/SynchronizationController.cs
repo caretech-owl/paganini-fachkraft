@@ -337,6 +337,7 @@ Bestätige die Synchronisierung auf dem Smartphone.";
         erw.Name = dwe.Name;
         erw.Start = dwe.Start;
         erw.StartType = dwe.StartType;
+        erw.UserId = dwe.UserId;
         erw.FromAPI = dwe.FromAPI;
         erw.RecordingDate = dwe.RecordingDate;
         erw.RecordingName = dwe.RecordingName;
@@ -490,6 +491,7 @@ Bestätige die Synchronisierung auf dem Smartphone.";
         w.Destination = erw.Destination;
         w.DestinationType = erw.DestinationType;
         w.FromAPI = erw.FromAPI;
+        w.UserId = erw.UserId;
         w.IsDirty = true;
         w.Insert();
 
@@ -1001,6 +1003,7 @@ Bestätige die Synchronisierung auf dem Smartphone.";
         public string DestinationType { set; get; }
         public string Name { set; get; }
         public string Description { set; get; }
+        public int UserId { set; get; }
 
         public System.DateTime RecordingDate { set; get; }
         public string RecordingName { set; get; }
