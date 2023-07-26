@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using LocationUtils;
 using NinevaStudios.GoogleMaps;
+using PaganiniRestAPI;
+using Unity.Entities.UniversalDelegates;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -72,6 +74,7 @@ public class MapManager : MonoBehaviour
 
     public void DisplayMarkers(List<Pathpoint> pathpoints)
     {
+        int i = 0;
 
         foreach (var pathpoint in pathpoints)
         {
@@ -91,28 +94,53 @@ public class MapManager : MonoBehaviour
 
             var mo = new MarkerOptions()
                     .Position(new LatLng(pathpoint.Latitude, pathpoint.Longitude))
-                    .Icon(NewCustomDescriptor());
+                    .Icon(NewCustomDescriptor(StaticMarkerIcon))
+                    .Title($"Marker {i} Lat: {pathpoint.Latitude} Lon: {pathpoint.Longitude}");
 
             Map.AddMarker(mo);
+            i++;
         }
     }
 
-    //public void FixRoute()
-    //{
-    //    var pipeline = new LocationUtils.GPSCleaningPipeline
-    //    {
-    //        ToleranceSimplify = ToleranceSimplify,
-    //        MaxAccuracyRadio = MaxAccuracyRadio,
-    //        DistanceOutlier = DistanceOutlier,
-    //        SegmentSplit = SegmentSplit,
-    //        OutlierFactor = OutlierFactor,
-    //        MinEvenly = MinEvenly,
-    //        MaxEvenly = MaxEvenly,
-    //        POIClusterDistance = POIClusterDistance
-    //    };
-    //    var ppList = pipeline.CleanRoute(PathpointList);
-    //    DisplayMarkers(ppList);
-    //}
+    int count = 0;
+    public void RenderMarker(PathpointTraceMessage traceMessage)
+    {
+        Texture2D icon = DefaultMarkerIcon;
+
+        if (traceMessage.eventType == SocketsAPI.POIState.OnPOI.ToString())
+        {
+            icon = ChangeIconColor(icon, 0.8f, 0.8f, 1.2f);
+        }
+        else if (traceMessage.eventType == SocketsAPI.POIState.OffTrack.ToString())
+        {
+            icon = ChangeIconColor(icon, 1.2f, 0.8f, 0.8f);
+        }
+        else if (traceMessage.eventType == SocketsAPI.POIState.Invalid.ToString())
+        {
+            icon = ChangeIconColor(icon, 1.2f, 0.6f, 0.2f);
+        }
+        else if (traceMessage.eventType == SocketsAPI.POIState.OnTrack.ToString())
+        {
+            icon = ChangeIconColor(icon, 0.8f, 1.2f, 0.8f);            
+        }
+        else
+        {
+            icon = ChangeIconColor(icon, 1.2f, 0.8f, 1.2f);
+        }
+
+        
+
+        var pathpoint = traceMessage.pathpoint;
+
+        var mo = new MarkerOptions()
+        .Position(new LatLng(pathpoint.ppoint_lat, pathpoint.ppoint_lon))
+        .Icon(NewCustomDescriptor(icon))
+        .Title($"Seq: {traceMessage.seq} Lat: {pathpoint.ppoint_lat} Lon: {pathpoint.ppoint_lon}"); 
+
+        Map.AddMarker(mo);
+        count++;
+    }
+
 
 
     private void LoadMap(int zoom)
@@ -136,6 +164,8 @@ public class MapManager : MonoBehaviour
             options = options.Camera(cameraPosition);
 
         }
+
+        options.MapType(GoogleMapType.Hybrid);
 
         Map = new GoogleMapsView(options);
        
@@ -184,10 +214,34 @@ public class MapManager : MonoBehaviour
         DisplayMarkers(PathpointList);
     }
 
-
-
-    static ImageDescriptor NewCustomDescriptor()
+    private Texture2D ChangeIconColor(Texture2D icon, float r, float g, float b)
     {
-        return ImageDescriptor.FromTexture2D(StaticMarkerIcon);
+        // Create a new Texture2D object with the same size as the original texture
+        Texture2D newIcon = new Texture2D(icon.width, icon.height);
+
+        // Get the pixel data from the original texture
+        Color[] pixels = icon.GetPixels();
+
+        // Modify the color values to give the texture a green hue
+        for (int i = 0; i < pixels.Length; i++)
+        {
+            pixels[i].r = pixels[i].r * r;
+            pixels[i].g = pixels[i].g * g;
+            pixels[i].b = pixels[i].b * b;
+        }
+
+        // Apply the modified pixel data to the new texture
+        newIcon.SetPixels(pixels);
+        newIcon.Apply();
+
+        return newIcon;
+
     }
+
+    static ImageDescriptor NewCustomDescriptor(Texture2D icon)
+    {
+        return ImageDescriptor.FromTexture2D(icon);
+    }
+
+
 }

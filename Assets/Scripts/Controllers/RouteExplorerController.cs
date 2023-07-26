@@ -79,7 +79,16 @@ public class RouteExplorerController : MonoBehaviour
 
 
 
-
+    /// <summary>
+    /// Updates the local routes with the data received from the API.
+    /// </summary>
+    /// <param name="list">An array of WayAPIResult objects containing the ways and associated routes information from the API.</param>
+    /// <remarks>
+    /// This function first deletes any non-dirty local copies of ways and routes. Then, it iterates through the list of WayAPIResult objects and
+    /// checks if a local copy of each way already exists. If not, it inserts a new way with the information from the API. Next, for each way, the function
+    /// iterates through its associated routes (if any) and checks if a local copy of each route already exists. If not, it inserts a new route with the
+    /// information from the API.
+    /// </remarks>
     private void UpdateLocalRoutes(WayAPIResult [] list)
     {
         // Delete the current local copy of ways

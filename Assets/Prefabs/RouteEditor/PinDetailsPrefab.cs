@@ -13,12 +13,15 @@ public class PinDetailsEvent : UnityEvent<Pathpoint>
 
 public class PinDetailsPrefab : MonoBehaviour
 {
-
+    [Header("Pin Data")]
     public TMPro.TMP_Text PinTitle;
     public TMPro.TMP_InputField PinDescription;
+    public Toggle PinType;
+
     public PhotoListPrefab PhotoList;
 
 
+    [Header("UI Controllers")]
     public Button ButtonClose;
     public PinDetailsEvent OnCloseDetails;
 
@@ -56,6 +59,16 @@ public class PinDetailsPrefab : MonoBehaviour
             Destroy(this.gameObject);
         }
     }
+
+
+    public void SaveChanges()
+    {
+        CurrentPathpoint.Description = PinDescription.text;
+        CurrentPathpoint.POIType = PinType.isOn ? Pathpoint.POIsType.Landmark : Pathpoint.POIsType.Reassurance;
+        CurrentPathpoint.IsDirty = true;
+        CurrentPathpoint.Insert();
+    }
+    
 
 
 }

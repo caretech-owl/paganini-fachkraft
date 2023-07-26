@@ -86,6 +86,12 @@ public class RouteEditorController : MonoBehaviour
         LoadVideo();
     }
 
+    public void RenderPathpointTrace(PathpointTraceMessage traceMessage)
+    {
+        Debug.Log($"RenderPathpointTrace {traceMessage.type} {traceMessage.eventType}");
+        GMap.RenderMarker(traceMessage);        
+    }
+
     /// <summary>
     /// Safely terminate the editor
     /// </summary>
@@ -432,6 +438,7 @@ public class RouteEditorController : MonoBehaviour
         Route.ChangeParent(CurrentWay.Id, waydb.Id);
 
         CurrentWay = waydb;
+        AppState.CurrentWay = CurrentWay;
 
         // continue to updating the route
         UploadRouteDefinition(waydb.Id);
@@ -456,6 +463,7 @@ public class RouteEditorController : MonoBehaviour
         Pathpoint.ChangeParent(CurrentRoute.Id, routedb.Id);
 
         CurrentRoute = routedb;
+        AppState.CurrentRoute = CurrentRoute;
 
         UploadNewAddedPathPhotos(routedb.Id);
     }
