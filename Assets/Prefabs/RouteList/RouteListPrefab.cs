@@ -16,7 +16,7 @@ public class RouteListPrefab : MonoBehaviour
     public RouteItemEvent OnItemSelected;
 
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         Clearlist();
     }
@@ -29,6 +29,8 @@ public class RouteListPrefab : MonoBehaviour
 
     public void Clearlist()
     {
+        if (Content== null) return;
+
         Transform content = Content.GetComponent<Transform>();
 
         // Remove all children
@@ -57,6 +59,29 @@ public class RouteListPrefab : MonoBehaviour
     }
 
 
+    public void AddItem(SynchronizationController.DetailedWayExport item)
+    {
+
+        Way w = new Way();
+        w.Id = item.Id;
+        w.Name = item.Name;
+        w.StartType = item.StartType;
+        w.DestinationType = item.DestinationType;
+        w.Start = item.Start;
+        w.Destination = item.Destination;
+        w.Description = item.Description;
+        w.UserId = item.UserId;
+
+        Route r = new Route();
+        r.Id = item.Id;
+        r.Date = item.RecordingDate;
+        r.Name = item.RecordingName;
+
+        w.Routes = new List<Route>();
+        w.Routes.Add(r);
+
+        this.AddItem(w);
+    }
 
 
 

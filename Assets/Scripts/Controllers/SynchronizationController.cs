@@ -21,14 +21,15 @@ using static InternalDataModel;
 public class SynchronizationController : MonoBehaviour
 {
 
-    public GameObject SyncOverviewListContentPrefab;
-    public GameObject SyncOverviewListContentAlternatePrefab;
+    //public GameObject SyncOverviewListContentPrefab;
+    //public GameObject SyncOverviewListContentAlternatePrefab;
     public GameObject SmartphoneFoundPrefab;
     public GameObject SmartphoneAskForConnectionText;
     //public GameObject OverviewList;
-    public GameObject SyncOverviewList;
+    //public GameObject SyncOverviewList;
+    public RouteListPrefab SyncOverviewList;
     public GameObject TextOverviewPanelAskForConnection;
-    public GameObject SVGImageSearchPanelAskForConnection;
+    public GameObject LoadingIconAskForConnection;
 
     public FileTransferServer FTS;
 
@@ -152,22 +153,24 @@ public class SynchronizationController : MonoBehaviour
     /// </summary>
     public void InitSyncUI()
     {
-        UI_PanelStart.SetActive(true);
-        UI_PanelSearch.SetActive(false);
-        UI_PanelFound.SetActive(false);
-        UI_PanelAskForConnection.SetActive(false);
-        UI_SyncOverview.SetActive(false);
-        UI_PanelFileTransferrunning.SetActive(false);
-        UI_PanelEnd.SetActive(false);
-        UI_Overwrite.SetActive(false);
-        UI_PanelError.SetActive(false);
-        UI_PanelDenied.SetActive(false);
+        //UI_PanelStart.SetActive(true);
+        //UI_PanelSearch.SetActive(false);
+        //UI_PanelFound.SetActive(false);
+        //UI_PanelAskForConnection.SetActive(false);
+        //UI_SyncOverview.SetActive(false);       
+        //UI_PanelFileTransferrunning.SetActive(false);
+        //UI_PanelEnd.SetActive(false);
+        //UI_Overwrite.SetActive(false);
+        //UI_PanelError.SetActive(false);
+        //UI_PanelDenied.SetActive(false);
+
+        DisplayScreenPanel(UI_PanelStart);
 
         TextOverviewPanelAskForConnection.GetComponent<TMP_Text>().text = @"Verbindung wird aufgebaut ...
 
 Bestätige die Synchronisierung auf dem Smartphone.";
 
-        SVGImageSearchPanelAskForConnection.SetActive(true);
+        LoadingIconAskForConnection.SetActive(true);
 
         FileListToSyncronize = null;
         FileListProcessed = null;
@@ -190,10 +193,11 @@ Bestätige die Synchronisierung auf dem Smartphone.";
     /// <param name="erwId">The id of the ERW to synchronize with</param>
     public void SyncWayFromMobilePhone(int erwId)
     {
+        string downloadPath = FileManagement.persistentDataPath + "/" + FTS._downloadFolder;
 
-        UI_PanelFileTransferrunning.SetActive(true);
+        DisplayScreenPanel(UI_PanelFileTransferrunning);
 
-        List<DetailedWayExport> listOfWays = DetailedWayExportFiles.ParseDWEFile("waysForExport.xml", FTS._downloadFolder);
+        List<DetailedWayExport> listOfWays = DetailedWayExportFiles.ParseDWEFile("waysForExport.xml", downloadPath);
 
         erw = InternalDataModelController.GetInternalDataModelController().idm.exploritoryRouteWalks.Find(x => x.Id.Equals(erwId));
 
@@ -208,9 +212,39 @@ Bestätige die Synchronisierung auf dem Smartphone.";
         {
             currentWayFolderName = erw.Folder;
 
-            UI_Overwrite.SetActive(true);
-            UI_SyncOverview.SetActive(false);
+            DisplayScreenPanel(UI_Overwrite);            
         }
+
+    }
+
+    public bool CheckIfOverwriteRequired(int erwId)
+    {
+        
+        erw = InternalDataModelController.GetInternalDataModelController().idm.exploritoryRouteWalks.Find(x => x.Id.Equals(erwId));        
+
+        return erw != null;
+
+    }
+
+    /// <summary>
+    /// Synchronise a given ERW from imported folders
+    /// </summary>
+    /// <param name="erwId">Selected ERW</param>
+    /// <param name="sourceFolder">Source folder</param>
+    public void SyncFromImportedFolder(int erwId, string importPath, string sourceFolderName)
+    {
+        List<DetailedWayExport> listOfWays = DetailedWayExportFiles.ParseDWEFile("waysForExport.xml", importPath);
+        selectedDwe = listOfWays.Find(x => x.Id.Equals(erwId));
+
+        erw = new DataOfImportedERW();
+
+        string sourceFolderPath = importPath + "/" + sourceFolderName;
+
+        // Prepare the files downloaded via the USB
+        PrepareFilesToDownload(sourceFolderPath, false);
+
+        // Process the downloaded files
+        ProcessDownloadedData(sourceFolderPath);
 
     }
 
@@ -265,33 +299,49 @@ Bestätige die Synchronisierung auf dem Smartphone.";
 
 
     /// <summary>
+    /// Event that listens to the selection of a route to synchronise
+    /// </summary>
+    public void OnRouteToSyncSelected(Way w, Route r)
+    {
+        SyncWayFromMobilePhone(r.Id);
+    }
+
+
+    /// <summary>
     /// Populates the list of available ERWs to download, as informed by
     /// the remote device (waysForExport.xml)
     /// </summary>
     private void FillSyncOverviewList()
     {
+        string downloadPath = FileManagement.persistentDataPath + "/" + FTS._downloadFolder;
 
-        List<DetailedWayExport> listOfWays = DetailedWayExportFiles.ParseDWEFile("waysForExport.xml", FTS._downloadFolder);
+        List<DetailedWayExport> listOfWays = DetailedWayExportFiles.ParseDWEFile("waysForExport.xml", downloadPath);
 
         // Reset overview list
         ResetOverviewLists();
 
-        // Sync overview list
-        foreach (DetailedWayExport dwe in listOfWays)
+        //// Sync overview list
+        //foreach (DetailedWayExport dwe in listOfWays)
+        //{
+        //    if (!alternateSync)
+        //    {
+        //        GameObject go = Instantiate(SyncOverviewListContentPrefab, SyncOverviewList.transform);
+        //        go.GetComponent<SyncOverviewElement>().InstantiateSyncOverviewElement(dwe.Id, dwe.Start, dwe.Destination, dwe.RecordingDate.ToString(), "Daten verfügbar", this);
+        //        alternateSync = true;
+        //    }
+        //    else
+        //    {
+        //        GameObject go = Instantiate(SyncOverviewListContentAlternatePrefab, SyncOverviewList.transform);
+        //        go.GetComponent<SyncOverviewElement>().InstantiateSyncOverviewElement(dwe.Id, dwe.Start, dwe.Destination, dwe.RecordingDate.ToString(), "Daten verfügbar", this);
+        //        alternateSync = false;
+        //    }
+        //}
+
+        foreach (var item in listOfWays)
         {
-            if (!alternateSync)
-            {
-                GameObject go = Instantiate(SyncOverviewListContentPrefab, SyncOverviewList.transform);
-                go.GetComponent<SyncOverviewElement>().InstantiateSyncOverviewElement(dwe.Id, dwe.Start, dwe.Destination, dwe.RecordingDate.ToString(), "Daten verfügbar", this);
-                alternateSync = true;
-            }
-            else
-            {
-                GameObject go = Instantiate(SyncOverviewListContentAlternatePrefab, SyncOverviewList.transform);
-                go.GetComponent<SyncOverviewElement>().InstantiateSyncOverviewElement(dwe.Id, dwe.Start, dwe.Destination, dwe.RecordingDate.ToString(), "Daten verfügbar", this);
-                alternateSync = false;
-            }
+            SyncOverviewList.AddItem(item);
         }
+
 
         CurrentStatus = SyncStatus.WAIT_ERW_SELECT;
     }
@@ -301,12 +351,20 @@ Bestätige die Synchronisierung auf dem Smartphone.";
     /// </summary>
     private void ResetOverviewLists()
     {
-        // Reset all overview lists with objects of type 'SyncOverviewElement'
-        while (GameObject.FindObjectsOfType(typeof(SyncOverviewElement)).Length > 0)
-        {
-            DestroyImmediate(((SyncOverviewElement)FindObjectsOfType(typeof(SyncOverviewElement))[0]).transform.gameObject, true);
-        }
+        SyncOverviewList.Clearlist();
+    }
 
+    private void DisplayScreenPanel(GameObject panel) {
+        UI_PanelStart.SetActive(UI_PanelStart == panel);
+        UI_PanelSearch.SetActive(UI_PanelSearch == panel);
+        UI_PanelFound.SetActive(UI_PanelFound == panel);
+        UI_PanelAskForConnection.SetActive(UI_PanelAskForConnection == panel);
+        UI_SyncOverview.SetActive(UI_SyncOverview == panel);
+        UI_PanelFileTransferrunning.SetActive(UI_PanelFileTransferrunning == panel);
+        UI_PanelEnd.SetActive(UI_PanelEnd == panel);
+        UI_Overwrite.SetActive(UI_Overwrite == panel);
+        UI_PanelError.SetActive(UI_PanelError == panel);
+        UI_PanelDenied.SetActive(UI_PanelDenied == panel);
     }
 
 
@@ -319,13 +377,13 @@ Bestätige die Synchronisierung auf dem Smartphone.";
     /// as defined by the previously downloaded ERW manifest.xml file.
     /// Once the list is prepared, it proceeds to request the first file.
     /// </summary>
-    private void PrepareFilesToDownload()
+    private void PrepareFilesToDownload(string sourceFolder, bool mobileSync = true)
     {
 
         FileListToSyncronize = new List<DetailedWayExportFiles>();
         FileListProcessed = new List<DetailedWayExportFiles>();
 
-        List<DetailedWayExport> list = DetailedWayExportFiles.ParseDWEFile($"{selectedDwe.Name}-manifest.xml", FTS._downloadFolder);
+        List<DetailedWayExport> list = DetailedWayExportFiles.ParseDWEFile($"{selectedDwe.Name}-manifest.xml", sourceFolder);
         DetailedWayExport dwe = list.First();
 
         // fill ERW
@@ -349,19 +407,26 @@ Bestätige die Synchronisierung auf dem Smartphone.";
         foreach (var file in dwe.Files)
         {
             FileListToSyncronize.Add(file);
+
+            // When we import from files, all files are copied and present and not incrementally
+            // processed when we received them from the pohne
+            if (!mobileSync) {
+                FileListProcessed.Add(file);
+            }
         }
 
         CurrentStatus = SyncStatus.DOWNLOAD;
 
         // get coordinates
         FileInfo fiPoints = new FileInfo(dwe.Points);
-        RequestFile(fiPoints.Name);
+
+        // we request file if we synchronise via phone, we ignore it via file import
+        if (mobileSync)
+            RequestFile(fiPoints.Name);
 
         DetailedWayExportFiles dwePoints = new DetailedWayExportFiles();
         dwePoints.File = fiPoints.Name;
         FileListProcessed.Add(dwePoints);
-
-        // InternalDataModelController.GetInternalDataModelController().CheckDirtyFlagsAndSave();
 
     }
 
@@ -371,7 +436,7 @@ Bestätige die Synchronisierung auf dem Smartphone.";
     /// As a result, files are organised and stored in the appropriate location, and the internal data model
     /// is updated.
     /// </summary>
-    private void ProcessDownloadedData()
+    private void ProcessDownloadedData(string sourceFolderPath)
     {
         // If the base folder exists, we overwrite it (as the user consented to it)
         if (Directory.Exists(FileManagement.persistentDataPath + "/" + currentWayFolderName))
@@ -390,7 +455,7 @@ Bestätige die Synchronisierung auf dem Smartphone.";
             Directory.CreateDirectory(FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Foto");
 
         // Reassemble file chunks
-        DetailedWayExportFiles.ReassembleFilesInFolder(FileManagement.persistentDataPath + "/" + FTS._downloadFolder);
+        DetailedWayExportFiles.ReassembleFilesInFolder(sourceFolderPath);
 
         foreach (DetailedWayExportFiles file in FileListProcessed)
         {
@@ -413,20 +478,20 @@ Bestätige die Synchronisierung auf dem Smartphone.";
                 if (erw.Videos.Contains(fileName)) continue;
 
                 erw.Videos.Add(fileName);
-                File.Copy(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + fileName,
+                File.Copy(sourceFolderPath + "/" + fileName,
                     FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Video/" + fileName);
 
             }
             else if (fileName.EndsWith(".jpg"))
             {
                 erw.Photos.Add(fileName);
-                File.Copy(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + fileName,
+                File.Copy(sourceFolderPath + "/" + fileName,
                     FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Foto/" + fileName);
 
             }
             else if (fileName.EndsWith("-coordinates.xml"))
             {
-                ProcessPathpoints(fileName);
+                ProcessPathpoints(fileName, sourceFolderPath);
             }
         }
 
@@ -448,15 +513,15 @@ Bestätige die Synchronisierung auf dem Smartphone.";
     /// Processes a file containing Pathpoints by deserializing it and storing it in the current ERW
     /// </summary>
     /// <param name="fileName">The name of the file containing the Pathpoints</param>
-    private void ProcessPathpoints(string fileName)
+    private void ProcessPathpoints(string fileName, string sourcePath)
     {
         try
         {
             List<Pathpoint> ppoints = new List<Pathpoint>();
 
-            if (File.Exists(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + fileName))
+            if (File.Exists(sourcePath+ "/" + fileName))
             {
-                using (var xmlReader = new XmlTextReader(FileManagement.persistentDataPath + "/" + FTS._downloadFolder + "/" + fileName))
+                using (var xmlReader = new XmlTextReader(sourcePath + "/" + fileName))
                 {
                     var xmlSerializer = new XmlSerializer(typeof(List<Pathpoint>));
                     ppoints = (List<Pathpoint>)xmlSerializer.Deserialize(xmlReader);
@@ -466,6 +531,8 @@ Bestätige die Synchronisierung auf dem Smartphone.";
 
                 Log("ProcessPathpoints - deserialize erw.Pathpoints: " + erw.Pathpoints[0].RouteId);
 
+            } else {
+                Log("ProcessPathpoints - Coordinates file does not exist!");
             }
         }
         catch (IOException ex)
@@ -625,25 +692,25 @@ Bestätige die Synchronisierung auf dem Smartphone.";
 
         if (file._sourceName.Equals("HANDSHAKE"))
         {
-            UI_PanelAskForConnection.SetActive(true);
+            DisplayScreenPanel(UI_PanelAskForConnection);
         }
         else if (file._sourceName.Equals("waysForExport.xml"))
         {
             fileInfo = file;
 
-            UI_SyncOverview.SetActive(true);
+            DisplayScreenPanel(UI_SyncOverview);
 
             FillSyncOverviewList();
 
         }
         else if (file._sourceName.Equals("ENDOFSYNC"))
         {
-            UI_PanelProcessingData.SetActive(true);
+            DisplayScreenPanel(UI_PanelProcessingData);
             CurrentStatus = SyncStatus.FINISH;
-            ProcessDownloadedData();
+            ProcessDownloadedData(FileManagement.persistentDataPath + "/"+ FTS._downloadFolder);
 
-            
-            UI_PanelEnd.SetActive(true);
+            DisplayScreenPanel(UI_PanelEnd);
+
             ResetOrDisposeProcessProtocol();
         }
         else if (file._sourceName.StartsWith("REQUEST-ERW-"))
@@ -656,7 +723,7 @@ Bestätige die Synchronisierung auf dem Smartphone.";
         }
         else if (file._sourceName.EndsWith("-manifest.xml"))
         {
-            PrepareFilesToDownload();
+            PrepareFilesToDownload(FileManagement.persistentDataPath + "/" + FTS._downloadFolder);
         }
         else if (file._sourceName.EndsWith(".mp4") ||
             file._sourceName.EndsWith(".chunk") ||
@@ -693,7 +760,7 @@ Bestätige die Synchronisierung auf dem Smartphone.";
             RequestFile("waysForExport.xml");
 
             TextOverviewPanelAskForConnection.GetComponent<TMP_Text>().text = "Die Geräte sind verbunden.";
-            SVGImageSearchPanelAskForConnection.SetActive(false);
+            LoadingIconAskForConnection.SetActive(false);
 
             CurrentStatus = SyncStatus.WAIT_ERW_LIST;
 
@@ -707,8 +774,7 @@ Bestätige die Synchronisierung auf dem Smartphone.";
             {
                 LogError($"CONNECTIONALLOWED: Process status is {CurrentStatus.ToString()} when WAIT_CONNECT_RESPONSE was expected ");
             }
-            UI_PanelAskForConnection.SetActive(false);
-            UI_PanelDenied.SetActive(true);
+            DisplayScreenPanel(UI_PanelDenied);
 
             CurrentStatus = SyncStatus.CANCEL; // DENIED
             ResetOrDisposeProcessProtocol();
@@ -755,7 +821,7 @@ Bestätige die Synchronisierung auf dem Smartphone.";
                 string[] comp = list[0].Split(',');
                 SmartphoneFoundPrefab.GetComponentInChildren<TMP_Text>().text = comp[0];
                 SmartphoneAskForConnectionText.GetComponent<TMP_Text>().text = comp[0];
-                UI_PanelFound.SetActive(true);
+                DisplayScreenPanel(UI_PanelFound);                
 
                 currentDeviceName = list[0];
             }
@@ -963,7 +1029,8 @@ Bestätige die Synchronisierung auf dem Smartphone.";
         {
             LogProcess($"Device {currentDeviceName} is disconnected.");
 
-            UI_PanelError.SetActive(true);
+            DisplayScreenPanel(UI_PanelError);
+
             ResetOrDisposeProcessProtocol();
         }
 
@@ -1098,15 +1165,15 @@ Bestätige die Synchronisierung auf dem Smartphone.";
 
 
 
-        public static List<DetailedWayExport> ParseDWEFile(string fileName, string folder)
+        public static List<DetailedWayExport> ParseDWEFile(string fileName, string path)
         {
             List<DetailedWayExport> listOfWays = new List<DetailedWayExport>();
 
-            if (System.IO.File.Exists((FileManagement.persistentDataPath + "/" + folder + "/" + fileName)))
+            if (System.IO.File.Exists((path+ "/" + fileName)))
             {
-                Debug.Log(FileManagement.persistentDataPath + "/" + folder + "/" + fileName + " exist!");
+                Debug.Log(path + "/" + fileName + " exist!");
 
-                using (var xmlReader = new XmlTextReader(FileManagement.persistentDataPath + "/" + folder + "/" + fileName))
+                using (var xmlReader = new XmlTextReader(path + "/" + fileName))
                 {
                     var xmlSerializer = new XmlSerializer(typeof(List<DetailedWayExport>));
                     listOfWays = (List<DetailedWayExport>)xmlSerializer.Deserialize(xmlReader);
@@ -1114,8 +1181,8 @@ Bestätige die Synchronisierung auf dem Smartphone.";
             }
             else
             {
-                Debug.LogWarning(FileManagement.persistentDataPath + "/" + folder + "/" + fileName + " does not exist!");
-                ErrorHandlerSingleton.GetErrorHandler().AddNewError("ParseDWEFile(): ", FileManagement.persistentDataPath + "/" + folder + "/" + fileName + " does not exist!");
+                Debug.LogWarning(path + "/" + fileName + " does not exist!");
+                ErrorHandlerSingleton.GetErrorHandler().AddNewError("ParseDWEFile(): ", path + "/" + fileName + " does not exist!");
             }
 
             return listOfWays;
