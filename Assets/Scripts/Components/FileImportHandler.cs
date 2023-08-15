@@ -114,27 +114,12 @@ public class FileImportHandler : MonoBehaviour
         Directory.CreateDirectory(TempPath);
         try
         {
-
+            //TODO: Does it throw an Exception if the folder does not exist?
             SFB.FileBrowserHelpers.CopyDirectory(SourceFolderPath, TempPath);
 
             LogText.text += "SourceFolderPath: " + SourceFolderPath + "\n";
 
-            //var ffs = SFB.FileBrowserHelpers.GetEntriesInDirectory(SourceFolderPath, true);
-
-            //foreach (var f in ffs)
-            //{
-            //    Debug.Log($"file:{f.Name} {f.Path}");
-            //    if (f.Name == overviewFilename) {
-            //        overviewPath = f.Path;
-            //    }
-            //}
-
-            //if (overviewPath == null)
-            //    throw new Exception($"{overviewFilename} does not exists in selected import folder {SourceFolderPath}");
-
-
-            //SFB.FileBrowserHelpers.CopyFile(overviewPath, tempPath);
-
+            //TODO: Throw exceptions when files / folders are not found
             RouteList = SynchronizationController.DetailedWayExportFiles.ParseDWEFile(overviewFilename, TempPath);
 
             DisplayScreenPanel(ImportOverviewPanel);
@@ -145,24 +130,6 @@ public class FileImportHandler : MonoBehaviour
             {
                 Debug.Log($"item:{item.Name}");
                 LogText.text = LogText.text + $"item:{item.Name}";
-
-                //Way w = new Way();
-                //w.Id = item.Id;
-                //w.Name = item.Name;
-                //w.StartType = item.StartType;
-                //w.DestinationType = item.DestinationType;
-                //w.Start = item.Start;
-                //w.Destination = item.Destination;
-                //w.Description = item.Description;
-                //w.UserId = item.UserId;
-
-                //Route r = new Route();
-                //r.Id = item.Id;
-                //r.Date = item.RecordingDate;
-                //r.Name = item.RecordingName;
-
-                //w.Routes = new List<Route>();
-                //w.Routes.Add(r);
 
                 AvailableRoutes.AddItem(item);
             }

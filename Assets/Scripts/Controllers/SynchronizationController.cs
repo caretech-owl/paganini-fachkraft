@@ -23,12 +23,12 @@ public class SynchronizationController : MonoBehaviour
 
     //public GameObject SyncOverviewListContentPrefab;
     //public GameObject SyncOverviewListContentAlternatePrefab;
-    public GameObject SmartphoneFoundPrefab;
-    public GameObject SmartphoneAskForConnectionText;
+    //public GameObject SmartphoneFoundPrefab;
+    //public GameObject SmartphoneAskForConnectionText;
     //public GameObject OverviewList;
     //public GameObject SyncOverviewList;
     public RouteListPrefab SyncOverviewList;
-    public GameObject TextOverviewPanelAskForConnection;
+    //public GameObject TextOverviewPanelAskForConnection;
     public GameObject LoadingIconAskForConnection;
 
     public FileTransferServer FTS;
@@ -39,6 +39,7 @@ public class SynchronizationController : MonoBehaviour
     public GameObject UI_PanelSearch;
     public GameObject UI_PanelFound;
     public GameObject UI_PanelAskForConnection;
+    public GameObject UI_PanelRouteReading;
     public GameObject UI_SyncOverview;
     public GameObject UI_PanelFileTransferrunning;
     public GameObject UI_PanelProcessingData;
@@ -130,6 +131,8 @@ public class SynchronizationController : MonoBehaviour
         // available in the environment. This should
         // be the name of the logged in user
         FTS._deviceName = "Social Worker,SWR";
+
+        SyncState.Instance.TabletName = "Social Worker";
     }
 
 
@@ -153,22 +156,11 @@ public class SynchronizationController : MonoBehaviour
     /// </summary>
     public void InitSyncUI()
     {
-        //UI_PanelStart.SetActive(true);
-        //UI_PanelSearch.SetActive(false);
-        //UI_PanelFound.SetActive(false);
-        //UI_PanelAskForConnection.SetActive(false);
-        //UI_SyncOverview.SetActive(false);       
-        //UI_PanelFileTransferrunning.SetActive(false);
-        //UI_PanelEnd.SetActive(false);
-        //UI_Overwrite.SetActive(false);
-        //UI_PanelError.SetActive(false);
-        //UI_PanelDenied.SetActive(false);
-
         DisplayScreenPanel(UI_PanelStart);
 
-        TextOverviewPanelAskForConnection.GetComponent<TMP_Text>().text = @"Verbindung wird aufgebaut ...
+//        TextOverviewPanelAskForConnection.GetComponent<TMP_Text>().text = @"Verbindung wird aufgebaut ...
 
-Bestätige die Synchronisierung auf dem Smartphone.";
+//Bestätige die Synchronisierung auf dem Smartphone.";
 
         LoadingIconAskForConnection.SetActive(true);
 
@@ -184,6 +176,9 @@ Bestätige die Synchronisierung auf dem Smartphone.";
 
         // We prevent the screen from dimming out while the process is active        
         Screen.sleepTimeout = SleepTimeout.NeverSleep;
+
+        SyncState.Instance.ClearValues();
+        SyncState.Instance.TabletName = "Social Worker";
 
     }
 
@@ -359,6 +354,7 @@ Bestätige die Synchronisierung auf dem Smartphone.";
         UI_PanelSearch.SetActive(UI_PanelSearch == panel);
         UI_PanelFound.SetActive(UI_PanelFound == panel);
         UI_PanelAskForConnection.SetActive(UI_PanelAskForConnection == panel);
+        UI_PanelRouteReading.SetActive(UI_PanelRouteReading == panel);
         UI_SyncOverview.SetActive(UI_SyncOverview == panel);
         UI_PanelFileTransferrunning.SetActive(UI_PanelFileTransferrunning == panel);
         UI_PanelEnd.SetActive(UI_PanelEnd == panel);
@@ -759,8 +755,10 @@ Bestätige die Synchronisierung auf dem Smartphone.";
 
             RequestFile("waysForExport.xml");
 
-            TextOverviewPanelAskForConnection.GetComponent<TMP_Text>().text = "Die Geräte sind verbunden.";
-            LoadingIconAskForConnection.SetActive(false);
+            //TextOverviewPanelAskForConnection.GetComponent<TMP_Text>().text = "Die Geräte sind verbunden.";
+            //LoadingIconAskForConnection.SetActive(false);
+            DisplayScreenPanel(UI_PanelRouteReading);
+
 
             CurrentStatus = SyncStatus.WAIT_ERW_LIST;
 
@@ -819,11 +817,16 @@ Bestätige die Synchronisierung auf dem Smartphone.";
             if (list.Count > 0)
             {
                 string[] comp = list[0].Split(',');
-                SmartphoneFoundPrefab.GetComponentInChildren<TMP_Text>().text = comp[0];
-                SmartphoneAskForConnectionText.GetComponent<TMP_Text>().text = comp[0];
-                DisplayScreenPanel(UI_PanelFound);                
+                //SmartphoneFoundPrefab.GetComponentInChildren<TMP_Text>().text = comp[0];
+                //SmartphoneAskForConnectionText.GetComponent<TMP_Text>().text = comp[0];
 
                 currentDeviceName = list[0];
+
+                SyncState.Instance.PhoneName = comp[0];
+
+                DisplayScreenPanel(UI_PanelFound);
+               
+                
             }
             else
             {
