@@ -155,6 +155,12 @@ MonoBehaviour:
   CellStatus: {fileID: 6507497428762145696}
   CellText: {fileID: 5541569172661467650}
   Icon: {fileID: 7226703222872774193}
+  StatusCleaning: {r: 0.8301887, g: 0.07440368, b: 0.07440368, a: 1}
+  StatusDiscussion: {r: 1, g: 0.7848823, b: 0, a: 1}
+  StatusAdaptation: {r: 0, g: 0.45551944, b: 1, a: 1}
+  StatusTraining: {r: 0.007843138, g: 1, b: 0.027450982, a: 1}
+  StatusDiscarded: {r: 0.5727572, g: 0.5754717, b: 0.5728108, a: 1}
+  StatusCompleted: {r: 0.9147138, g: 0.007843137, b: 1, a: 0}
 --- !u!1 &5541569172661467648
 GameObject:
   m_ObjectHideFlags: 0
@@ -403,7 +409,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8112042486664818060, guid: ff15f4712b90f47b9ab5722d08bb2f66, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 125
+      value: 36
       objectReference: {fileID: 0}
     - target: {fileID: 8112042486664818060, guid: ff15f4712b90f47b9ab5722d08bb2f66, type: 3}
       propertyPath: m_SizeDelta.y
@@ -411,11 +417,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8112042486664818060, guid: ff15f4712b90f47b9ab5722d08bb2f66, type: 3}
       propertyPath: m_LocalScale.x
-      value: 0.35
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8112042486664818060, guid: ff15f4712b90f47b9ab5722d08bb2f66, type: 3}
       propertyPath: m_LocalScale.y
-      value: 0.35
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 8112042486664818060, guid: ff15f4712b90f47b9ab5722d08bb2f66, type: 3}
       propertyPath: m_LocalPosition.x

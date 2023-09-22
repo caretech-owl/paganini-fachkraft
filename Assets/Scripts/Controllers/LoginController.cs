@@ -11,7 +11,9 @@ public class LoginController : MonoBehaviour
 {
     public GameObject InputFieldUsername;
     public GameObject InputFieldPassword;
-    public Button LoginButton;
+    public GameObject ErrorMessage;
+
+    public ButtonPrefab LoginButton;
     //public UnityEvent OnLoginSucceed;
     //public UnityEvent OnLoginFail;
     public Toggle ToggleIsLoginRemembered;
@@ -44,7 +46,8 @@ public class LoginController : MonoBehaviour
 
     public void SendPinToAPI()
     {
-        LoginButton.interactable = false;
+        ErrorMessage.SetActive(false);
+        LoginButton.RenderBusyState(true);
         //ServerCommunication.Instance.GetSocialWorkerAuthentification(GetAuthSucceed, GetAuthFailed, InputFieldUsername.GetComponent<TMP_InputField>().text, InputFieldPassword.GetComponent<TMP_InputField>().text);
 
         PaganiniRestAPI.SocialWorker.Authenticate(InputFieldUsername.GetComponent<TMP_InputField>().text,
@@ -84,7 +87,8 @@ public class LoginController : MonoBehaviour
     private void GetAuthFailed(string errorMessage)
     {
         Debug.LogError(errorMessage);
-        LoginButton.interactable = true;
+        LoginButton.RenderBusyState(false);
+        ErrorMessage.SetActive(true);
 
         Assets.ErrorHandlerSingleton.GetErrorHandler().AddNewError("AuthFailed", errorMessage);
 

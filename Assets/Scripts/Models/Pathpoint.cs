@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Serialization;
+using PaganiniRestAPI;
 using SQLite4Unity3d;
 using Unity.VisualScripting;
 //using SQLiteNetExtensions.Attributes;
@@ -21,15 +22,23 @@ public class Pathpoint : BaseModel<Pathpoint>
 	public long Timestamp { set; get; }
 	public string Description { set; get; }
     public string PhotoFilename { set; get; }
+    public string Instruction { set; get; }
+    public POIFeedback RelevanceFeedback { set; get; }
+    public POIFeedback FamiliarityFeedback { set; get; }
 
 
-
-	//[OneToMany(CascadeOperations = CascadeOperation.All)]
-	[Ignore]
+    //[OneToMany(CascadeOperations = CascadeOperation.All)]
+    [Ignore]
     public List<PathpointPhoto> Photos { get; set; }
     [Ignore]
     public List<string> PhotoFilenames { get; set; }
 
+    public enum POIFeedback
+    {
+        None = 0,
+        Yes = 1,
+        No = 2,
+    }
 
     public enum POIsType
     {
@@ -38,7 +47,12 @@ public class Pathpoint : BaseModel<Pathpoint>
         [XmlEnum("1")]
         Reassurance = 1,
         [XmlEnum("2")]
-        Landmark = 2
+        Landmark = 2,
+        [XmlEnum("3")]
+        WayStart = 3,
+        [XmlEnum("4")]
+        WayDestination = 4
+
     }
 
     public Pathpoint() { }
@@ -53,6 +67,10 @@ public class Pathpoint : BaseModel<Pathpoint>
         Accuracy = pathpoint.ppoint_accuracy;
         POIType = (POIsType) pathpoint.ppoint_poitype;
         Description = pathpoint.ppoint_description;
+        Instruction = pathpoint.ppoint_instruction;
+
+        RelevanceFeedback = ((POIFeedback?) pathpoint.ppoint_relevance_feedback) ?? POIFeedback.None;
+        FamiliarityFeedback = ((POIFeedback?) pathpoint.ppoint_familiarity_feedback) ?? POIFeedback.None; 
 
         FromAPI = true;
 
@@ -164,8 +182,10 @@ public class Pathpoint : BaseModel<Pathpoint>
         pp.ppoint_poitype = (int)POIType;
         pp.ppoint_timestamp = DateTimeOffset.FromUnixTimeMilliseconds(Timestamp).UtcDateTime.ToString("yyyy-MM-dd HH:mm:ss");
         pp.ppoint_description = Description;
+        pp.ppoint_instruction = Instruction;
 
-
+        pp.ppoint_relevance_feedback = (int)RelevanceFeedback;
+        pp.ppoint_familiarity_feedback = (int)FamiliarityFeedback;
 
         return pp;
     }

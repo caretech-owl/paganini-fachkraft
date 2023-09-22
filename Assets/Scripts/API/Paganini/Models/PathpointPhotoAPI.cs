@@ -10,6 +10,8 @@ public interface IPathpointPhotoAPI
     public string pphoto_description { get; set; }
     public string photo { get; set; }
     public string photo_reference { get; set; }
+    public int? pphoto_cleaning_feedback { get; set; }
+    public int? pphoto_discussion_feedback { get; set; }
     public bool IsNew { get; set; }
 }
 
@@ -17,6 +19,8 @@ public class PathpointPhotoAPIBase : BaseAPI
 {
     public string pphoto_description { get; set; }
     public string photo { get; set; }
+    public int? pphoto_cleaning_feedback { get; set; }
+    public int? pphoto_discussion_feedback { get; set; }
 }
 
 

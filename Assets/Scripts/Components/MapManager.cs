@@ -10,6 +10,7 @@ using UnityEngine;
 
 public class MapManager : MonoBehaviour
 {
+    public GameObject MapContainer;
     public Texture2D DefaultMarkerIcon;
     public Texture2D POILandmarkMarkerIcon;
     public Texture2D POIReassuranceMarkerIcon;
@@ -18,12 +19,13 @@ public class MapManager : MonoBehaviour
     private static Texture2D StaticMarkerIcon;
     private GoogleMapsView Map;
     private List<Pathpoint> PathpointList;
+    private RouteSharedData SharedData;
 
 
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
-        
+        SharedData = RouteSharedData.Instance;
     }
 
     // Update is called once per frame
@@ -40,9 +42,9 @@ public class MapManager : MonoBehaviour
     /// Load the map component
     /// </summary>
     /// <param name="pathpoints">Pathpoints to render in the map</param> 
-    public void LoadMap(List<Pathpoint> pathpoints)
+    public void LoadMap()
     {
-        PathpointList = pathpoints;
+        PathpointList = SharedData.PathpointList;
         LoadMap(19);
     }
 
@@ -52,7 +54,7 @@ public class MapManager : MonoBehaviour
     public void DisableMap()
     {
         Map.IsVisible = false;
-        gameObject.SetActive(false);
+        MapContainer.SetActive(false);
     }
 
     /// <summary>
@@ -61,7 +63,7 @@ public class MapManager : MonoBehaviour
     public void EnableMap()
     {
         Map.IsVisible = true;
-        gameObject.SetActive(true);
+        MapContainer.SetActive(true);
     }
 
     /// <summary>
@@ -78,6 +80,7 @@ public class MapManager : MonoBehaviour
 
         foreach (var pathpoint in pathpoints)
         {
+            Debug.Log("DisplayMarkers: "+ pathpoint.Id);
 
             if (pathpoint.POIType == Pathpoint.POIsType.Point)
             {
@@ -147,8 +150,6 @@ public class MapManager : MonoBehaviour
     {
         StaticMarkerIcon = DefaultMarkerIcon;
 
-
-
         // initialize Map
 
         var options = new GoogleMapsOptions();        
@@ -175,7 +176,7 @@ public class MapManager : MonoBehaviour
     public Rect GetComponentSize()
     {
         // Get the RectTransform component
-        RectTransform rectTransform = gameObject.GetComponent<RectTransform>();
+        RectTransform rectTransform = MapContainer.GetComponent<RectTransform>();
         // return rectTransform.rect;
 
 
@@ -190,7 +191,7 @@ public class MapManager : MonoBehaviour
     public Vector2 GetCanvasPosition()
     {
         // Get the RectTransform of the GameObject
-        RectTransform rectTransform = gameObject.GetComponent<RectTransform>();
+        RectTransform rectTransform = MapContainer.GetComponent<RectTransform>();
 
         // Get the absolute position of the RectTransform in world space
         Vector3[] corners = new Vector3[4];

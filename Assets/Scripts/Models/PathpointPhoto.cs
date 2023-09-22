@@ -4,6 +4,8 @@ using System.Collections.Generic;
 using System;
 using PaganiniRestAPI;
 using UnityEngine;
+using Unity.VisualScripting;
+using static Pathpoint;
 
 public class PathpointPhoto : BaseModel<PathpointPhoto>
 {
@@ -11,7 +13,8 @@ public class PathpointPhoto : BaseModel<PathpointPhoto>
     public int Id { set; get; }
     public int PathpointId { set; get; }
     public string Description { set; get; }
-    public PhotoFeedback Feedback { set; get; }
+    public PhotoFeedback CleaningFeedback { set; get; }
+    public PhotoFeedback DiscussionFeedback { set; get; }
 
 
     public byte[] Photo { set; get; }
@@ -31,6 +34,9 @@ public class PathpointPhoto : BaseModel<PathpointPhoto>
         PathpointId = photoAPI.ppoint_id;
         Description = photoAPI.pphoto_description;
         Photo = Convert.FromBase64String(photoAPI.photo);
+
+        CleaningFeedback = ((PhotoFeedback?)photoAPI.pphoto_cleaning_feedback) ?? PhotoFeedback.None;
+        DiscussionFeedback = ((PhotoFeedback?)photoAPI.pphoto_discussion_feedback) ?? PhotoFeedback.None;
 
         FromAPI = true;
     }
@@ -72,6 +78,9 @@ public class PathpointPhoto : BaseModel<PathpointPhoto>
         photo.pphoto_description = Description;
         //photo.photo = Convert.ToBase64String(Photo);
 
+        photo.pphoto_cleaning_feedback = (int)CleaningFeedback;
+        photo.pphoto_discussion_feedback = (int)DiscussionFeedback;
+
         return photo;
     }
 
@@ -96,6 +105,9 @@ public class PathpointPhoto : BaseModel<PathpointPhoto>
         photo.ppoint_id = PathpointId;
         photo.pphoto_description = Description;
         //photo.photo = Convert.ToBase64String(Photo);
+
+        photo.pphoto_cleaning_feedback = (int)CleaningFeedback;
+        photo.pphoto_discussion_feedback = (int)DiscussionFeedback;
 
         return photo;
     }

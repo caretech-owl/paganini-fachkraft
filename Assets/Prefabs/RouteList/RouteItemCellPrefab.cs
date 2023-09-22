@@ -1,7 +1,6 @@
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using Unity.VectorGraphics;
+using UnityEngine.UI;
 using static Route;
 
 public class RouteItemCellPrefab : MonoBehaviour
@@ -10,7 +9,18 @@ public class RouteItemCellPrefab : MonoBehaviour
     public TMPro.TMP_Text CellText;
     public LandmarkIcon Icon;
 
+    public  Color StatusCleaning;
+    public  Color StatusDiscussion;
+    public  Color StatusAdaptation;
+    public  Color StatusTraining;
+    public  Color StatusDiscarded;
+    public  Color StatusCompleted;
 
+    private Dictionary<RouteStatus, Color> StatusColor;
+
+    void Awake () {
+        
+    }
 
     public void FillCell(string text)
     {
@@ -39,7 +49,10 @@ public class RouteItemCellPrefab : MonoBehaviour
 
     public void SetCellStatus(RouteStatus status)
     {
+        SetupColors();
         //CellStatus.SetActive(status);
+        Image image = CellStatus.GetComponent<Image>();
+        image.color = StatusColor[status];
     }
 
     public void SetCellIcon(LandmarkIcon.LandmarkType iconType)
@@ -47,17 +60,24 @@ public class RouteItemCellPrefab : MonoBehaviour
         Icon.SelectedLandmarkType = iconType;
     }
 
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        
-    }
-
     // Update is called once per frame
     void Update()
     {
         
+    }
+
+    private void SetupColors() {
+        if (StatusColor != null) return;
+
+        StatusColor = new Dictionary<RouteStatus, Color>()
+            {
+                { RouteStatus.New,  StatusCleaning},
+                { RouteStatus.DraftPrepared, StatusDiscussion},
+                { RouteStatus.DraftNegotiated, StatusAdaptation },
+                { RouteStatus.Training, StatusTraining},
+                { RouteStatus.Completed, StatusCompleted },
+                { RouteStatus.Discarded, StatusDiscarded},
+            };
     }
 
 

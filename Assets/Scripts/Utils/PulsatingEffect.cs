@@ -8,13 +8,13 @@ public class PulsatingEffect : MonoBehaviour
     public float minAlpha = 0.0f;
     public float maxAlpha = 1.0f;
 
-    private SVGImage image;
+    private Image image;
     private CanvasRenderer canvasRenderer;
     private bool increasing = true;
 
     private void Start()
     {
-        image = GetComponent<SVGImage>();
+        image = GetComponent<Image>();
         canvasRenderer = GetComponent<CanvasRenderer>();
     }
 

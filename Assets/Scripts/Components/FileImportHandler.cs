@@ -6,6 +6,7 @@ using System.Collections;
 using SFB = SimpleFileBrowser;
 using SimpleFileBrowser;
 using Unity.Entities.UniversalDelegates;
+using static SynchronizationController;
 
 public class FileImportHandler : MonoBehaviour
 {
@@ -133,7 +134,7 @@ public class FileImportHandler : MonoBehaviour
 
                 AvailableRoutes.AddItem(item);
             }
-
+            AvailableRoutes.FinishLoading();
 
         }
         catch (Exception e)
@@ -179,6 +180,14 @@ public class FileImportHandler : MonoBehaviour
         }
 
         
+    }
+
+    /// <summary>
+    /// Resets the view, when the sync process is midway
+    /// </summary>
+    public void ResetSyncView()
+    {
+        DisplayScreenPanel(VolumeBrowsePanel);
     }
 
 

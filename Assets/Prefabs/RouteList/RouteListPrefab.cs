@@ -4,21 +4,31 @@ using UnityEngine;
 
 public class RouteListPrefab : MonoBehaviour
 {
+    [Header("UI states")]
+    public GameObject DataState;
+    public GameObject BlankState;
+    public GameObject LoadingState;
 
+    [Header("Data UI")]
     public GameObject ScrollView;
 
     public GameObject Content;
 
     public GameObject ItemPrefab;
 
-    public GameObject BlankState;
-
+    [Header("Events")]
     public RouteItemEvent OnItemSelected;
+
+    private int dataCount;
 
     // Start is called before the first frame update
     void Awake()
     {
         Clearlist();
+    }
+
+    void Start() {
+        dataCount = 0;        
     }
 
     // Update is called once per frame
@@ -42,6 +52,8 @@ public class RouteListPrefab : MonoBehaviour
             // Destroy the child game object
             Destroy(child);
         }
+        dataCount = 0;
+        ActivateStateView(LoadingState);
     }
 
     public void AddItem(Way w)
@@ -54,6 +66,8 @@ public class RouteListPrefab : MonoBehaviour
             RouteItemPrefab item = neu.GetComponent<RouteItemPrefab>();
             item.OnSelected = OnItemSelected;
             item.FillWayRoute(w, route);
+
+            dataCount++;
         }        
 
     }
@@ -81,11 +95,25 @@ public class RouteListPrefab : MonoBehaviour
         w.Routes.Add(r);
 
         this.AddItem(w);
+
+        dataCount++;
     }
 
+    public void FinishLoading()
+    {
+        if (dataCount > 0) {
+            ActivateStateView(DataState);
+        } else {
+            ActivateStateView(BlankState);
+        }
+    }
 
+    private void ActivateStateView(GameObject view) {
 
-
+        DataState.SetActive(view == DataState);
+        BlankState.SetActive(view == BlankState);
+        LoadingState.SetActive(view == LoadingState);
+    }
 
 
 

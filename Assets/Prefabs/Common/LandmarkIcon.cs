@@ -6,6 +6,8 @@ using UnityEngine.UI;
 
 public class LandmarkIcon : MonoBehaviour
 {
+    public Color BackgroundColor = Color.white;
+
     public enum LandmarkType {
         Placeholder = -1,
         PinLandmark = -2,
@@ -13,7 +15,9 @@ public class LandmarkIcon : MonoBehaviour
         Train = 1,
         Coffee = 2,
         Work = 3,
-        Home = 4
+        Home = 4,
+        Bus = 5,
+        Park = 6
     }
     public LandmarkType SelectedLandmarkType = LandmarkType.Placeholder;
     private LandmarkType activeLandmarkType;
@@ -21,6 +25,7 @@ public class LandmarkIcon : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        ApplyColorToBackground();
         displayLandmarkType(activeLandmarkType);
     }
 
@@ -51,4 +56,34 @@ public class LandmarkIcon : MonoBehaviour
     {
         SelectedLandmarkType = (LandmarkType)typeCode;
     }
+
+    private void ApplyColorToBackground()
+    {
+        // Find the "Background" components within the prefab
+        //Transform[] backgroundComponents = gameObject.GetComponentsInChildren<Transform>(true);
+
+        //foreach (Transform component in backgroundComponents)
+        //{
+        //    if (component.name == "Background")
+        //    {
+        //        Renderer renderer = component.GetComponent<Renderer>();
+
+        //        if (renderer != null)
+        //        {
+        //            renderer.material.color = BackgroundColor;
+        //        }
+        //    }
+        //}
+
+        Image[] backgroundComponents = gameObject.GetComponentsInChildren<Image>(true);
+
+        foreach (var component in backgroundComponents)
+        {
+            if (component.name == "Background")
+            {
+                component.color = BackgroundColor;                
+            }
+        }
+    }
+
 }

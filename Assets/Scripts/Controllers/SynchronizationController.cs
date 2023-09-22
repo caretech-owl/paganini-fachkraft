@@ -33,6 +33,9 @@ public class SynchronizationController : MonoBehaviour
 
     public FileTransferServer FTS;
 
+    [Header("Import UI Methods")]
+    public GameObject UI_Method_Phone;
+    public GameObject UI_Method_USBStick;
 
     [Header("Synchronisation Screens")]
     public GameObject UI_PanelStart;
@@ -61,10 +64,6 @@ public class SynchronizationController : MonoBehaviour
     public double MaxEvenly = 8;
     public double POIClusterDistance = 10;
 
-
-
-    bool alternate = false;
-    bool alternateSync = false;
     bool wasSendPollRequestCalled = false;
 
     List<string> logs = new List<string>();
@@ -105,6 +104,7 @@ public class SynchronizationController : MonoBehaviour
         FINISH = 10,
         CANCEL = 11
     }
+
 
     private void Awake()
     {
@@ -303,6 +303,41 @@ public class SynchronizationController : MonoBehaviour
 
 
     /// <summary>
+    /// Resets the view, when the sync process is midway
+    /// </summary>
+    public void ResetSyncView()
+    {
+        if (CurrentStatus == SyncStatus.CANCEL ||
+            CurrentStatus == SyncStatus.FINISH) {
+            // Do nothing, the process is already over
+            
+        } else if (CurrentStatus == SyncStatus.LISTEN ||
+            CurrentStatus == SyncStatus.WAIT_DEVICE_SELECT ||
+            CurrentStatus == SyncStatus.WAIT_CONNECT_RESPONSE) {
+            // There is no connection to cancel
+            ResetOrDisposeProcessProtocol();
+        } else {
+            RequestCancelProcess();
+            ResetOrDisposeProcessProtocol();
+        }
+
+        DisplayScreenPanel(UI_PanelStart);
+    }
+
+    /// <summary>
+    /// Renders the view corresponding to the s
+    /// </summary>
+    public void RenderImportMethodUSB()
+    {
+        UI_Method_USBStick.SetActive(true);
+        UI_Method_Phone.SetActive(false);
+    }
+    public void RenderImportMethodPhone() {
+        UI_Method_USBStick.SetActive(false);
+        UI_Method_Phone.SetActive(true);
+    }
+
+    /// <summary>
     /// Populates the list of available ERWs to download, as informed by
     /// the remote device (waysForExport.xml)
     /// </summary>
@@ -336,6 +371,7 @@ public class SynchronizationController : MonoBehaviour
         {
             SyncOverviewList.AddItem(item);
         }
+        SyncOverviewList.FinishLoading();
 
 
         CurrentStatus = SyncStatus.WAIT_ERW_SELECT;
@@ -362,6 +398,8 @@ public class SynchronizationController : MonoBehaviour
         UI_PanelError.SetActive(UI_PanelError == panel);
         UI_PanelDenied.SetActive(UI_PanelDenied == panel);
     }
+
+
 
 
     /****************************************
@@ -443,12 +481,12 @@ public class SynchronizationController : MonoBehaviour
         Directory.CreateDirectory(FileManagement.persistentDataPath + "/" + currentWayFolderName);
 
         // check for video folder
-        if (!Directory.Exists(FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Video"))
-            Directory.CreateDirectory(FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Video");
+        if (!Directory.Exists(FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Videos"))
+            Directory.CreateDirectory(FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Videos");
 
         // check for photo folder
-        if (!Directory.Exists(FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Foto"))
-            Directory.CreateDirectory(FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Foto");
+        if (!Directory.Exists(FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Fotos"))
+            Directory.CreateDirectory(FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Fotos");
 
         // Reassemble file chunks
         DetailedWayExportFiles.ReassembleFilesInFolder(sourceFolderPath);
@@ -475,14 +513,14 @@ public class SynchronizationController : MonoBehaviour
 
                 erw.Videos.Add(fileName);
                 File.Copy(sourceFolderPath + "/" + fileName,
-                    FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Video/" + fileName);
+                    FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Videos/" + fileName);
 
             }
             else if (fileName.EndsWith(".jpg"))
             {
                 erw.Photos.Add(fileName);
                 File.Copy(sourceFolderPath + "/" + fileName,
-                    FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Foto/" + fileName);
+                    FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Fotos/" + fileName);
 
             }
             else if (fileName.EndsWith("-coordinates.xml"))
@@ -567,7 +605,7 @@ public class SynchronizationController : MonoBehaviour
         r.Date = erw.RecordingDate;
         r.Status = (Int32)Route.RouteStatus.New;
         r.WayId = w.Id;
-        r.LocalVideoFilename = currentWayFolderName + "/Video/" + erw.Videos[0];
+        r.LocalVideoFilename = currentWayFolderName + "/Videos/" + erw.Videos[0];
         r.IsDirty = true;
         r.Insert();
 
@@ -591,7 +629,7 @@ public class SynchronizationController : MonoBehaviour
                 foreach (var photofile in pp.PhotoFilenames)
                 {
 
-                    string filename = FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Foto/" + photofile;
+                    string filename = FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Fotos/" + photofile;
 
                     PathpointPhoto ppf = new PathpointPhoto();
                     ppf.Id = - photoId++;
@@ -709,6 +747,10 @@ public class SynchronizationController : MonoBehaviour
 
             ResetOrDisposeProcessProtocol();
         }
+        else if (file._sourceName.Equals("CANCELSYNC")) {
+            CurrentStatus = SyncStatus.CANCEL;
+            // We do not really need to do anything
+        }
         else if (file._sourceName.StartsWith("REQUEST-ERW-"))
         {
             //RequestAllFiles();
@@ -771,6 +813,21 @@ public class SynchronizationController : MonoBehaviour
             if (CurrentStatus != SyncStatus.WAIT_CONNECT_RESPONSE)
             {
                 LogError($"CONNECTIONALLOWED: Process status is {CurrentStatus.ToString()} when WAIT_CONNECT_RESPONSE was expected ");
+            }
+            DisplayScreenPanel(UI_PanelDenied);
+
+            CurrentStatus = SyncStatus.CANCEL; // DENIED
+            ResetOrDisposeProcessProtocol();
+
+        }
+        else if (fileUpload.GetName().Equals("CANCELSYNC"))
+        {
+            // Check that the peer is sending the message according to
+            // the state machine of the protocol
+
+            if ((int)CurrentStatus < (int)SyncStatus.WAIT_ERW_LIST || (int)CurrentStatus > (int)SyncStatus.DOWNLOAD)
+            {
+                LogError($"CONNECTIONALLOWED: Process status is {CurrentStatus.ToString()} when status WAIT_ERW_LIST to DOWNLOAD was expected ");
             }
             DisplayScreenPanel(UI_PanelDenied);
 
@@ -912,7 +969,7 @@ public class SynchronizationController : MonoBehaviour
     private void RequestCancelProcess()
     {
         LogProcess("CancelSynchronisation: Requesting ENDOFSYNC");
-        RequestFile("ENDOFSYNC");
+        RequestFile("CANCELSYNC");
 
         CurrentStatus = SyncStatus.CANCEL;
     }

@@ -20,7 +20,7 @@ public class RouteExplorerController : MonoBehaviour
 
         PaganiniRestAPI.Way.GetAll(AppState.CurrentUser.Id, GetWaySucceeded, GetWayFailed);
 
-        WelcomeText.text = WelcomeText.text.Replace("[USER]", AppState.CurrentUser.Mnemonic_token);
+       // WelcomeText.text = WelcomeText.text.Replace("[USER]", AppState.CurrentUser.Mnemonic_token);
     }
 
     // Update is called once per frame
@@ -41,6 +41,7 @@ public class RouteExplorerController : MonoBehaviour
             way.Routes = Route.GetRouteListByWay(way.Id);
             RouteList.AddItem(way);
         }
+        RouteList.FinishLoading();
     }
 
     /// <summary>
