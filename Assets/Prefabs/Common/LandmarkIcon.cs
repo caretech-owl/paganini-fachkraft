@@ -59,22 +59,6 @@ public class LandmarkIcon : MonoBehaviour
 
     private void ApplyColorToBackground()
     {
-        // Find the "Background" components within the prefab
-        //Transform[] backgroundComponents = gameObject.GetComponentsInChildren<Transform>(true);
-
-        //foreach (Transform component in backgroundComponents)
-        //{
-        //    if (component.name == "Background")
-        //    {
-        //        Renderer renderer = component.GetComponent<Renderer>();
-
-        //        if (renderer != null)
-        //        {
-        //            renderer.material.color = BackgroundColor;
-        //        }
-        //    }
-        //}
-
         Image[] backgroundComponents = gameObject.GetComponentsInChildren<Image>(true);
 
         foreach (var component in backgroundComponents)

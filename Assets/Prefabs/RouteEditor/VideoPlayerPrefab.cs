@@ -1,3 +1,4 @@
+using System.Collections;
 using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
@@ -30,6 +31,7 @@ public class VideoPlayerPrefab : MonoBehaviour
     {
       //  VideoManager.prepareCompleted += OnVideoPrepared;
       //  VideoManager.seekCompleted += OnSeekCompleted;
+      
     }
 
     // Update is called once per frame
@@ -240,7 +242,7 @@ public class VideoPlayerPrefab : MonoBehaviour
     //    PlayButton.gameObject.SetActive(true);
     //}
 
-    public void LoadVideo(string url)
+    public void LoadVideo(string url, float? aspectRatio = null)
     {
         if (File.Exists(url)) {
             BlankState.SetActive(false);
@@ -248,7 +250,16 @@ public class VideoPlayerPrefab : MonoBehaviour
 
             if (VideoManager != null)
             {
-                VideoManager.url = url;   
+                VideoManager.url = url;
+                if (aspectRatio == null)
+                {
+                    StartCoroutine(DetectVideoResolution());
+                }
+                else
+                {
+                    SetAspectRatioToVideo(VideoManager.gameObject, (float)aspectRatio);
+                }
+                
             }
         } else {
             DataState.SetActive(false);
@@ -257,26 +268,66 @@ public class VideoPlayerPrefab : MonoBehaviour
 
     }
 
-    //public void PauseVideo()
+    private IEnumerator DetectVideoResolution()
+    {
+        yield return new WaitUntil(() => VideoManager.isPrepared); // Wait until the video is prepared.
+
+        long width = VideoManager.width;   // Width of the video
+        long height = VideoManager.height; // Height of the video
+
+        Debug.Log("Video Resolution: " + width + "x" + height);
+
+        float videoAspectRatio = (float) VideoManager.width / VideoManager.height;
+
+        SetAspectRatioToVideo(VideoManager.gameObject, videoAspectRatio);
+
+    }
+
+    public void SetAspectRatioToVideo(GameObject targetObject, float videoAspectRatio)
+    {        
+        var wrapperTransform = DataState.GetComponent<RectTransform>();
+
+        float height = wrapperTransform.sizeDelta.y;
+        float width = height * videoAspectRatio;
+
+
+        Vector3 newScale = targetObject.transform.localScale;
+        newScale.y = height;
+        newScale.x = width;
+
+        targetObject.transform.localScale = newScale;
+
+        wrapperTransform.sizeDelta = new Vector2(width, height);
+    }
+
+
+
+    //void ResizePanel()
     //{
-    //    VideoTimestamp = VideoTimestamp > 0 ? VideoTimestamp : VideoManager.time;
-    //    VideoManager.Pause();
+    //    // Get the width of the content
+    //    RectTransform contentRectTransform = Content.GetComponent<RectTransform>();
+    //    float contentWidth = contentRectTransform.rect.width;
+
+    //    // Get the width of the container of the content
+    //    RectTransform viewportRectTransform = Viewport.GetComponent<RectTransform>();
+    //    float viewportWidth = viewportRectTransform.rect.width;
+
+    //    RectTransform padingRectTransform = Padding.GetComponent<RectTransform>();
+    //    float currPaddingWidth = padingRectTransform.rect.width;
+
+    //    // let's remove the current padding to the actual content
+    //    contentWidth = contentWidth - currPaddingWidth;
+
+    //    // Adding padding to center the contents
+    //    float paddingWidth = contentWidth < viewportWidth ? (viewportWidth - contentWidth) / 2 : 1;
+    //    padingRectTransform.sizeDelta = new Vector2(paddingWidth, padingRectTransform.sizeDelta.y);
+
+    //    // Center the back line, standing behind the pins
+    //    RectTransform lineRectTransform = Backline.GetComponent<RectTransform>();
+    //    lineRectTransform.sizeDelta = new Vector2(contentWidth - 100, lineRectTransform.sizeDelta.y);
+
+
     //}
-
-    //public void ResumeVideo()
-    //{
-    //    SkipToVideoFrame(VideoTimestamp, VideoPreviewTexture);
-    //}
-
-    //public void PlayVideo()
-    //{
-    //    VideoManager.time = VideoTimestamp;
-    //    VideoManager.Play();
-    //    VideoTimestamp = -1;
-    //    VideoPreviewTexture = null;
-    //}
-
-
 
 
 }

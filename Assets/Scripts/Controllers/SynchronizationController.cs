@@ -433,6 +433,12 @@ public class SynchronizationController : MonoBehaviour
         erw.FromAPI = dwe.FromAPI;
         erw.RecordingDate = dwe.RecordingDate;
         erw.RecordingName = dwe.RecordingName;
+        erw.LocalVideoResolution = dwe.LocalVideoResolution;
+        erw.StartTimestamp = dwe.StartTimestamp;
+        erw.EndTimestamp = dwe.EndTimestamp;
+        erw.SocialWorkerId = dwe.SocialWorkerId ;
+
+
         erw.Videos = new List<string>();
         erw.Photos = new List<string>();
 
@@ -603,11 +609,15 @@ public class SynchronizationController : MonoBehaviour
         r.Id = -routeId;
         r.Name = erw.RecordingName;
         r.Date = erw.RecordingDate;
+        r.StartTimestamp = erw.StartTimestamp;
+        r.EndTimestamp = erw.EndTimestamp;
+        r.SocialWorkerId = erw.SocialWorkerId;
+        r.LocalVideoResolution = erw.LocalVideoResolution;
+
         r.Status = (Int32)Route.RouteStatus.New;
         r.WayId = w.Id;
         r.LocalVideoFilename = currentWayFolderName + "/Videos/" + erw.Videos[0];
-        r.IsDirty = true;
-        r.Insert();
+        r.InsertDirty();
 
         List<Pathpoint> ppList = CleanRoutePathpoints(erw.Pathpoints);
 
@@ -629,14 +639,14 @@ public class SynchronizationController : MonoBehaviour
                 foreach (var photofile in pp.PhotoFilenames)
                 {
 
-                    string filename = FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Fotos/" + photofile;
+                    string filename = FileManagement.persistentDataPath + "/" + currentWayFolderName + "/Fotos/" + photofile.Filename;
 
                     PathpointPhoto ppf = new PathpointPhoto();
                     ppf.Id = - photoId++;
                     ppf.PathpointId = pp.Id;
                     ppf.Photo = File.ReadAllBytes(filename);
-                    ppf.IsDirty = true;
-                    ppf.Insert();
+                    ppf.Timestamp = photofile.Timestamp;
+                    ppf.InsertDirty();
                 }
 
             }
@@ -1134,6 +1144,10 @@ public class SynchronizationController : MonoBehaviour
 
         public System.DateTime RecordingDate { set; get; }
         public string RecordingName { set; get; }
+        public string LocalVideoResolution { set; get; }
+        public long StartTimestamp { set; get; }
+        public long EndTimestamp { set; get; }
+        public int SocialWorkerId { set; get; }
 
         public bool FromAPI { set; get; }
     }

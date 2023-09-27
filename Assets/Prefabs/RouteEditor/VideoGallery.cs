@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using static SocketsAPI;
 
@@ -26,8 +27,18 @@ public class VideoGallery : MonoBehaviour
 
     public void LoadVideo(Pathpoint start )
     {
+        float? aspectRatio = null;
+        if (AppState.CurrentRoute.LocalVideoResolution != null)
+        {
+            string[] res = AppState.CurrentRoute.LocalVideoResolution.Split("x");
+            float width = float.Parse(res[0]);
+            float height = float.Parse(res[1]);
+
+            aspectRatio = width / height;
+        }
+
         POIStart = start;
-        VideoPlayer.LoadVideo(FileManagement.persistentDataPath + "/" + AppState.CurrentRoute.LocalVideoFilename);
+        VideoPlayer.LoadVideo(FileManagement.persistentDataPath + "/" + AppState.CurrentRoute.LocalVideoFilename, aspectRatio);
     }
 
     /// <summary>
@@ -36,9 +47,15 @@ public class VideoGallery : MonoBehaviour
     /// </summary>
     /// <param name = "pathpoint" > Pathpoint to synchronize with</param>
     public void LimitPlaybackTimeframe(Pathpoint currentPOI, Pathpoint nextPOI)
-    {
+    {        
         double startTime = (currentPOI.Timestamp - POIStart.Timestamp) / 1000;
         double endTime = (nextPOI.Timestamp - POIStart.Timestamp) / 1000;
+
+        if (currentPOI.TimeInVideo != null)
+        {
+            startTime = (double)currentPOI.TimeInVideo;
+            endTime = (double)nextPOI.TimeInVideo;
+        }
 
         Texture2D texture = new Texture2D(2, 2);
         texture.LoadImage(currentPOI.Photos[0].Photo);

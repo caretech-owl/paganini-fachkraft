@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -16,6 +17,10 @@ public class Route : BaseModel<Route>
     public int Pin { set; get; }
     public RouteStatus Status { set; get; }
     public string LocalVideoFilename { set; get; }
+    public string LocalVideoResolution { set; get; }
+    public long? StartTimestamp { set; get; }
+    public long? EndTimestamp { set; get; }
+    public int SocialWorkerId { set; get; }
 
     //[Indexed]
     public int WayId { get; set; }
@@ -61,9 +66,15 @@ public class Route : BaseModel<Route>
         if (erw.status != null)
         {
             this.Status = (RouteStatus)erw.status.erw_status_id;
-        }        
+        }
         this.FromAPI = true;
+
+        LocalVideoResolution = erw.erw_video_resolution;
+        StartTimestamp = DateUtils.ConvertStringToTsMilliseconds(erw.erw_start_time);
+        EndTimestamp = DateUtils.ConvertStringToTsMilliseconds(erw.erw_end_time);
+        SocialWorkerId = erw.erw_socialworker_id??-1;
     }
+
 
     public RouteAPI ToAPI()
     {
@@ -76,6 +87,12 @@ public class Route : BaseModel<Route>
             erw_video_url = this.LocalVideoFilename,
             status = new RouteStatusAPI { erw_status_id = (int)this.Status }
         };
+
+        erw.erw_video_resolution = LocalVideoResolution;
+        erw.erw_start_time = DateUtils.ConvertMillisecondsToString(StartTimestamp);
+        erw.erw_end_time = DateUtils.ConvertMillisecondsToString(EndTimestamp);
+
+        erw.erw_socialworker_id = SocialWorkerId != -1 ? SocialWorkerId : null;
 
         // Tag whether needs to be updated
         if (!FromAPI)

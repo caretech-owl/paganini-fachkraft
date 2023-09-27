@@ -72,10 +72,12 @@ public class POIEdit : MonoBehaviour
     {
         HideAllButThisView(Video.gameObject);
 
+
         Video.LoadVideo(SharedData.POIList[0]);
 
         Pathpoint pointNext = SharedData.CurrentPOI;
-        if (SharedData.CurrentPOI.POIType != Pathpoint.POIsType.WayDestination) {
+        if (SharedData.CurrentPOI.POIType != Pathpoint.POIsType.WayDestination &&
+            SharedData.CurrentPOIIndex + 1 < SharedData.POIList.Count) {
             pointNext = SharedData.POIList[SharedData.CurrentPOIIndex + 1];
         }
 

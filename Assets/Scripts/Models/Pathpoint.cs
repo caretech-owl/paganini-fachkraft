@@ -3,12 +3,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Serialization;
-using PaganiniRestAPI;
 using SQLite4Unity3d;
 using Unity.VisualScripting;
-//using SQLiteNetExtensions.Attributes;
-//using SQLiteNetExtensions.Extensions;
 
+[System.Serializable]
 public class Pathpoint : BaseModel<Pathpoint>
 {
     [PrimaryKey]
@@ -23,15 +21,28 @@ public class Pathpoint : BaseModel<Pathpoint>
 	public string Description { set; get; }
     public string PhotoFilename { set; get; }
     public string Instruction { set; get; }
+    public double? TimeInVideo { set; get; }
     public POIFeedback RelevanceFeedback { set; get; }
     public POIFeedback FamiliarityFeedback { set; get; }
 
-
-    //[OneToMany(CascadeOperations = CascadeOperation.All)]
     [Ignore]
     public List<PathpointPhoto> Photos { get; set; }
     [Ignore]
-    public List<string> PhotoFilenames { get; set; }
+     public List<PhotoData> PhotoFilenames { get; set; }
+
+    // for clustering
+    public class PhotoData
+    {
+        public long Timestamp { get; set; }
+        public string Filename { get; set; }
+
+        public PhotoData() { }
+        public PhotoData(long timestamp, string filename)
+        {
+            Timestamp = timestamp;
+            Filename = filename;
+        }
+    }
 
     public enum POIFeedback
     {
@@ -74,9 +85,10 @@ public class Pathpoint : BaseModel<Pathpoint>
 
         FromAPI = true;
 
-        var ts = DateTime.ParseExact(pathpoint.ppoint_timestamp, "yyyy-MM-dd'T'HH:mm:ss", CultureInfo.InvariantCulture);
-        Timestamp = new DateTimeOffset(ts).ToUnixTimeMilliseconds();
-    }
+        Timestamp = (long)DateUtils.ConvertStringToTsMilliseconds(pathpoint.ppoint_timestamp, "yyyy-MM-dd'T'HH:mm:ss");
+
+        TimeInVideo = pathpoint.ppoint_time_in_video== null? null: Double.Parse(pathpoint.ppoint_time_in_video);
+}
 
     public static List<Pathpoint> GetPathpointListByRoute(int routeId, Func<Pathpoint, bool> whereCondition = null)
     {
@@ -180,9 +192,10 @@ public class Pathpoint : BaseModel<Pathpoint>
         pp.ppoint_altitude = Altitude;
         pp.ppoint_accuracy = Accuracy;
         pp.ppoint_poitype = (int)POIType;
-        pp.ppoint_timestamp = DateTimeOffset.FromUnixTimeMilliseconds(Timestamp).UtcDateTime.ToString("yyyy-MM-dd HH:mm:ss");
+        pp.ppoint_timestamp = DateUtils.ConvertMillisecondsToString(Timestamp); 
         pp.ppoint_description = Description;
         pp.ppoint_instruction = Instruction;
+        pp.ppoint_time_in_video = TimeInVideo != null? TimeInVideo.ToString() : null;
 
         pp.ppoint_relevance_feedback = (int)RelevanceFeedback;
         pp.ppoint_familiarity_feedback = (int)FamiliarityFeedback;

@@ -10,9 +10,16 @@ using Newtonsoft.Json.Serialization;
 using System.Linq;
 
 
+[System.Serializable]
+public class RESTErrorEvent : UnityEvent<ErrorData>
+{
+}
+
 
 public class RESTAPI : PersistentLazySingleton<RESTAPI>
 {
+    public RESTErrorEvent OnRequestError;
+
     JsonSerializerSettings settings = new JsonSerializerSettings
     {
         Formatting = Formatting.Indented,
@@ -120,6 +127,9 @@ public class RESTAPI : PersistentLazySingleton<RESTAPI>
             {
                 Debug.LogError(request.error);
                 errorCallback(request.error);
+
+                var error = new ErrorData(request.error, request.downloadHandler.text, request.responseCode);
+                OnRequestError?.Invoke(error);
             }
             else
             {

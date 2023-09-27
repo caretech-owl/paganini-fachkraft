@@ -50,6 +50,10 @@ public class InternalDataModel
 
         public System.DateTime RecordingDate { set; get; }
         public string RecordingName { set; get; }
+        public string LocalVideoResolution { set; get; }
+        public long StartTimestamp { set; get; }
+        public long EndTimestamp { set; get; }
+        public int SocialWorkerId { set; get; }
 
         public bool FromAPI { set; get; }
     }

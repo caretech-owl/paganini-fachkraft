@@ -2,10 +2,7 @@ using SQLite4Unity3d;
 using System.Linq;
 using System.Collections.Generic;
 using System;
-using PaganiniRestAPI;
-using UnityEngine;
-using Unity.VisualScripting;
-using static Pathpoint;
+using System.Globalization;
 
 public class PathpointPhoto : BaseModel<PathpointPhoto>
 {
@@ -15,7 +12,7 @@ public class PathpointPhoto : BaseModel<PathpointPhoto>
     public string Description { set; get; }
     public PhotoFeedback CleaningFeedback { set; get; }
     public PhotoFeedback DiscussionFeedback { set; get; }
-
+    public long? Timestamp { set; get; }
 
     public byte[] Photo { set; get; }
 
@@ -28,6 +25,7 @@ public class PathpointPhoto : BaseModel<PathpointPhoto>
 
     public PathpointPhoto() { }
 
+
     public PathpointPhoto(IPathpointPhotoAPI photoAPI)
     {
         Id = photoAPI.pphoto_id;
@@ -38,6 +36,10 @@ public class PathpointPhoto : BaseModel<PathpointPhoto>
         CleaningFeedback = ((PhotoFeedback?)photoAPI.pphoto_cleaning_feedback) ?? PhotoFeedback.None;
         DiscussionFeedback = ((PhotoFeedback?)photoAPI.pphoto_discussion_feedback) ?? PhotoFeedback.None;
 
+   
+        Timestamp = DateUtils.ConvertStringToTsMilliseconds(photoAPI.pphoto_timestamp);
+        
+        
         FromAPI = true;
     }
 
@@ -105,6 +107,8 @@ public class PathpointPhoto : BaseModel<PathpointPhoto>
         photo.ppoint_id = PathpointId;
         photo.pphoto_description = Description;
         //photo.photo = Convert.ToBase64String(Photo);
+
+        photo.pphoto_timestamp = DateUtils.ConvertMillisecondsToString(Timestamp); 
 
         photo.pphoto_cleaning_feedback = (int)CleaningFeedback;
         photo.pphoto_discussion_feedback = (int)DiscussionFeedback;

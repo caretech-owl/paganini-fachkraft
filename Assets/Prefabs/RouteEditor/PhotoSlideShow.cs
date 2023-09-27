@@ -79,7 +79,7 @@ public class PhotoSlideShow : MonoBehaviour, IBeginDragHandler, IDragHandler, IE
         if (isDragging)
         {
             float deltaX = eventData.position.x - startPosition.x;
-            slideContainer.anchoredPosition = new Vector2(-currentSlideIndex * Screen.width + deltaX, 0);
+            slideContainer.anchoredPosition = new Vector2(-currentSlideIndex * slideContainer.rect.width + deltaX, 0);
         }
     }
 
