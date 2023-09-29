@@ -3,6 +3,7 @@ using System.Linq;
 using System.Collections.Generic;
 using System;
 using System.Globalization;
+using PaganiniRestAPI;
 
 public class PathpointPhoto : BaseModel<PathpointPhoto>
 {
@@ -37,9 +38,8 @@ public class PathpointPhoto : BaseModel<PathpointPhoto>
         DiscussionFeedback = ((PhotoFeedback?)photoAPI.pphoto_discussion_feedback) ?? PhotoFeedback.None;
 
    
-        Timestamp = DateUtils.ConvertStringToTsMilliseconds(photoAPI.pphoto_timestamp);
-        
-        
+        Timestamp = DateUtils.ConvertUTCStringToTsMilliseconds(photoAPI.pphoto_timestamp, "yyyy-MM-dd'T'HH:mm:ss");
+
         FromAPI = true;
     }
 
@@ -52,11 +52,34 @@ public class PathpointPhoto : BaseModel<PathpointPhoto>
 
         // Query all Ways and their related Routes using sqlite-net's built-in mapping functionality
 
-        photos = conn.Table<PathpointPhoto>().Where(p => p.PathpointId == pathpointId).ToList();
+        photos = conn.Table<PathpointPhoto>().Where(p => p.PathpointId == pathpointId)
+            .OrderBy(item => item.Timestamp)
+            .ThenByDescending(item => item.Id)
+            .ToList();
 
         return photos;
     }
 
+    public static PathpointPhoto GetDefaultPhoto(List<PathpointPhoto> photos)
+    {
+        if (photos == null) return null;
+
+        foreach(var photo in photos)
+        {
+            if (photo.CleaningFeedback != PhotoFeedback.Delete && photo.DiscussionFeedback != PhotoFeedback.Delete)
+            {
+                return photo;
+            }
+        }
+
+        // We use one of the discarded ones
+        if (photos.Count > 0)
+        {
+            return photos[0];
+        }
+
+        return null;
+    }
 
     public IPathpointPhotoAPI ToAPI()
     {
@@ -79,6 +102,8 @@ public class PathpointPhoto : BaseModel<PathpointPhoto>
 
         photo.pphoto_description = Description;
         //photo.photo = Convert.ToBase64String(Photo);
+
+        photo.pphoto_timestamp = DateUtils.ConvertMillisecondsToUTCString(Timestamp);
 
         photo.pphoto_cleaning_feedback = (int)CleaningFeedback;
         photo.pphoto_discussion_feedback = (int)DiscussionFeedback;
@@ -108,7 +133,7 @@ public class PathpointPhoto : BaseModel<PathpointPhoto>
         photo.pphoto_description = Description;
         //photo.photo = Convert.ToBase64String(Photo);
 
-        photo.pphoto_timestamp = DateUtils.ConvertMillisecondsToString(Timestamp); 
+        photo.pphoto_timestamp = DateUtils.ConvertMillisecondsToUTCString(Timestamp); 
 
         photo.pphoto_cleaning_feedback = (int)CleaningFeedback;
         photo.pphoto_discussion_feedback = (int)DiscussionFeedback;

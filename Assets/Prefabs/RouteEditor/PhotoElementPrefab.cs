@@ -13,6 +13,7 @@ public class PhotoElementPrefab : MonoBehaviour
 {
     public RawImage POIPhoto;
     public Toggle SelectedToggle;
+    public Toggle KeepItToggle;
     public Button OpenPhoto;
     public PathpointPhoto CurrentPathpointPhoto;
 
@@ -44,13 +45,30 @@ public class PhotoElementPrefab : MonoBehaviour
         
     }
 
-    public void FillPhoto(PathpointPhoto p)
+    public void FillPhoto(PathpointPhoto p, bool enableSelection)
     {
         RenderPicture(p.Photo);
         CurrentPathpointPhoto = p;
 
+        EnableSelection(enableSelection);
+
         // We de-select the pictures curated as 'deleted'
         SelectedToggle.isOn = p.CleaningFeedback != PathpointPhoto.PhotoFeedback.Delete;
+
+        // Display user feedback?
+        if (p.DiscussionFeedback != PathpointPhoto.PhotoFeedback.None)
+        {
+            KeepItToggle.isOn = p.DiscussionFeedback == PathpointPhoto.PhotoFeedback.Keep;
+            KeepItToggle.gameObject.SetActive(!enableSelection);
+        }
+        else
+        {
+            KeepItToggle.gameObject.SetActive(false);
+        }
+        
+
+
+        ApplyDeselectionEffect(SelectedToggle.isOn);
     }
 
     private void RenderPicture(byte[] imageBytes)
@@ -63,6 +81,9 @@ public class PhotoElementPrefab : MonoBehaviour
 
     public void OnToggleSelectedChanged(bool isActive)
     {
+        ApplyDeselectionEffect(isActive);
+
+
         if (OnSelectedChanged != null)
         {
             OnSelectedChanged.Invoke(this);
@@ -79,6 +100,20 @@ public class PhotoElementPrefab : MonoBehaviour
         }
 
         Debug.Log("Photo opened: " + CurrentPathpointPhoto.Id);
+    }
+
+    private void ApplyDeselectionEffect(bool isActive)
+    {
+        Color grayColor = Color.white;//new Color(0.5647f, 0.5647f, 0.5647f); // Values are in the range [0, 1]
+        grayColor.a = 0.4f; // Set the alpha component
+
+        POIPhoto.color = !isActive ? grayColor : Color.white;
+    }
+
+
+    private void EnableSelection(bool enable)
+    {
+        SelectedToggle.gameObject.SetActive(enable);
     }
 
 }

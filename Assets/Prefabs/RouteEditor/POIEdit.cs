@@ -1,10 +1,5 @@
-using System.Collections;
-using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
-using static LandmarkIcon;
-using UnityEngine.UI;
-using PaganiniRestAPI;
+
 
 public class POIEdit : MonoBehaviour
 {
@@ -53,7 +48,7 @@ public class POIEdit : MonoBehaviour
     public void LoadGallery()
     {
         HideAllButThisView(Gallery.gameObject);
-
+        Gallery.EditMode = SharedData.CurrentEditorMode;
         Gallery.Clearlist();
         Gallery.LoadPhotos(SharedData.CurrentPOI.Photos);
         PinEdit.EnableSwitchToGallery(false);

@@ -17,11 +17,21 @@ public class POITimelineItem : MonoBehaviour
     public TMPro.TMP_Text PinTitle;
     public TMPro.TMP_Text PinSubtitle;
     public RawImage POIPhoto;
+    public GameObject NoData;
+
+    [Header("Icons")]
     public LandmarkIcon LocationIcon;
-    public GameObject CheckmarkIcon;
+    //public GameObject CheckmarkIcon;
     public GameObject EditIcon;
     public GameObject RemovedIcon;
-    public GameObject NoData;
+    public GameObject LandmarkIcon;
+    public GameObject ReassuranceIcon;
+
+    [Header("Direction Icons")]
+    public GameObject TurnLeftIcon;
+    public GameObject TurnRightIcon;
+    public GameObject StraightIcon;
+
 
     [Header("Events")]
     public PathpointItemEvent OnSelected;
@@ -92,8 +102,12 @@ public class POITimelineItem : MonoBehaviour
     public void FillPathpointData(Pathpoint pathpoint)
     {
         // render picture
-        byte[] preview = pathpoint.Photos[0].Photo;
-        RenderPicture(preview);
+        var previewPhoto = PathpointPhoto.GetDefaultPhoto(pathpoint.Photos);
+        if (previewPhoto != null)
+        {            
+            RenderPicture(previewPhoto.Photo);
+        }
+        
 
         // render description
         if (pathpoint.Description!= null)
@@ -105,18 +119,15 @@ public class POITimelineItem : MonoBehaviour
         PathpointItem = pathpoint;
     }
 
-    private void RenderPOIType(Pathpoint.POIsType pOIsType)
+    private void RenderPOIType()
     {
 
-        //if (pOIsType == Pathpoint.POIsType.Landmark)
-        //{
-        //    PinIcon.SelectedLandmarkType = LandmarkIcon.LandmarkType.PinLandmark;
-        //}
-        //else if (pathpoint.POIType == Pathpoint.POIsType.Reassurance)
-        //{
-        //    PinIcon.SelectedLandmarkType = LandmarkIcon.LandmarkType.PinReassurance;
-        //}
+        ReassuranceIcon.SetActive(PathpointItem.POIType == Pathpoint.POIsType.Reassurance);
+        LandmarkIcon.SetActive(PathpointItem.POIType == Pathpoint.POIsType.Landmark);
 
+        StraightIcon.SetActive(PathpointItem.Instruction== "Straight");
+        TurnLeftIcon.SetActive(PathpointItem.Instruction == "LeftTurn");
+        TurnRightIcon.SetActive(PathpointItem.Instruction == "RightTurn");    
     }
 
     private void RenderIrrelevant(bool irrelevant) {
@@ -129,21 +140,30 @@ public class POITimelineItem : MonoBehaviour
 
         RemovedIcon.SetActive(irrelevant);
         NoData.SetActive(!irrelevant);
-        CheckmarkIcon.SetActive(!irrelevant);
+        ReassuranceIcon.SetActive(!irrelevant);
+        LandmarkIcon.SetActive(!irrelevant);
         EditIcon.SetActive(!irrelevant);
+        StraightIcon.SetActive(false);
+        TurnLeftIcon.SetActive(false);
+        TurnRightIcon.SetActive(false);
     }
 
 
     private void RenderLocationIcon(string landmarkType)
     {
         LocationIcon.SetSelectedLandmark(Int32.Parse(landmarkType));
-        CheckmarkIcon.SetActive(false);
+        LandmarkIcon.SetActive(false);
+        ReassuranceIcon.SetActive(false);
         EditIcon.SetActive(false);
     }
 
     private void RenderCompletedIcon(bool completed)
-    {        
-        CheckmarkIcon.SetActive(completed);
+    {
+        if (completed)
+        {
+            RenderPOIType();
+        }
+        
         EditIcon.SetActive(!completed);
 
         POIPhoto.gameObject.SetActive(completed);

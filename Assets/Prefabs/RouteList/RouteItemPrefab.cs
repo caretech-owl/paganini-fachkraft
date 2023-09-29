@@ -53,7 +53,7 @@ public class RouteItemPrefab : MonoBehaviour
         TitleCell.FillCell(way.Name);
         StartCell.FillCell(way.Start, startIcon);
         DestinatitonCell.FillCell(way.Destination, destIcon);
-        DateCell.FillCell(route.Date.ToString("dd/MM/yyyy HH:mm"));
+        DateCell.FillCell(DateUtils.ConvertUTCToLocalString(route.Date, "dd/MM/yyyy HH:mm"));
         StatusCell.FillCell(Route.RouteStatusDescriptions[route.Status], route.Status);
 
         NewFlag.SetActive(!route.FromAPI);

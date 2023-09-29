@@ -47,5 +47,9 @@ public class EditorHeader : MonoBehaviour
         {
             HeaderText.text = "Diskussion";
         }
+        else if (SharedData.CurrentRoute.Status == Route.RouteStatus.Training)
+        {
+            HeaderText.text = "Training";
+        }
     }
 }

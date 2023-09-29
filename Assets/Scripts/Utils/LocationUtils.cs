@@ -311,7 +311,7 @@ namespace LocationUtils
                     if (distance <= distanceThreshold)
                     {
                         // Add the candidate point to the current cluster
-                        currentCluster.PhotoFilenames.Add(new Pathpoint.PhotoData(currentCluster.Timestamp, currentCluster.PhotoFilename));
+                        currentCluster.PhotoFilenames.Add(new Pathpoint.PhotoData(candidatePoint.Timestamp, candidatePoint.PhotoFilename));
                         currentClusterStart++;
                     }
                     else
@@ -355,7 +355,7 @@ namespace LocationUtils
             var ppList = points.Where(item => item.POIType == Pathpoint.POIsType.Point).ToList(); 
 
             // select only POIs
-            List<Pathpoint> POIList = points.Where(item => item.POIType != Pathpoint.POIsType.Point).ToList();
+            List<Pathpoint> POIList = points.Where(item => item.POIType != Pathpoint.POIsType.Point).OrderBy(item => item.TimeInVideo).ToList();
             POIList = LocationUtils.GPSSmooth.ClusterPoints(POIList, POIClusterDistance);
 
 

@@ -910,10 +910,10 @@ MonoBehaviour:
   m_Padding:
     m_Left: 20
     m_Right: 20
-    m_Top: 0
+    m_Top: 10
     m_Bottom: 0
   m_ChildAlignment: 1
-  m_Spacing: 8
+  m_Spacing: 20
   m_ChildForceExpandWidth: 1
   m_ChildForceExpandHeight: 1
   m_ChildControlWidth: 0
@@ -1030,6 +1030,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: UserItemPrefab (1)
       objectReference: {fileID: 0}
+    - target: {fileID: 5906962362041412404, guid: 1fab8982c1e844f84a3c16ce38c0fef9, type: 3}
+      propertyPath: m_Material
+      value: 
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1fab8982c1e844f84a3c16ce38c0fef9, type: 3}
 --- !u!224 &7228744605530123664 stripped
@@ -1131,6 +1135,10 @@ PrefabInstance:
     - target: {fileID: 3014211618918218906, guid: 1fab8982c1e844f84a3c16ce38c0fef9, type: 3}
       propertyPath: m_Name
       value: UserItemPrefab
+      objectReference: {fileID: 0}
+    - target: {fileID: 5906962362041412404, guid: 1fab8982c1e844f84a3c16ce38c0fef9, type: 3}
+      propertyPath: m_Material
+      value: 
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1fab8982c1e844f84a3c16ce38c0fef9, type: 3}

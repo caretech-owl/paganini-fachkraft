@@ -15,13 +15,40 @@ public class PhotoGallery : MonoBehaviour
     public GameObject Content;
     public GameObject ItemPrefab;
     public GameObject BlankState;
-
-    public RouteSharedData.EditorMode EditMode { get; set; }
+    public TMPro.TMP_Text TitleText;
 
     private List<PathpointPhoto> CurrentPhotos;
+    private RouteSharedData.EditorMode _editMode;
 
     [Header("Events")]
     public GalleryEvent OnPhotoOpened;
+    
+
+    public RouteSharedData.EditorMode EditMode
+    {
+        get { return _editMode; }
+        set
+        {
+            _editMode = value;
+
+            // Update the TitleText based on the EditMode
+            switch (value)
+            {
+                case RouteSharedData.EditorMode.Cleaning:
+                    TitleText.text = "Überprüfen Sie Fotos, die an diesem Ort aufgenommen wurden. Im Cleaning-modus können Sie minderwertige Bilder abwählen. Tippen Sie für Vollbildansicht.";
+                    break;
+                case RouteSharedData.EditorMode.Discussion:
+                    TitleText.text = "Im Diskussionsmodus Feedback sammeln, um auszuwählen, welche Bilder zu behalten sind. Tippen Sie auf ein Bild für Vollbild-Feedback.";
+                    break;
+                case RouteSharedData.EditorMode.ReadOnly:
+                    TitleText.text = "Im Trainingsmodus Bilder nur im Lese-Modus durchsehen. Keine Bearbeitung möglich.";
+                    break;
+                default:
+                    TitleText.text = "";
+                    break;
+            }
+        }
+    }
 
     // Start is called before the first frame update
     void Start()
@@ -68,11 +95,17 @@ public class PhotoGallery : MonoBehaviour
     {
         //fix: To safely load, due to problem with initialisation
         CurrentPhotos = photos;
-        if (!Content) return;        
+        if (!Content) return;
 
         foreach (var photo in photos)
         {
-            AddItem(photo);
+            if (EditMode == RouteSharedData.EditorMode.Cleaning ||
+                photo.CleaningFeedback != PathpointPhoto.PhotoFeedback.Delete)
+            {
+                AddItem(photo);
+            }
+            
+            Debug.Log($"Id: {photo.Id} Timestamp:{photo.Timestamp}");
         }
 
         //TODO: Prepare the Gallery based on the EditMode
@@ -87,7 +120,7 @@ public class PhotoGallery : MonoBehaviour
         var item = neu.GetComponent<PhotoElementPrefab>();
         item.OnPhotoOpened.AddListener(OnPhotoOpenedHandler);
         item.OnSelectedChanged.AddListener(OnPhotoSelectedHandler);
-        item.FillPhoto(p);
+        item.FillPhoto(p, EditMode == RouteSharedData.EditorMode.Cleaning);
 
     }
 

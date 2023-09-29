@@ -78,14 +78,21 @@ public class Pathpoint : BaseModel<Pathpoint>
         Accuracy = pathpoint.ppoint_accuracy;
         POIType = (POIsType) pathpoint.ppoint_poitype;
         Description = pathpoint.ppoint_description;
-        Instruction = pathpoint.ppoint_instruction;
+        Instruction = pathpoint.ppoint_instruction == "None"? "" : pathpoint.ppoint_instruction;
 
         RelevanceFeedback = ((POIFeedback?) pathpoint.ppoint_relevance_feedback) ?? POIFeedback.None;
         FamiliarityFeedback = ((POIFeedback?) pathpoint.ppoint_familiarity_feedback) ?? POIFeedback.None; 
 
         FromAPI = true;
 
-        Timestamp = (long)DateUtils.ConvertStringToTsMilliseconds(pathpoint.ppoint_timestamp, "yyyy-MM-dd'T'HH:mm:ss");
+        Timestamp = (long)DateUtils.ConvertUTCStringToTsMilliseconds(pathpoint.ppoint_timestamp, "yyyy-MM-dd'T'HH:mm:ss");
+
+
+
+        //string temp = DateUtils.ConvertMillisecondsToUTCString(Timestamp);
+        //long tempRev = (long)DateUtils.ConvertUTCStringToTsMilliseconds(temp);
+        //Debug.Log($"StrDate1: {pathpoint.ppoint_timestamp} Timestamp1: {Timestamp} | StrDate2: {temp} Timestamp2: {tempRev}");
+
 
         TimeInVideo = pathpoint.ppoint_time_in_video== null? null: Double.Parse(pathpoint.ppoint_time_in_video);
 }
@@ -192,9 +199,9 @@ public class Pathpoint : BaseModel<Pathpoint>
         pp.ppoint_altitude = Altitude;
         pp.ppoint_accuracy = Accuracy;
         pp.ppoint_poitype = (int)POIType;
-        pp.ppoint_timestamp = DateUtils.ConvertMillisecondsToString(Timestamp); 
+        pp.ppoint_timestamp = DateUtils.ConvertMillisecondsToUTCString(Timestamp, "yyyy-MM-dd'T'HH:mm:ss"); 
         pp.ppoint_description = Description;
-        pp.ppoint_instruction = Instruction;
+        pp.ppoint_instruction = Instruction == ""? "None" : Instruction;
         pp.ppoint_time_in_video = TimeInVideo != null? TimeInVideo.ToString() : null;
 
         pp.ppoint_relevance_feedback = (int)RelevanceFeedback;
