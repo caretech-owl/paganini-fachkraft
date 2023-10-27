@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
-using PaganiniRestAPI;
 
 public class PhotoSlideShow : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
+    public PhotoSlideStatus SlideStatus;
+
+    [Header("UI Elements")]
     public GameObject NoData;
     public RectTransform slideContainer;
     public PhotoFeedbackToggle PhotoFeedback;
@@ -17,6 +19,7 @@ public class PhotoSlideShow : MonoBehaviour, IBeginDragHandler, IDragHandler, IE
     private int currentSlideIndex;
     public bool interactable = true;
     private Vector2 startPosition;
+    private Vector2 originalPosition;
     private bool isDragging;
     private List<PathpointPhoto> pathpointPhotos;
     private List<PathpointPhoto> renderedPhotos;
@@ -28,9 +31,11 @@ public class PhotoSlideShow : MonoBehaviour, IBeginDragHandler, IDragHandler, IE
         //isDragging = false;
         //UpdateVisualIndicators();
         //PhotoFeedback.gameObject.SetActive(false);
+
+        originalPosition = slideContainer.anchoredPosition;
     }
 
-    public void LoadSlideShow(List<PathpointPhoto> photos)
+    public void LoadSlideShow(List<PathpointPhoto> photos, int startIndex)
     {
         ResetSlides();
         pathpointPhotos = photos;
@@ -39,7 +44,21 @@ public class PhotoSlideShow : MonoBehaviour, IBeginDragHandler, IDragHandler, IE
         {
             NoData?.gameObject.SetActive(false);
 
-            GenerateSlides();
+            
+            slideContainer.anchoredPosition = originalPosition;
+            // generate the slides, and normalise the starting index to the list of actually rendered ones
+            // which skip the 'unselected' pictures.
+            currentSlideIndex = GenerateSlides(startIndex);            
+
+            // set the starting photo           
+            float targetX = -currentSlideIndex * slideContainer.rect.width;
+            slideContainer.anchoredPosition = new Vector2(targetX, 0);
+
+            // initialise the status
+            SlideStatus.GenerateDots(renderedPhotos.Count);
+            SlideStatus.SetActiveSlide(currentSlideIndex);
+
+
             interactable = true;
             RenderFeebackPanel();
         }
@@ -121,13 +140,15 @@ public class PhotoSlideShow : MonoBehaviour, IBeginDragHandler, IDragHandler, IE
         }
 
         RenderFeebackPanel();
+        SlideStatus.SetActiveSlide(currentSlideIndex);
     }
 
-    private void GenerateSlides()
+    private int GenerateSlides(int startIndex)
     {
         slides = new List<Image>();
         renderedPhotos = new List<PathpointPhoto>();
 
+        var renderListIndex = -1;
         for (int i = 0; i < pathpointPhotos.Count; i++)
         {
             if (pathpointPhotos[i].CleaningFeedback != PathpointPhoto.PhotoFeedback.Delete) { 
@@ -136,7 +157,7 @@ public class PhotoSlideShow : MonoBehaviour, IBeginDragHandler, IDragHandler, IE
 
                 Image slideImage = newSlide.AddComponent<Image>();
                 Texture2D texture = new Texture2D(2, 2);
-                texture.LoadImage(pathpointPhotos[i].Photo);
+                texture.LoadImage(pathpointPhotos[i].Data.Photo);
                 slideImage.sprite = Sprite.Create(texture, new Rect(0, 0, texture.width, texture.height), new Vector2(0.5f, 0.5f));
 
                 // Set Preserve Aspect to true
@@ -151,8 +172,18 @@ public class PhotoSlideShow : MonoBehaviour, IBeginDragHandler, IDragHandler, IE
 
                 slides.Add(slideImage);
                 renderedPhotos.Add(pathpointPhotos[i]);
+                renderListIndex++;
+            }
+
+            if (startIndex == i)
+            {
+                startIndex = renderListIndex;
             }
         }
+
+        Debug.Log($"Start Index: {startIndex}");
+
+        return startIndex;
     }
 
     public void ResetSlides()
@@ -165,6 +196,8 @@ public class PhotoSlideShow : MonoBehaviour, IBeginDragHandler, IDragHandler, IE
             }
             slides.Clear();
         }
+
+        renderedPhotos?.Clear();
 
         currentSlideIndex = 0;
         isDragging = false;
@@ -186,5 +219,50 @@ public class PhotoSlideShow : MonoBehaviour, IBeginDragHandler, IDragHandler, IE
         PhotoFeedback.gameObject.SetActive(false);
     }
 
+
+    public void CleanupView()
+    {
+        // Stop any running coroutines
+        StopAllCoroutines();
+
+        // Remove any event listeners or cleanup any other resources as needed.
+        // For example, if you have registered event listeners, unregister them here.
+
+        // Clear references to objects
+        //slideContainer = null; // Clear reference to slideContainer
+        //PhotoFeedback = null; // Clear reference to PhotoFeedback
+
+        // Destroy all slide images and their textures
+        if (slides != null)
+        {
+            foreach (var slide in slides)
+            {
+                if (slide != null)
+                {
+                    var slideTexture = slide.sprite?.texture;
+                    Destroy(slide.gameObject);
+                    Destroy(slideTexture); // Destroy the texture to release memory
+                }
+            }
+            slides.Clear();
+        }
+
+        // Clear lists and variables
+        //pathpointPhotos?.Clear();
+        renderedPhotos?.Clear();
+        currentSlideIndex = 0;
+        isDragging = false;
+
+        // Deactivate or hide any game objects or UI elements that are no longer needed
+        NoData?.gameObject.SetActive(false);
+
+        // Clear any references to coroutines
+        // Remove any remaining references or states that may cause memory leaks
+
+        // Clear any other variables or states as needed
+
+        // Set interactable to false
+        interactable = false;
+    }
 
 }

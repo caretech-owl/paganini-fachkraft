@@ -28,16 +28,16 @@ public class Pathpoint : BaseModel<Pathpoint>
     [Ignore]
     public List<PathpointPhoto> Photos { get; set; }
     [Ignore]
-     public List<PhotoData> PhotoFilenames { get; set; }
+     public List<PhotoMetaData> PhotoFilenames { get; set; }
 
     // for clustering
-    public class PhotoData
+    public class PhotoMetaData
     {
         public long Timestamp { get; set; }
         public string Filename { get; set; }
 
-        public PhotoData() { }
-        public PhotoData(long timestamp, string filename)
+        public PhotoMetaData() { }
+        public PhotoMetaData(long timestamp, string filename)
         {
             Timestamp = timestamp;
             Filename = filename;
@@ -202,7 +202,7 @@ public class Pathpoint : BaseModel<Pathpoint>
         pp.ppoint_timestamp = DateUtils.ConvertMillisecondsToUTCString(Timestamp, "yyyy-MM-dd'T'HH:mm:ss"); 
         pp.ppoint_description = Description;
         pp.ppoint_instruction = Instruction == ""? "None" : Instruction;
-        pp.ppoint_time_in_video = TimeInVideo != null? TimeInVideo.ToString() : null;
+        pp.ppoint_time_in_video = TimeInVideo != null? TimeInVideo.Value.ToString("0.00", CultureInfo.InvariantCulture) : null;
 
         pp.ppoint_relevance_feedback = (int)RelevanceFeedback;
         pp.ppoint_familiarity_feedback = (int)FamiliarityFeedback;

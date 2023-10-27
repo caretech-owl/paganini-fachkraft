@@ -55,13 +55,25 @@ public class ConnectionController : MonoBehaviour
 
     private void OnRequestError(ErrorData errorData)
     {
-        ConnectionErrorView.RenderSessionExpired();
+        if (errorData.HTTPStatus == 401)
+        {
+            ConnectionErrorView.RenderSessionExpired();
+        }
+        else
+        {
+            Debug.LogWarning(errorData.Message);
+        }
+        
     }
 
 
     private void OnDestroy()
     {
-        RESTAPI.Instance.OnRequestError.RemoveListener(OnRequestError);
+        if (RESTAPI.Instance != null && RESTAPI.Instance.OnRequestError != null)
+        {
+            RESTAPI.Instance.OnRequestError.RemoveListener(OnRequestError);
+        }
+        
     }
 
 

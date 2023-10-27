@@ -16,6 +16,7 @@ public class PhotoElementPrefab : MonoBehaviour
     public Toggle KeepItToggle;
     public Button OpenPhoto;
     public PathpointPhoto CurrentPathpointPhoto;
+    public int CurrentIndex;
 
 
     public bool IsSelected
@@ -45,10 +46,11 @@ public class PhotoElementPrefab : MonoBehaviour
         
     }
 
-    public void FillPhoto(PathpointPhoto p, bool enableSelection)
+    public void FillPhoto(PathpointPhoto p, bool enableSelection, int index)
     {
-        RenderPicture(p.Photo);
+        RenderPicture(p.Data.Photo);
         CurrentPathpointPhoto = p;
+        CurrentIndex = index;
 
         EnableSelection(enableSelection);
 
@@ -76,7 +78,20 @@ public class PhotoElementPrefab : MonoBehaviour
         Texture2D texture = new Texture2D(2, 2);
         texture.LoadImage(imageBytes);
 
+        if (POIPhoto.texture!= null){
+            DestroyTexture(POIPhoto.texture);
+        }
+
         POIPhoto.texture = texture;
+    }
+
+    private void DestroyTexture(Texture texture)
+    {
+        if (texture != null)
+        {
+            // Use DestroyImmediate to properly destroy the texture at runtime
+            DestroyImmediate(texture, true);
+        }
     }
 
     public void OnToggleSelectedChanged(bool isActive)

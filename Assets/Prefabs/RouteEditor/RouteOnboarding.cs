@@ -7,14 +7,17 @@ public class RouteOnboarding : MonoBehaviour
 {
     [Header("UI States")]
     public GameObject LoadingState;
+    public ButtonPrefab OkButton;
 
     [Header("Onboarding Screens")]    
     public GameObject OnboardDiscussion;
     public GameObject OnboardCleaning;
     public GameObject OnboardTraining;
-
+    
 
     private RouteSharedData SharedData;
+
+   
 
 
 
@@ -30,11 +33,17 @@ public class RouteOnboarding : MonoBehaviour
         
     }
 
-    public void LoadView() {        
+    public void LoadBusyView() {        
         gameObject.SetActive(true);
         LoadingState.SetActive(false);
+        OkButton.RenderBusyState(true);
         PopulateRouteOnboarding();
         
+    }
+
+    public void LoadReadyView()
+    {
+        OkButton.RenderBusyState(false);
     }
 
     /// <summary>

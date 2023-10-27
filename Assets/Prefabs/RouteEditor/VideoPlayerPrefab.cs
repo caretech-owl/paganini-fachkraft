@@ -75,9 +75,17 @@ public class VideoPlayerPrefab : MonoBehaviour
 
         if (!VideoManager.isPrepared)
         {
+            VideoManager.prepareCompleted -= OnVideoPrepareCompleted;
             VideoManager.prepareCompleted += OnVideoPrepareCompleted;
             VideoManager.Play();
         }
+
+        // Remove previous texture
+        if (Preview.texture != null)
+        {
+            Destroy(Preview.texture);
+        }
+        
 
         if (preview != null)
         {
@@ -164,83 +172,6 @@ public class VideoPlayerPrefab : MonoBehaviour
         PlayControl.SetActive(!activate);        
     }
 
-    //private void OnVideoStarted(VideoPlayer player)
-    //{
-    //    Debug.Log("Video started!");
-
-    //    VideoManager.started -= OnVideoStarted;
-    //    VideoManager.time = VideoTimestamp;
-    //    VideoManager.Pause();
-    //    PlayButton.gameObject.SetActive(true);
-    //}
-
-    //public void SkipToVideoFrame(double timestamp)
-    //{
-    //    VideoManager.Play();
-    //    VideoTimestamp = timestamp;
-    //    if (VideoManager.isPrepared)
-    //    {
-    //        Debug.Log("Video Prepared");
-    //        StartCoroutine(UpdateVideoFrameAndPause(timestamp));
-    //    }
-    //}
-
-
-    //private IEnumerator UpdateVideoFrameAndPause(double timestamp)
-    //{
-    //    // Wait for the next frame to be rendered
-    //    yield return null;
-    //    SkipTo(timestamp);
-    //}
-
-    //private void SkipTo(double timestamp)
-    //{
-    //    // Set the time and update the associated frame
-    //    VideoManager.Pause();
-    //    VideoManager.time = timestamp;
-    //    VideoManager.frame = (long)(timestamp * VideoManager.frameRate);
-
-    //    //VideoManager. += OnFrameReady;
-
-    //    //// Pause the video player
-    //    //VideoManager.Pause();
-
-    //    //// Show the play button
-    //    //PlayButton.gameObject.SetActive(true);
-
-    //    Debug.Log("Timestamp: " + timestamp);
-    //}
-
-    //void OnVideoPrepared(VideoPlayer source)
-    //{
-    //    Debug.Log("Video ready!");
-    //    SkipTo(VideoTimestamp);
-    //    VideoManager.Pause();
-    //}
-
-    //void OnFrameReady(VideoPlayer source, long frameIdx)
-    //{
-    //    VideoManager.frameReady -= OnFrameReady;
-    //    Debug.Log("Frame ready! timestamp:" + source.time + " frame: "+ frameIdx);
-    //    //SkipTo(VideoTimestamp);
-    //    // Pause the video player
-    //    VideoManager.Pause();
-
-    //    // Show the play button
-    //    PlayButton.gameObject.SetActive(true);
-    //}
-
-    //void OnSeekCompleted(VideoPlayer source)
-    //{
-    //    Debug.Log("Seek completed! timestamp:" + source.time);
-    //    //SkipTo(VideoTimestamp);
-    //    // Pause the video player
-    //    VideoManager.Play();
-    //    VideoManager.Pause();
-
-    //    // Show the play button
-    //    PlayButton.gameObject.SetActive(true);
-    //}
 
     public void LoadVideo(string url, float? aspectRatio = null)
     {
@@ -301,33 +232,30 @@ public class VideoPlayerPrefab : MonoBehaviour
     }
 
 
+    public void CleanupView()
+    {
+        // Unsubscribe from events to prevent memory leaks
+        VideoManager.prepareCompleted -= OnVideoPrepareCompleted;
 
-    //void ResizePanel()
-    //{
-    //    // Get the width of the content
-    //    RectTransform contentRectTransform = Content.GetComponent<RectTransform>();
-    //    float contentWidth = contentRectTransform.rect.width;
+        // Unload the video to release its resources
+        VideoManager.url = null;
 
-    //    // Get the width of the container of the content
-    //    RectTransform viewportRectTransform = Viewport.GetComponent<RectTransform>();
-    //    float viewportWidth = viewportRectTransform.rect.width;
+        // Clear any loaded preview texture
+        if (Preview.texture != null)
+        {
+            Destroy(Preview.texture);
+            Preview.texture = null;
+        }
 
-    //    RectTransform padingRectTransform = Padding.GetComponent<RectTransform>();
-    //    float currPaddingWidth = padingRectTransform.rect.width;
+        // Deactivate any active game objects
+        PreviewWrapper.SetActive(false);
+        ControlWrapper.SetActive(false);
 
-    //    // let's remove the current padding to the actual content
-    //    contentWidth = contentWidth - currPaddingWidth;
-
-    //    // Adding padding to center the contents
-    //    float paddingWidth = contentWidth < viewportWidth ? (viewportWidth - contentWidth) / 2 : 1;
-    //    padingRectTransform.sizeDelta = new Vector2(paddingWidth, padingRectTransform.sizeDelta.y);
-
-    //    // Center the back line, standing behind the pins
-    //    RectTransform lineRectTransform = Backline.GetComponent<RectTransform>();
-    //    lineRectTransform.sizeDelta = new Vector2(contentWidth - 100, lineRectTransform.sizeDelta.y);
-
-
-    //}
-
+        // Reset variables to their initial state
+        StartTimestamp = 0;
+        EndTimestamp = 0;
+        awaitingPlaybackAction = false;
+        videoJustLoaded = true;
+    }
 
 }

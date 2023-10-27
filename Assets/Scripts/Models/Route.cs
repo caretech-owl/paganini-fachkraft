@@ -115,7 +115,7 @@ public class Route : BaseModel<Route>
 
         // Query all Ways and their related Routes using sqlite-net's built-in mapping functionality
 
-        routes = conn.Table<Route>().Where(r => r.WayId == wayId).ToList();
+        routes = conn.Table<Route>().Where(r => r.WayId == wayId && r.Status != RouteStatus.Discarded).ToList();
 
         return routes;
     }

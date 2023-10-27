@@ -54,11 +54,11 @@ public class POIEdit : MonoBehaviour
         PinEdit.EnableSwitchToGallery(false);
     }
 
-    public void LoadSlideShow()
+    public void LoadSlideShow(PathpointPhoto photo, int startIndex)
     {
         HideAllButThisView(SlideShow.gameObject);
         SlideShow.EditMode = SharedData.CurrentEditorMode;
-        SlideShow.LoadSlideShow(SharedData.CurrentPOI.Photos);
+        SlideShow.LoadSlideShow(SharedData.CurrentPOI.Photos, startIndex);
         PinEdit.EnableSwitchToGallery(false);
     }
 
@@ -88,8 +88,22 @@ public class POIEdit : MonoBehaviour
     private void HideAllButThisView(GameObject view)
     {
         SlideShow.gameObject.SetActive(SlideShow.gameObject == view);
+        if (SlideShow.gameObject != view)
+        {
+            SlideShow.CleanupView();
+        }
+
         Gallery.gameObject.SetActive(Gallery.gameObject == view);
+        if (Gallery.gameObject != view)
+        {
+            Gallery.CleanupView();
+        }
+
         Video.gameObject.SetActive(Video.gameObject == view);
+        if (Video.gameObject != view)
+        {
+            Video.CleanupView();
+        }
     }
 
     private void SetupEditorMode() {
@@ -106,6 +120,14 @@ public class POIEdit : MonoBehaviour
             SharedData.CurrentEditorMode = RouteSharedData.EditorMode.ReadOnly;
         }
 
+    }
+
+    public void CleanupView()
+    {
+        PinEdit.CleanupView();
+        SlideShow.CleanupView();
+        Gallery.CleanupView();
+        Video.CleanupView();
     }
 
 }

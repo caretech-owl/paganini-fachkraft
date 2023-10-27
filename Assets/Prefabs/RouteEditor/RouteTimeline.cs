@@ -59,11 +59,11 @@ public class RouteTimeline: MonoBehaviour
             if (index == 0) {
                 //TODO: Remove hack
                 item.POIType = Pathpoint.POIsType.WayStart;
-                POITimelineView.AddStart(item);
+                POITimelineView.AddStart(item, SharedData.CurrentWay);
             } else if (index == SharedData.POIList.Count -1) {
                 //TODO: Remove hack
                 item.POIType = Pathpoint.POIsType.WayDestination;
-                POITimelineView.AddDestination(item);
+                POITimelineView.AddDestination(item, SharedData.CurrentWay);
             } else {
                 POITimelineView.AddPOI(item);
             }
@@ -84,6 +84,11 @@ public class RouteTimeline: MonoBehaviour
         POITimelineView.gameObject.SetActive(false);
         NoDataView.SetActive(true);
         SaveButton.SetActive(false);
+    }
+
+    public void CleanupView()
+    {
+        POITimelineView.CleanupView();
     }
 
 }

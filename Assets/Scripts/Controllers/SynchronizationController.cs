@@ -4,15 +4,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices.ComTypes;
 using System.Xml;
 using System.Xml.Serialization;
 
-using System.Drawing;
-
-using TMPro;
 using UnityEngine;
-using UnityEngine.UI;
+
 using static FTSCore;
 using static InternalDataModel;
 
@@ -130,9 +126,9 @@ public class SynchronizationController : MonoBehaviour
         // TODO: The social worker profile should be
         // available in the environment. This should
         // be the name of the logged in user
-        FTS._deviceName = "Social Worker,SWR";
+        FTS._deviceName = $"{AppState.CurrenSocialWorker.Firstname} {AppState.CurrenSocialWorker.Surname},SWR";
 
-        SyncState.Instance.TabletName = "Social Worker";
+        SyncState.Instance.TabletName = $"{AppState.CurrenSocialWorker.Firstname} {AppState.CurrenSocialWorker.Surname}";
     }
 
 
@@ -178,7 +174,7 @@ public class SynchronizationController : MonoBehaviour
         Screen.sleepTimeout = SleepTimeout.NeverSleep;
 
         SyncState.Instance.ClearValues();
-        SyncState.Instance.TabletName = "Social Worker";
+        SyncState.Instance.TabletName = $"{AppState.CurrenSocialWorker.Firstname} {AppState.CurrenSocialWorker.Surname}";
 
     }
 
@@ -349,23 +345,6 @@ public class SynchronizationController : MonoBehaviour
 
         // Reset overview list
         ResetOverviewLists();
-
-        //// Sync overview list
-        //foreach (DetailedWayExport dwe in listOfWays)
-        //{
-        //    if (!alternateSync)
-        //    {
-        //        GameObject go = Instantiate(SyncOverviewListContentPrefab, SyncOverviewList.transform);
-        //        go.GetComponent<SyncOverviewElement>().InstantiateSyncOverviewElement(dwe.Id, dwe.Start, dwe.Destination, dwe.RecordingDate.ToString(), "Daten verfügbar", this);
-        //        alternateSync = true;
-        //    }
-        //    else
-        //    {
-        //        GameObject go = Instantiate(SyncOverviewListContentAlternatePrefab, SyncOverviewList.transform);
-        //        go.GetComponent<SyncOverviewElement>().InstantiateSyncOverviewElement(dwe.Id, dwe.Start, dwe.Destination, dwe.RecordingDate.ToString(), "Daten verfügbar", this);
-        //        alternateSync = false;
-        //    }
-        //}
 
         foreach (var item in listOfWays)
         {
@@ -626,8 +605,7 @@ public class SynchronizationController : MonoBehaviour
         {
             pp.Id = -routeId++;
             pp.RouteId = r.Id;
-            pp.IsDirty = true;
-            pp.Insert();
+            pp.InsertDirty();
             
 
             if (pp.POIType!= Pathpoint.POIsType.Point && pp.PhotoFilenames != null)
@@ -644,9 +622,14 @@ public class SynchronizationController : MonoBehaviour
                     PathpointPhoto ppf = new PathpointPhoto();
                     ppf.Id = - photoId++;
                     ppf.PathpointId = pp.Id;
-                    ppf.Photo = File.ReadAllBytes(filename);
+                    ppf.PhotoId = ppf.Id;
                     ppf.Timestamp = photofile.Timestamp;
                     ppf.InsertDirty();
+
+                    PhotoData pd = new PhotoData();
+                    pd.Id = ppf.Id;
+                    pd.Photo = File.ReadAllBytes(filename);
+                    pd.InsertDirty();
                 }
 
             }

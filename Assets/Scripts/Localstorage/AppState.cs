@@ -6,6 +6,7 @@ public class AppState
 {
 
     public static string APIToken = null;
+    public static SocialWorker CurrenSocialWorker = null;
 
     public static int ScreenSleepTimeout = Screen.sleepTimeout;
 

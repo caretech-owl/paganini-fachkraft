@@ -52,6 +52,7 @@ public class DBConnector : PersistentLazySingleton<DBConnector>
         this.connection.CreateTable<Way>();
         this.connection.CreateTable<Address>();
         this.connection.CreateTable<PathpointPhoto>();
+        this.connection.CreateTable<PhotoData>();
     }
 
     public void TruncateTables()

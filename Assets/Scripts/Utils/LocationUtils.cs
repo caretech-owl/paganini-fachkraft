@@ -294,10 +294,10 @@ namespace LocationUtils
 
                 if (currentCluster.PhotoFilenames == null)
                 {
-                    currentCluster.PhotoFilenames = new List<Pathpoint.PhotoData>();                    
+                    currentCluster.PhotoFilenames = new List<Pathpoint.PhotoMetaData>();                    
                 }
 
-                currentCluster.PhotoFilenames.Add(new Pathpoint.PhotoData(currentCluster.Timestamp, currentCluster.PhotoFilename));
+                currentCluster.PhotoFilenames.Add(new Pathpoint.PhotoMetaData(currentCluster.Timestamp, currentCluster.PhotoFilename));
 
 
                 // Look for other points within the distance threshold in the window
@@ -311,7 +311,7 @@ namespace LocationUtils
                     if (distance <= distanceThreshold)
                     {
                         // Add the candidate point to the current cluster
-                        currentCluster.PhotoFilenames.Add(new Pathpoint.PhotoData(candidatePoint.Timestamp, candidatePoint.PhotoFilename));
+                        currentCluster.PhotoFilenames.Add(new Pathpoint.PhotoMetaData(candidatePoint.Timestamp, candidatePoint.PhotoFilename));
                         currentClusterStart++;
                     }
                     else

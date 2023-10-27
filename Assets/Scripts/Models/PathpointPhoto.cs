@@ -15,7 +15,11 @@ public class PathpointPhoto : BaseModel<PathpointPhoto>
     public PhotoFeedback DiscussionFeedback { set; get; }
     public long? Timestamp { set; get; }
 
-    public byte[] Photo { set; get; }
+    //public byte[] Photo { set; get; }
+    public int? PhotoId { set; get; }
+
+    [Ignore]
+    public PhotoData Data { get; set; }
 
     public enum PhotoFeedback
     {
@@ -32,12 +36,13 @@ public class PathpointPhoto : BaseModel<PathpointPhoto>
         Id = photoAPI.pphoto_id;
         PathpointId = photoAPI.ppoint_id;
         Description = photoAPI.pphoto_description;
-        Photo = Convert.FromBase64String(photoAPI.photo);
+        //Photo = Convert.FromBase64String(photoAPI.photo);
 
         CleaningFeedback = ((PhotoFeedback?)photoAPI.pphoto_cleaning_feedback) ?? PhotoFeedback.None;
         DiscussionFeedback = ((PhotoFeedback?)photoAPI.pphoto_discussion_feedback) ?? PhotoFeedback.None;
 
-   
+        PhotoId = photoAPI.photo_id;
+
         Timestamp = DateUtils.ConvertUTCStringToTsMilliseconds(photoAPI.pphoto_timestamp, "yyyy-MM-dd'T'HH:mm:ss");
 
         FromAPI = true;
@@ -56,6 +61,14 @@ public class PathpointPhoto : BaseModel<PathpointPhoto>
             .OrderBy(item => item.Timestamp)
             .ThenByDescending(item => item.Id)
             .ToList();
+
+        // get PhotoData
+
+        foreach(var photo in photos)
+        {
+            photo.Data = PhotoData.Get(photo.PhotoId);
+        }
+
 
         return photos;
     }
@@ -202,4 +215,31 @@ public class PathpointPhoto : BaseModel<PathpointPhoto>
         cmd.ExecuteNonQuery();
 
     }
+
+    public static void DeleteFromPOIs(int routeId)
+    {
+        //Pathpoint.DeleteFromRoute(CurrentRoute.Id, new bool[] { false }, new Pathpoint.POIsType[] { Pathpoint.POIsType.Landmark, Pathpoint.POIsType.Reassurance });
+
+        //// Open the SQLliteConnection
+        var conn = DBConnector.Instance.GetConnection();
+
+        // Prepare the base DELETE command text
+        string cmdText = "DELETE FROM PathpointPhoto " +
+                         "WHERE PathpointId IN (" +
+                         "    SELECT p.Id " +
+                         "    FROM Pathpoint p " +
+                         "    WHERE p.RouteId = ? " +
+                         ") ";
+
+
+        List<object> parameters = new List<object> {  routeId };
+
+        //// Prepare the SQLiteCommand with the command text and parameters
+        SQLiteCommand cmd = conn.CreateCommand(cmdText, parameters.ToArray());
+
+        // Execute the command
+        cmd.ExecuteNonQuery();
+
+    }
+
 }

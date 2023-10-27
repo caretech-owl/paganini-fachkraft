@@ -50,7 +50,7 @@ public class RouteItemPrefab : MonoBehaviour
     {
         LandmarkIcon.LandmarkType startIcon = Enum.Parse<LandmarkIcon.LandmarkType>(way.StartType);
         LandmarkIcon.LandmarkType destIcon = Enum.Parse<LandmarkIcon.LandmarkType>(way.DestinationType);
-        TitleCell.FillCell(way.Name);
+        TitleCell.FillCell(route.Name);
         StartCell.FillCell(way.Start, startIcon);
         DestinatitonCell.FillCell(way.Destination, destIcon);
         DateCell.FillCell(DateUtils.ConvertUTCToLocalString(route.Date, "dd/MM/yyyy HH:mm"));

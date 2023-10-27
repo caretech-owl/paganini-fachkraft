@@ -39,16 +39,16 @@ public class POITimeline : MonoBehaviour
         item.FillPathpoint(p, CurrentIndex++ );
     }
 
-    public void AddStart(Pathpoint p)
+    public void AddStart(Pathpoint p, Way way)
     {
         var item = SetupItem(p);
-        item.FillPathpointStart(p, AppState.CurrentWay);
+        item.FillPathpointStart(p, way);
     }
 
-    public void AddDestination(Pathpoint p)
+    public void AddDestination(Pathpoint p, Way way)
     {
         var item = SetupItem(p);
-        item.FillPathpointDestination(p, AppState.CurrentWay);
+        item.FillPathpointDestination(p, way);
     }
 
     private POITimelineItem SetupItem(Pathpoint p)
@@ -103,7 +103,11 @@ public class POITimeline : MonoBehaviour
         RectTransform lineRectTransform = Backline.GetComponent<RectTransform>();
         lineRectTransform.sizeDelta = new Vector2(contentWidth - 100, lineRectTransform.sizeDelta.y);
         
+    }
 
+    public void CleanupView()
+    {
+        Clearlist();
     }
 
 }

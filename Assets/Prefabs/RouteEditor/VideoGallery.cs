@@ -58,7 +58,18 @@ public class VideoGallery : MonoBehaviour
         }
 
         Texture2D texture = new Texture2D(2, 2);
-        texture.LoadImage(currentPOI.Photos[0].Photo);
+        texture.LoadImage(currentPOI.Photos[0].Data.Photo);
         VideoPlayer.SetupPlayback(startTime - BeforePOIVideoPlayback, endTime, texture);
+    }
+
+    public void CleanupView()
+    {        
+        // Unload the video player to release resources
+        VideoPlayer.CleanupView();
+
+        Resources.UnloadUnusedAssets();
+
+        // Optionally, you can destroy the GameObject itself if it's no longer needed
+        //Destroy(gameObject);
     }
 }

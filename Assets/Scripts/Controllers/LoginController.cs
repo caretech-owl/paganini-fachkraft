@@ -46,7 +46,7 @@ public class LoginController : MonoBehaviour
 
     public void SendPinToAPI()
     {
-        ErrorMessage.SetActive(false);
+        ErrorMessage?.SetActive(false);
         LoginButton.RenderBusyState(true);
         //ServerCommunication.Instance.GetSocialWorkerAuthentification(GetAuthSucceed, GetAuthFailed, InputFieldUsername.GetComponent<TMP_InputField>().text, InputFieldPassword.GetComponent<TMP_InputField>().text);
 
@@ -75,9 +75,10 @@ public class LoginController : MonoBehaviour
             authToken.Insert();
         }
 
+
         ContinueUserSignIn(authToken);
 
-        //ServerCommunication.Instance.GetUserProfile(GetUserProfileSucceed, GetUserProfileFailed, token.apitoken);        
+              
     }
 
     /// <summary>
@@ -99,6 +100,15 @@ public class LoginController : MonoBehaviour
     {
         // Let's keep track of the apitoken
         AppState.APIToken = authToken.ApiToken;
+
+        PaganiniRestAPI.SocialWorker.GetProfile(GetProfileSucceed, GetAuthFailed);
+        
+    }
+
+    private void GetProfileSucceed(SocialWorkerAPI profile)
+    {
+        AppState.CurrenSocialWorker = new SocialWorker(profile);
         SceneSwitcher.LoadUserManager();
+
     }
 }

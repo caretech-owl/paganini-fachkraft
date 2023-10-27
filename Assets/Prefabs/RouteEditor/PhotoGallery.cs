@@ -87,7 +87,7 @@ public class PhotoGallery : MonoBehaviour
             GameObject child = content.GetChild(i).gameObject;
 
             // Destroy the child game object
-            Destroy(child);
+            DestroyItem(child);
         }
     }
 
@@ -97,12 +97,13 @@ public class PhotoGallery : MonoBehaviour
         CurrentPhotos = photos;
         if (!Content) return;
 
+        int index = 0;
         foreach (var photo in photos)
         {
             if (EditMode == RouteSharedData.EditorMode.Cleaning ||
                 photo.CleaningFeedback != PathpointPhoto.PhotoFeedback.Delete)
             {
-                AddItem(photo);
+                AddItem(photo, index++);
             }
             
             Debug.Log($"Id: {photo.Id} Timestamp:{photo.Timestamp}");
@@ -113,19 +114,34 @@ public class PhotoGallery : MonoBehaviour
         // Feedback during discussion
     }
 
-    public void AddItem(PathpointPhoto p)
+    public void AddItem(PathpointPhoto p, int index)
     {
         var neu = Instantiate(ItemPrefab, Content.transform);
 
         var item = neu.GetComponent<PhotoElementPrefab>();
         item.OnPhotoOpened.AddListener(OnPhotoOpenedHandler);
         item.OnSelectedChanged.AddListener(OnPhotoSelectedHandler);
-        item.FillPhoto(p, EditMode == RouteSharedData.EditorMode.Cleaning);
+        item.FillPhoto(p, EditMode == RouteSharedData.EditorMode.Cleaning, index);
 
     }
 
+    private void DestroyItem(GameObject itemObject)
+    {
+        // Remove event listeners before destroying the item
+        var item = itemObject.GetComponent<PhotoElementPrefab>();
+        item.OnPhotoOpened.RemoveListener(OnPhotoOpenedHandler);
+        item.OnSelectedChanged.RemoveListener(OnPhotoSelectedHandler);
+
+        // Destroy the item game object
+        Destroy(itemObject);
+    }
+
     private void OnPhotoOpenedHandler(PhotoElementPrefab prefab) {
-        OnPhotoOpened?.Invoke(prefab.CurrentPathpointPhoto,0);
+        // 'Deleted' / 'Unselected' pictures cannot be opened
+        if (prefab.CurrentPathpointPhoto.CleaningFeedback != PathpointPhoto.PhotoFeedback.Delete)
+        {
+            OnPhotoOpened?.Invoke(prefab.CurrentPathpointPhoto, prefab.CurrentIndex);
+        }        
     }
 
     private void OnPhotoSelectedHandler(PhotoElementPrefab prefab)
@@ -137,6 +153,21 @@ public class PhotoGallery : MonoBehaviour
             photo.CleaningFeedback = PathpointPhoto.PhotoFeedback.Delete;
         }
         photo.InsertDirty();        
+    }
+
+    public void CleanupView()
+    {
+        // Clear the list of photos and destroy instantiated items
+        Clearlist();
+
+        // Unload unused assets (textures, etc.)
+        //Resources.UnloadUnusedAssets();
+
+        // Reset the current photos
+        CurrentPhotos = null;
+
+        // Optionally, you can also destroy the GameObject itself if it's no longer needed
+        //Destroy(gameObject);
     }
 
 }

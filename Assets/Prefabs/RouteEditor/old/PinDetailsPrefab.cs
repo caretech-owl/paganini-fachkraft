@@ -46,7 +46,7 @@ public class PinDetailsPrefab : MonoBehaviour
         PhotoList.Clearlist();
         foreach(var photo in point.Photos)
         {
-            PhotoList.AddItem(photo);
+            PhotoList.AddItem(photo, 0);
         }
 
     }

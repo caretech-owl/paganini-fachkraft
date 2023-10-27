@@ -105,7 +105,7 @@ public class POITimelineItem : MonoBehaviour
         var previewPhoto = PathpointPhoto.GetDefaultPhoto(pathpoint.Photos);
         if (previewPhoto != null)
         {            
-            RenderPicture(previewPhoto.Photo);
+            RenderPicture(previewPhoto.Data.Photo);
         }
         
 
@@ -172,6 +172,11 @@ public class POITimelineItem : MonoBehaviour
 
     private void RenderPicture(byte[] imageBytes)
     {
+        if (POIPhoto.texture != null)
+        {
+            Destroy(POIPhoto.texture);
+        }
+
         Texture2D texture = new Texture2D(2, 2);
         texture.LoadImage(imageBytes);
 
@@ -188,4 +193,35 @@ public class POITimelineItem : MonoBehaviour
 
         Debug.Log("Item PathpointItem " + PathpointItem.Id + " label: " + PinTitle.text);
     }
+
+
+    public void CleanupView()
+    {
+        // Remove any event listeners or cleanup any other resources as needed.
+        // For example, if you have registered event listeners, unregister them here.
+        PinButton.onClick.RemoveAllListeners();
+
+        // Clear references to objects
+        if (POIPhoto.texture != null)
+        {
+            Destroy(POIPhoto.texture);
+        }
+
+        // Deactivate or hide any game objects or UI elements that are no longer needed
+        LocationIcon.gameObject.SetActive(false);
+        // You can add other GameObjects/UI elements that need to be deactivated or reset here.
+
+        // Clear any text or data
+        PinTitle.text = string.Empty;
+        PinSubtitle.text = string.Empty;
+
+        // Reset other variables or states as needed
+        // For example, if you have other variables that need to be reset, do so here.
+    }
+
+    private void OnDestroy()
+    {
+        CleanupView();
+    }
+
 }

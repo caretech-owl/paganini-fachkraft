@@ -1,6 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
-using PaganiniRestAPI;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -23,7 +20,7 @@ public class PinDetailsEdit : MonoBehaviour
 
     [Header("Gallery / Video switch")]
     public GameObject SwitchVideoPanel;
-    public GameObject SwitchGAlleryPanel;
+    public GameObject SwitchGalleryPanel;
 
     private Pathpoint CurrentPathpoint;
     private Way CurrentWay;
@@ -69,14 +66,14 @@ public class PinDetailsEdit : MonoBehaviour
         if (point.Photos != null && point.Photos.Count > 0) {
             // render picture
             var previewPhoto = PathpointPhoto.GetDefaultPhoto(point.Photos);
-            RenderThumbnail(previewPhoto.Photo);
+            RenderThumbnail(previewPhoto.Data.Photo);
         }
         
     }
 
     public void EnableSwitchToGallery(bool activate) {
         SwitchVideoPanel.SetActive(!activate);
-        SwitchGAlleryPanel.SetActive(activate) ;
+        SwitchGalleryPanel.SetActive(activate) ;
     }
 
     private void PopulateCleaning(Pathpoint point) {
@@ -163,11 +160,22 @@ public class PinDetailsEdit : MonoBehaviour
 
     private void RenderThumbnail(byte[] imageBytes)
     {
+        // Destroy the old texture before creating a new one
+        if (POIVideoThumbnail.texture != null)
+        {
+            Destroy(POIVideoThumbnail.texture);
+        }
+
         Texture2D texture = new Texture2D(2, 2);
         texture.LoadImage(imageBytes);
 
         POIVideoThumbnail.texture = texture;
         POIVideoThumbnail.gameObject.SetActive(true);
+
+        if (POIPhotoThumbnail.texture != null)
+        {
+            Destroy(POIPhotoThumbnail.texture);
+        }
 
         POIPhotoThumbnail.texture = texture;
         POIPhotoThumbnail.gameObject.SetActive(true);
@@ -195,4 +203,45 @@ public class PinDetailsEdit : MonoBehaviour
 
         FillPOIEditMode(CurrentPathpoint, CurrentWay, CurrentIndex);
     }
+
+
+
+    private void DestroyTexture(Texture texture)
+    {
+        if (texture != null)
+        {
+            // Use DestroyImmediate to properly destroy the texture at runtime
+            DestroyImmediate(texture, true);
+        }
+    }
+
+    public void CleanupView()
+    {
+        // Clear references to objects
+        CurrentPathpoint = null;
+        CurrentWay = null;
+
+        // Destroy textures to release memory
+        DestroyTexture(POIVideoThumbnail.texture);
+        DestroyTexture(POIPhotoThumbnail.texture);
+
+        POIMetadata.CleanupView();
+
+        // Remove event listeners or cleanup any other resources as needed
+        // For example, if you have registered event listeners, unregister them here.
+
+        // Deactivate or hide any game objects or UI elements that are no longer needed
+        CleaningPanel.SetActive(false);
+        DiscussionPanel.SetActive(false);
+        ReadOnlyPanel.SetActive(false);
+        SwitchVideoPanel.SetActive(false);
+        SwitchGalleryPanel.SetActive(false);
+
+        // Unload unused assets to free up memory
+        Resources.UnloadUnusedAssets();
+    }
+
+
+
+
 }

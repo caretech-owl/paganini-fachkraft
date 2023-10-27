@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -10,8 +11,8 @@ namespace PaganiniRestAPI
     public class Path
     {
         //Base URL for the Rest APi
-        public const string BaseUrl = "https://infinteg-main.fh-bielefeld.de/paganini/api/";
-        //public const string BaseUrl = "http://192.168.178.22:3000/";
+        //public const string BaseUrl = "https://infinteg-main.fh-bielefeld.de/paganini/api/";
+        public const string BaseUrl = "http://192.168.178.22:3000/";
        
        
         public const string Authenticate = BaseUrl + "sw/me/authentification";
@@ -30,13 +31,37 @@ namespace PaganiniRestAPI
         public const string SwRoutePhotoList = SwRoutes + "/photos";
         public const string SwPOIList = SwRoutes + "/pois";
 
+        public const string SwPhotoDataList = SwRoutePhotoList + "/data";
+
         public const string SwPathpointList = SwRoutes + "/pathpoints";
         public const string SwPathpoints = BaseUrl + "sw/pathpoints/{0}";
+
+
+        // Function to build a query string from a dictionary
+        public static string BuildQueryString(Dictionary<string, string> query)
+        {
+            if (query == null || query.Count == 0)
+            {
+                return string.Empty; // No query parameters, return an empty string
+            }
+
+            var queryString = new StringBuilder("?");
+            foreach (var kvp in query)
+            {
+                // Encode and append each key-value pair to the query string
+                queryString.Append(Uri.EscapeDataString(kvp.Key));
+                queryString.Append("=");
+                queryString.Append(Uri.EscapeDataString(kvp.Value));
+                queryString.Append("&");
+            }
+
+            return queryString.ToString().TrimEnd('&');
+        }
 
     }
 
 
-    public class SocialWorker 
+    public class SocialWorker
     {
 
         public static void Authenticate(string username, string password, UnityAction<AuthTokenAPI> successCallback, UnityAction<string> errorCallback)
@@ -48,6 +73,18 @@ namespace PaganiniRestAPI
             };
 
             RESTAPI.Instance.Get<AuthTokenAPI>(Path.Authenticate, successCallback, errorCallback, headers);
+        }
+
+        public static void GetProfile(UnityAction<SocialWorkerAPI> successCallback, UnityAction<string> errorCallback)
+        {
+            Dictionary<string, string> headers = new Dictionary<string, string>
+            {
+                { "apitoken", AppState.APIToken }
+            };
+
+            string url = Path.SwProfile;
+
+            RESTAPI.Instance.Get<SocialWorkerAPI>(url, successCallback, errorCallback, headers);
         }
     }
 
@@ -207,7 +244,7 @@ namespace PaganiniRestAPI
             // batch will need to have the list of byte[] files, with reference to the pathpoints (photo with the filename?)
 
             string url = string.Format(Path.SwRoutePhotoList, routeId);
-            RESTAPI.Instance.PutMultipart<PathpointPhotoAPIList>(url, batch, batch.files, successCallback, errorCallback, headers);
+            RESTAPI.Instance.Put<PathpointPhotoAPIList>(url, batch, successCallback, errorCallback, headers);
 
         }
 
@@ -242,6 +279,39 @@ namespace PaganiniRestAPI
         }
     }
 
+
+    public class PhotoData
+    {
+        public static void GetAll(Int32 routeId, Dictionary<string, string> query, UnityAction<PhotoDataAPIList> successCallback, UnityAction<string> errorCallback)
+        {
+            Dictionary<string, string> headers = new Dictionary<string, string>
+            {
+                { "apitoken", AppState.APIToken }
+            };
+
+            var queryString = Path.BuildQueryString(query);
+
+            string url = string.Format(Path.SwPhotoDataList, routeId) + queryString;
+
+            RESTAPI.Instance.Get<PhotoDataAPIList>(url, successCallback, errorCallback, headers);
+        }
+
+
+        public static void BatchUpdate(Int32 routeId, PhotoDataAPIBatch batch, UnityAction<PhotoDataAPIList> successCallback, UnityAction<string> errorCallback)
+        {
+            Dictionary<string, string> headers = new Dictionary<string, string>
+            {
+                { "apitoken", AppState.APIToken }
+            };
+
+            // batch will need to have the list of byte[] files, with reference to the pathpoints (photo with the filename?)
+
+            string url = string.Format(Path.SwPhotoDataList, routeId);
+            RESTAPI.Instance.PutMultipart<PhotoDataAPIList>(url, batch, batch.files, successCallback, errorCallback, headers);
+
+        }
+
+    }
 
 
 }

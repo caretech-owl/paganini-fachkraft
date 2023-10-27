@@ -35,7 +35,7 @@ public class PinItemPrefab : MonoBehaviour
     public void FillPathpoint(Pathpoint pathpoint)
     {
         // render picture
-        byte[] preview = pathpoint.Photos[0].Photo;        
+        byte[] preview = pathpoint.Photos[0].Data.Photo;        
         RenderPicture(preview);
 
         // render Icon

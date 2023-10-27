@@ -11,6 +11,7 @@ public class RouteStepChange : MonoBehaviour
 
     [Header("UI States")]
     public GameObject DataState;
+    public GameObject DeleteState;
     public GameObject ErrorState;
 
     [Header("UI Controls")]
@@ -52,8 +53,7 @@ public class RouteStepChange : MonoBehaviour
 
     public void LoadRouteStepChange(Route route)
     {
-        DataState.SetActive(true);
-        ErrorState.SetActive(false);
+        LoadView(DataState);
 
         CurrentRoute = route;
         string step = "";
@@ -75,6 +75,16 @@ public class RouteStepChange : MonoBehaviour
         {
             toggle.isOn = toggle.name.Contains(step);           
         }
+    }
+
+    public void LoadDeleteRoute()
+    {
+        LoadView(DeleteState);
+    }
+
+    public void LoadSaveView()
+    {
+        LoadView(DataState);
     }
 
 
@@ -111,6 +121,12 @@ public class RouteStepChange : MonoBehaviour
     }
 
 
+    public void DeleteRoute()
+    {
+        SharedData.DeleteWayDefinition();
+    }
+
+
     public void UploadRouteEditingDraft()
     {
         ButtonSave.RenderBusyState(true);
@@ -118,9 +134,14 @@ public class RouteStepChange : MonoBehaviour
     }
 
     private void RouteSharedData_OnDataUploadError(string message) {
-        DataState.SetActive(false);
-        ErrorState.SetActive(true);
+        LoadView(ErrorState);
+    }
 
+    private void LoadView(GameObject view)
+    {
+        DataState.SetActive(view == DataState);
+        ErrorState.SetActive(view == ErrorState);
+        DeleteState.SetActive(view == DeleteState);
     }
 
 }

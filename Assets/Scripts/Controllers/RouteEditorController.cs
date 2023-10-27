@@ -9,10 +9,11 @@ public class RouteEditorController : MonoBehaviour
     public RouteTimeline RouteTimelineView;
     public POIEdit POIEditView;
     public RouteStepChange StatusChange;
+    public RouteInfoEdit RouteInfoEditView;
 
 
-    public VideoPlayerPrefab VideoManager;
-    public PinListPrefab PinList;
+    //public VideoPlayerPrefab VideoManager;
+    //public PinListPrefab PinList;
     public MapManager GMap;
 
 
@@ -25,6 +26,7 @@ public class RouteEditorController : MonoBehaviour
     {
         SharedData = RouteSharedData.Instance;
         SharedData.OnDataDownloaded += RouteSharedData_OnDataDownloaded;
+        SharedData.OnDataPartiallyDownloaded += RouteSharedData_OnDataPartiallyDownloaded;
         SharedData.OnDataUploaded += SharedData_OnDataUploaded;
 
         SharedData.DownloadRouteDefinition();
@@ -38,25 +40,25 @@ public class RouteEditorController : MonoBehaviour
     /// Toggle the route video representation, where active turns on video and inactive the map
     /// </summary>
     /// <param name="videoActive">Whether video should be active</param> 
-    public void ToggleRouteRepresentation(bool videoActive)
-    {
-        if (videoActive)
-        {
-            GMap.DisableMap();
-            // Activating the component, and then resuming to the last timestamp
-            VideoManager.gameObject.SetActive(videoActive); // function to hide!        
-            //VideoManager.ResumeVideo();
-        }
-        else // videoActive = false
-        {
-            GMap.EnableMap();
-            // Pausing the component to get the current timestamp,
-            // and then disabling the component
-            //VideoManager.PauseVideo();
-            VideoManager.gameObject.SetActive(videoActive);
-        }
+    //public void ToggleRouteRepresentation(bool videoActive)
+    //{
+    //    if (videoActive)
+    //    {
+    //        GMap.DisableMap();
+    //        // Activating the component, and then resuming to the last timestamp
+    //        VideoManager.gameObject.SetActive(videoActive); // function to hide!        
+    //        //VideoManager.ResumeVideo();
+    //    }
+    //    else // videoActive = false
+    //    {
+    //        GMap.EnableMap();
+    //        // Pausing the component to get the current timestamp,
+    //        // and then disabling the component
+    //        //VideoManager.PauseVideo();
+    //        VideoManager.gameObject.SetActive(videoActive);
+    //    }
         
-    }
+    //}
 
 
     //public void RenderPathpointTrace(PathpointTraceMessage traceMessage)
@@ -90,6 +92,12 @@ public class RouteEditorController : MonoBehaviour
         StatusChange.LoadRouteStepChange(SharedData.CurrentRoute);
     }
 
+    public void LoadEditRouteInfo()
+    {
+        HideAllButThisView(RouteInfoEditView.gameObject);
+        RouteInfoEditView.LoadRouteInfo(SharedData.CurrentWay, SharedData.CurrentRoute);
+    }
+
     public void LoadPOIEditor(Pathpoint poi, int index)
     {
         SharedData.CurrentPOI = poi;
@@ -104,13 +112,23 @@ public class RouteEditorController : MonoBehaviour
         RouteTimelineView.LoadView();        
     }
 
+    public void BackToTimeline()
+    {
+        HideAllButThisView(RouteTimelineView.gameObject);
+    }
+
     public void LoadOnboarding() {
         HideAllButThisView(RouteOnboardingView.gameObject);
-        RouteOnboardingView.LoadView();        
+        RouteOnboardingView.LoadBusyView();        
     }
 
 
     private void RouteSharedData_OnDataDownloaded(object sender, EventArgs e)
+    {
+        RouteOnboardingView.LoadReadyView();
+    }
+
+    private void RouteSharedData_OnDataPartiallyDownloaded(object sender, EventArgs e)
     {
         SharedData.LoadRouteFromDatabase();
         LoadOnboarding();
@@ -124,16 +142,30 @@ public class RouteEditorController : MonoBehaviour
     private void HideAllButThisView(GameObject view) {
 
         RouteOnboardingView.gameObject.SetActive(RouteOnboardingView.gameObject == view);
-        RouteTimelineView.gameObject.SetActive(RouteTimelineView.gameObject == view);        
+        RouteTimelineView.gameObject.SetActive(RouteTimelineView.gameObject == view);
+
+        if (RouteTimelineView.gameObject != view)
+        {
+            //RouteTimelineView.CleanupView();
+        }
+
         POIEditView.gameObject.SetActive(POIEditView.gameObject == view);
+        if (POIEditView.gameObject != view)
+        {
+            POIEditView.CleanupView();
+        }
+
         GMap.gameObject.SetActive(GMap.gameObject == view);
         StatusChange.gameObject.SetActive(StatusChange.gameObject == view);
+
+        RouteInfoEditView.gameObject.SetActive(RouteInfoEditView.gameObject == view);
     }
 
     private void OnDestroy()
     {
         SharedData.OnDataDownloaded -= RouteSharedData_OnDataDownloaded;
         SharedData.OnDataUploaded -= SharedData_OnDataUploaded;
+        SharedData.OnDataPartiallyDownloaded -= RouteSharedData_OnDataPartiallyDownloaded;
     }
 
 
