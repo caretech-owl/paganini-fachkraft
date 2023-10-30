@@ -8,8 +8,8 @@ public class WayAPI : BaseAPI
     [JsonIgnore]
     public int way_id;
 
-	public AddressAPI way_start;
-	public AddressAPI way_destination;
+	public IAddressAPI way_start;
+	public IAddressAPI way_destination;
 	public string way_name;
 	public string way_description;
 
@@ -24,6 +24,11 @@ public class WayAPIResult : WayAPI
     public int way_id;
 
     [JsonProperty]
+    public AddressAPIResult way_start;
+    [JsonProperty]
+    public AddressAPIResult way_destination;
+
+    [JsonProperty]
     public RouteAPIResult[] routes;
 }
 
@@ -33,9 +38,9 @@ public class WayAPIResult : WayAPI
 public class WayAPIUpdate : WayAPI
 {
     [JsonIgnore]
-    public AddressAPI way_start;
+    public AddressAPIUpdate way_start;
     [JsonIgnore]
-    public AddressAPI way_destination;
+    public AddressAPIUpdate way_destination;
 }
 
 public class WayAPIList
