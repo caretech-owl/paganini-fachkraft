@@ -194,6 +194,7 @@ namespace LocationUtils
 
         public static List<Pathpoint> SimplifyTrackVWSimplifier(List<Pathpoint> pathpoints, double tolerance)
         {
+            
             List<Coordinate> list = new List<Coordinate>();
             List<Pathpoint> simplified = new List<Pathpoint>();
             Dictionary<Coordinate, Pathpoint> CoordToPathpoint = new Dictionary<Coordinate, Pathpoint> { };
@@ -210,6 +211,9 @@ namespace LocationUtils
                 }
                 
             }
+
+            // we need at least 2 points to continue
+            if (list.Count < 2) return pathpoints;
 
             var geomFactory = new GeometryFactory();
             var lineString = geomFactory.CreateLineString(list.ToArray());
@@ -341,8 +345,8 @@ namespace LocationUtils
         public double DistanceOutlier = 100;
         public int SegmentSplit = 300;
         public double OutlierFactor = 1.5;
-        public double MinEvenly = 4;
-        public double MaxEvenly = 8;
+        public double MinEvenly = 3;
+        public double MaxEvenly = 6;
         public double POIClusterDistance = 10;
 
 
@@ -359,7 +363,7 @@ namespace LocationUtils
             POIList = LocationUtils.GPSSmooth.ClusterPoints(POIList, POIClusterDistance);
 
 
-            // keep track of where to insert POIs?
+            //// keep track of where to insert POIs?
             var tolerance = GPSSmooth.EstimateSimplicationDistanceTolerance(ppList, ToleranceSimplify);
             ppList = LocationUtils.GPSUtils.RemoveInnacuratePoints(ppList, MaxAccuracyRadio);
             ppList = LocationUtils.GPSUtils.RemoveOutliers(ppList, DistanceOutlier);
@@ -463,6 +467,8 @@ namespace LocationUtils
                     // Compute the latitude and longitude differences between the current point and the previous point
                     double latDiff = (coordinates[i].Latitude - prevCoord.Latitude) / numPoints;
                     double lonDiff = (coordinates[i].Longitude - prevCoord.Longitude) / numPoints;
+                    double altDiff = (coordinates[i].Altitude - prevCoord.Altitude) / numPoints;
+                    double accDiff = (coordinates[i].Accuracy - prevCoord.Accuracy) / numPoints;
 
                     // Compute the time difference between the current point and the previous point
                     double timeDiff = coordinates[i].Timestamp - prevCoord.Timestamp;
@@ -476,6 +482,8 @@ namespace LocationUtils
                         {
                             Latitude = prevCoord.Latitude + latDiff * j,
                             Longitude = prevCoord.Longitude + lonDiff * j,
+                            Altitude = prevCoord.Altitude + altDiff * j,
+                            Accuracy = prevCoord.Accuracy + accDiff * j,
                             POIType = Pathpoint.POIsType.Point,
                             Timestamp = prevCoord.Timestamp + (long)(timeDiff * j / numPoints)
                         });

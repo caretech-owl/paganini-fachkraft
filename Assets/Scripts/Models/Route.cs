@@ -1,8 +1,6 @@
 using System;
 using System.Collections.Generic;
-using System.Data;
 using System.Linq;
-using PaganiniRestAPI;
 using SQLite4Unity3d;
 //using SQLiteNetExtensions.Attributes;
 
@@ -21,11 +19,11 @@ public class Route : BaseModel<Route>
     public long? StartTimestamp { set; get; }
     public long? EndTimestamp { set; get; }
     public int SocialWorkerId { set; get; }
+    public bool? IsDraftUpdated { set; get; }
 
     //[Indexed]
     public int WayId { get; set; }
 
-    //[OneToMany(CascadeOperations = CascadeOperation.All)]
     [Ignore]
     public List<Pathpoint> Pathpoints { get; set; }
 
@@ -74,7 +72,6 @@ public class Route : BaseModel<Route>
         EndTimestamp = DateUtils.ConvertUTCStringToTsMilliseconds(erw.erw_end_time, "yyyy-MM-dd'T'HH:mm:ss");
         SocialWorkerId = erw.erw_socialworker_id??-1;
     }
-
 
     public RouteAPI ToAPI()
     {
@@ -132,6 +129,29 @@ public class Route : BaseModel<Route>
         // Execute the command
         cmd.ExecuteNonQuery();
 
+    }
+
+    /// <summary>
+    /// Deletes all non-dirty (unmodified) model instances from the database.
+    /// </summary>
+    public static void DeleteIfUpdatedDrafts(bool? IsDraftUpdated = null)
+    {
+        var conn = DBConnector.Instance.GetConnection();
+
+
+        // Create the SQL command with the update query and parameters
+        string cmdText = "DELETE from Route where IsDirty = 0 ";
+
+
+        if (IsDraftUpdated != null)
+        {
+            cmdText = cmdText + " AND IsDraftUpdated = ?";
+            SQLiteCommand cmd = conn.CreateCommand(cmdText, IsDraftUpdated);
+            cmd.ExecuteNonQuery();
+            return;
+        }
+                    
+        conn.Execute(cmdText);
     }
 
 }

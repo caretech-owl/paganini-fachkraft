@@ -130,4 +130,5 @@ public class BaseModel<T> where T : BaseModel<T>, new()
                                       conn.Table<T>().Table.TableName);
         conn.Execute(query);
     }
+
 }

@@ -95,7 +95,7 @@ public class RouteExplorerController : MonoBehaviour
         // Delete the current local copy of ways
 
         Way.DeleteNonDirtyCopies();
-        Route.DeleteNonDirtyCopies();
+        Route.DeleteIfUpdatedDrafts(false);
 
         // Create a local copy of the API results
         foreach (WayAPIResult wres in list)
@@ -112,14 +112,24 @@ public class RouteExplorerController : MonoBehaviour
             if (wres.routes != null)
             {
                 foreach (RouteAPIResult rres in wres.routes)
-                {
-                    // check for local copy
-                    if(!Route.CheckIfExists(r => r.Id == rres.erw_id))
+                {                    
+                    if (!Route.CheckIfExists(r => r.Id == rres.erw_id))
                     {
                         // Insert associated route
                         Route r = new Route(rres);
                         r.Insert();
                     }
+                    else
+                    {
+                        var localRoute = Route.Get(rres.erw_id);
+                        if (!localRoute.IsDirty && localRoute.IsDraftUpdated!= null && (bool)localRoute.IsDraftUpdated)
+                        {
+                            // Keep the flag
+                            Route r = new Route(rres);
+                            r.IsDraftUpdated = localRoute.IsDraftUpdated;
+                            r.Insert();
+                        }
+                    }                    
                 }
             }            
         }

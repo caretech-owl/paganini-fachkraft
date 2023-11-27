@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
@@ -51,9 +52,16 @@ public class RouteTimeline: MonoBehaviour
         int index = 0;
         foreach (var item in SharedData.POIList)
         {
+            try { 
             // We load photos
-            item.Photos = PathpointPhoto.GetPathpointPhotoListByPOI(item.Id);
-            //item.Photos
+                item.Photos = PathpointPhoto.GetPathpointPhotoListByPOI(item.Id);
+                //item.Photos
+            }
+            catch (Exception e)
+            {
+                Debug.Log($"Id: {item.Id} POIType: {item.POIType} --> Error loading photos");
+                continue;
+            }
 
             // Add item to list
             if (index == 0) {
@@ -69,7 +77,8 @@ public class RouteTimeline: MonoBehaviour
             }
             index++;
 
-            Debug.Log("POIType: " + item.POIType);
+            Debug.Log($"Id: {item.Id} POIType: {item.POIType}");
+
         }
 
         // No data to render
@@ -83,7 +92,7 @@ public class RouteTimeline: MonoBehaviour
     private void LoadNoData() {
         POITimelineView.gameObject.SetActive(false);
         NoDataView.SetActive(true);
-        SaveButton.SetActive(false);
+        //SaveButton.SetActive(false);
     }
 
     public void CleanupView()

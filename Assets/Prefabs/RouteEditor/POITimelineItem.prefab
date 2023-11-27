@@ -1099,6 +1099,7 @@ MonoBehaviour:
   textObject: {fileID: 0}
   Wrapper: {fileID: 7870777996740324882}
   ClickBackground: {fileID: 0}
+  pressedColor: {r: 0, g: 0, b: 0, a: 1}
 --- !u!1 &7939523043755852040
 GameObject:
   m_ObjectHideFlags: 0
@@ -2276,11 +2277,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3291947449434263298, guid: 7a85a0017c4b04175b999dad635765fc, type: 3}
       propertyPath: m_SizeDelta.x
-      value: 300
+      value: 250
       objectReference: {fileID: 0}
     - target: {fileID: 3291947449434263298, guid: 7a85a0017c4b04175b999dad635765fc, type: 3}
       propertyPath: m_SizeDelta.y
-      value: 50
+      value: 60
       objectReference: {fileID: 0}
     - target: {fileID: 3291947449434263298, guid: 7a85a0017c4b04175b999dad635765fc, type: 3}
       propertyPath: m_LocalPosition.x
@@ -2329,6 +2330,31 @@ PrefabInstance:
     - target: {fileID: 3291947449434263298, guid: 7a85a0017c4b04175b999dad635765fc, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3291947449434263299, guid: 7a85a0017c4b04175b999dad635765fc, type: 3}
+      propertyPath: m_text
+      value: This is a very long description that is shown here for everybody to
+        see
+      objectReference: {fileID: 0}
+    - target: {fileID: 3291947449434263299, guid: 7a85a0017c4b04175b999dad635765fc, type: 3}
+      propertyPath: m_fontSize
+      value: 24
+      objectReference: {fileID: 0}
+    - target: {fileID: 3291947449434263299, guid: 7a85a0017c4b04175b999dad635765fc, type: 3}
+      propertyPath: m_margin.w
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3291947449434263299, guid: 7a85a0017c4b04175b999dad635765fc, type: 3}
+      propertyPath: m_fontSizeBase
+      value: 24
+      objectReference: {fileID: 0}
+    - target: {fileID: 3291947449434263299, guid: 7a85a0017c4b04175b999dad635765fc, type: 3}
+      propertyPath: m_overflowMode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3291947449434263299, guid: 7a85a0017c4b04175b999dad635765fc, type: 3}
+      propertyPath: m_VerticalAlignment
+      value: 256
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 7a85a0017c4b04175b999dad635765fc, type: 3}

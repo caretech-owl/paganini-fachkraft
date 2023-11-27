@@ -62,12 +62,10 @@ public class POITimelineItem : MonoBehaviour
 
         LocationIcon.gameObject.SetActive(false);
 
-        RenderIrrelevant(pathpoint.RelevanceFeedback == Pathpoint.POIFeedback.No);
-        if (pathpoint.RelevanceFeedback != Pathpoint.POIFeedback.No) {
+        RenderIrrelevant(pathpoint.RelevanceFeedback == Pathpoint.POIFeedback.No || pathpoint.CleaningFeedback == Pathpoint.POIFeedback.No);
+        if (pathpoint.RelevanceFeedback != Pathpoint.POIFeedback.No && pathpoint.CleaningFeedback != Pathpoint.POIFeedback.No) {
             RenderCompletedIcon(true);
         }
-        
-
 
         CurrentIndex = index;
     }
@@ -125,9 +123,10 @@ public class POITimelineItem : MonoBehaviour
         ReassuranceIcon.SetActive(PathpointItem.POIType == Pathpoint.POIsType.Reassurance);
         LandmarkIcon.SetActive(PathpointItem.POIType == Pathpoint.POIsType.Landmark);
 
-        StraightIcon.SetActive(PathpointItem.Instruction== "Straight");
-        TurnLeftIcon.SetActive(PathpointItem.Instruction == "LeftTurn");
-        TurnRightIcon.SetActive(PathpointItem.Instruction == "RightTurn");    
+        bool isLandmark = PathpointItem.POIType == Pathpoint.POIsType.Landmark;
+        StraightIcon.SetActive(isLandmark && PathpointItem.Instruction== "Straight");
+        TurnLeftIcon.SetActive(isLandmark && PathpointItem.Instruction == "LeftTurn");
+        TurnRightIcon.SetActive(isLandmark && PathpointItem.Instruction == "RightTurn");    
     }
 
     private void RenderIrrelevant(bool irrelevant) {

@@ -11,6 +11,7 @@ public class PinDetailsEdit : MonoBehaviour
     public DirectionTypeToggle DirectionType;
     public POITypeToggle POIType;
     public POIFeedbackToggle POIFeedback;
+    public POIFeedbackToggle POICleaning;
     public POIFeedbackToggle POIReadOnlyFeedback;
 
     [Header("Edit modes")]
@@ -22,15 +23,20 @@ public class PinDetailsEdit : MonoBehaviour
     public GameObject SwitchVideoPanel;
     public GameObject SwitchGalleryPanel;
 
+    [Header("Additional UI Components")]
+    public GameObject SwitchToCleaningMode;
+    public GameObject SwitchToDiscussionMode;
+
     private Pathpoint CurrentPathpoint;
     private Way CurrentWay;
     private int CurrentIndex;
     public RouteSharedData.EditorMode EditMode { get; set; }
+    bool isTempCleaningEnabled;
 
     // Start is called before the first frame update
     void Start()
     {
-
+        isTempCleaningEnabled = false;
     }
 
     // Update is called once per frame
@@ -39,11 +45,14 @@ public class PinDetailsEdit : MonoBehaviour
 
     }
 
-    public void PopulateMetadata(Pathpoint point, Way way, int index)
+    public void PopulateMetadata(Pathpoint point, Way way, int index, bool preserveTempCleaning = false)
     {
         CurrentPathpoint = point;
         CurrentWay = way;
         CurrentIndex = index;
+
+        // Changes allowed?
+        DisableChangesOnPOI(point.CleaningFeedback == Pathpoint.POIFeedback.No);
 
         // POI information
         FillPOIEditMode(point, way, index);
@@ -51,11 +60,13 @@ public class PinDetailsEdit : MonoBehaviour
         // Information Editing
         if (EditMode == RouteSharedData.EditorMode.Cleaning)
         {
+            isTempCleaningEnabled = false;
             PopulateCleaning(point);
         }
         else if (EditMode == RouteSharedData.EditorMode.Discussion)
         {
-            PopulateDiscussion(point);
+            isTempCleaningEnabled = isTempCleaningEnabled && preserveTempCleaning;
+            PopulateDiscussion(point);            
         }
         else
         {
@@ -68,18 +79,42 @@ public class PinDetailsEdit : MonoBehaviour
             var previewPhoto = PathpointPhoto.GetDefaultPhoto(point.Photos);
             RenderThumbnail(previewPhoto.Data.Photo);
         }
-        
+
     }
 
     public void EnableSwitchToGallery(bool activate) {
         SwitchVideoPanel.SetActive(!activate);
-        SwitchGalleryPanel.SetActive(activate) ;
+        SwitchGalleryPanel.SetActive(activate);
     }
+
+    public void DisableChangesOnPOI(bool disable)
+    {
+        InactiveOverlay.SharedData.Instance.CurrentlyDisabled = disable;
+    }
+
+    public void SwitchToCleaning()
+    {
+        PopulateCleaning(CurrentPathpoint);
+        SwitchToDiscussionMode.SetActive(true);
+        isTempCleaningEnabled = true;
+    }
+
+    public void SwitchToDiscussion()
+    {
+        PopulateDiscussionInfo(CurrentPathpoint);
+        SwitchToCleaningMode.SetActive(true);
+        isTempCleaningEnabled = false;
+    }
+
+
+    // Private functions
+
 
     private void PopulateCleaning(Pathpoint point) {
 
         DiscussionPanel.SetActive(false);
         ReadOnlyPanel.SetActive(false);
+        SwitchToCleaningMode.SetActive(false);
 
         // If start / destination, user cannot edit POI Information (type, direction..)
         if (point.POIType == Pathpoint.POIsType.WayStart ||
@@ -91,6 +126,7 @@ public class PinDetailsEdit : MonoBehaviour
         {
             CleaningPanel.SetActive(true);
             POIType.SetSelectedPOIType(point.POIType);
+            POICleaning.FillDiscussionFeedback(point);
         }
 
         // Direction Type
@@ -107,8 +143,26 @@ public class PinDetailsEdit : MonoBehaviour
 
     private void PopulateDiscussion(Pathpoint poi)
     {
+        bool isNormalPOI = poi.POIType != Pathpoint.POIsType.WayStart &&
+                           poi.POIType != Pathpoint.POIsType.WayDestination;
+
+        if (isTempCleaningEnabled)
+        {
+            PopulateCleaning(poi);
+            SwitchToDiscussionMode.SetActive(isNormalPOI);
+        }
+        else
+        {
+            PopulateDiscussionInfo(poi);
+            SwitchToCleaningMode.SetActive(isNormalPOI);
+        }
+    }
+
+    private void PopulateDiscussionInfo(Pathpoint poi)
+    {
         CleaningPanel.SetActive(false);        
         ReadOnlyPanel.SetActive(false);
+        SwitchToDiscussionMode.SetActive(false);
 
         if (poi.POIType == Pathpoint.POIsType.WayStart ||
             poi.POIType == Pathpoint.POIsType.WayDestination)
@@ -118,6 +172,7 @@ public class PinDetailsEdit : MonoBehaviour
         else
         {
             DiscussionPanel.SetActive(true);
+            SwitchToCleaningMode.SetActive(true);
             POIFeedback.FillDiscussionFeedback(poi);
         }        
     }
@@ -191,7 +246,7 @@ public class PinDetailsEdit : MonoBehaviour
 
         Debug.Log($"OnPOITypeValueChanged: {pOIType}");
 
-        PopulateMetadata(CurrentPathpoint, CurrentWay, CurrentIndex);
+        PopulateMetadata(CurrentPathpoint, CurrentWay, CurrentIndex, true);
     }
 
     public void OnDirectionTypeValueChanged(string direction)
@@ -204,6 +259,11 @@ public class PinDetailsEdit : MonoBehaviour
         FillPOIEditMode(CurrentPathpoint, CurrentWay, CurrentIndex);
     }
 
+
+    public void RefreshPOIMeta()
+    {
+        FillPOIEditMode(CurrentPathpoint, CurrentWay, CurrentIndex);
+    }
 
 
     private void DestroyTexture(Texture texture)
@@ -240,8 +300,5 @@ public class PinDetailsEdit : MonoBehaviour
         // Unload unused assets to free up memory
         Resources.UnloadUnusedAssets();
     }
-
-
-
 
 }

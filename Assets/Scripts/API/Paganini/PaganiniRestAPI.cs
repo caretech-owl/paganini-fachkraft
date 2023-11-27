@@ -11,8 +11,8 @@ namespace PaganiniRestAPI
     public class Path
     {
         //Base URL for the Rest APi
-        //public const string BaseUrl = "https://infinteg-main.fh-bielefeld.de/paganini/api/";
-        public const string BaseUrl = "http://192.168.178.22:3000/";
+        public const string BaseUrl = "https://infinteg-main.fh-bielefeld.de/paganini/api/";
+        //public const string BaseUrl = "http://192.168.178.22:3000/";
        
        
         public const string Authenticate = BaseUrl + "sw/me/authentification";

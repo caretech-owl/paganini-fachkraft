@@ -112,6 +112,38 @@ public class PhotoData : BaseModel<PhotoData>
         return photos;
     }
 
+    /// <summary>
+    /// Returns a list of PhotoData for a given route, filtered by an optional predicate.
+    /// </summary>
+    /// <param name="routeId">The ID of the route to filter by.</param>
+    /// <param name="wherePhoto">An optional predicate to further filter the photos.</param>
+    /// <returns>A list of PhotoData.</returns>
+    public static List<PhotoData> GetListByRoute(int routeId, Func<PhotoData, bool> wherePhoto = null)
+    {
+        List<PhotoData> photos;
+
+        var conn = DBConnector.Instance.GetConnection();
+
+        // Query all PathpointPhotos and their related Pathpoints using sqlite-net's raw query
+        string cmdText = @"SELECT pd.* FROM PhotoData pd
+                            JOIN PathpointPhoto pp ON pd.Id = pp.PhotoId
+                            JOIN Pathpoint p ON pp.PathpointId = p.Id
+                            WHERE p.RouteId = ?";
+        photos = conn.Query<PhotoData>(cmdText, routeId);
+
+        // Apply the additional filter, if provided
+        if (wherePhoto != null)
+        {
+            photos = photos.Where(wherePhoto).ToList();
+        }
+
+        // Order the resulting photos by PathpointId
+        photos = photos.OrderBy(p => p.LastUpdate).ToList();
+
+        return photos;
+    }
+
+
     public static void DeleteFromRoute(int routeId)
     {
         //Pathpoint.DeleteFromRoute(CurrentRoute.Id, new bool[] { false }, new Pathpoint.POIsType[] { Pathpoint.POIsType.Landmark, Pathpoint.POIsType.Reassurance });
@@ -158,6 +190,31 @@ public class PhotoData : BaseModel<PhotoData>
 
 
         List<object> parameters = new List<object> {routeId, pathpointFromAPI, pathphotoFromAPI };
+
+        //// Prepare the SQLiteCommand with the command text and parameters
+        SQLiteCommand cmd = conn.CreateCommand(cmdText, parameters.ToArray());
+
+        // Execute the command
+        cmd.ExecuteNonQuery();
+
+    }
+
+    public static void DeleteByPOI(int poiId)
+    {
+
+        //// Open the SQLliteConnection
+        var conn = DBConnector.Instance.GetConnection();
+
+        // Prepare the base DELETE command text
+        string cmdText = @"DELETE FROM PhotoData 
+                         WHERE Id IN (
+                             SELECT pp.PhotoId 
+                             FROM PathpointPhoto pp
+                             WHERE pp.PathpointId = ?
+                         ) ";
+
+
+        List<object> parameters = new List<object> { poiId };
 
         //// Prepare the SQLiteCommand with the command text and parameters
         SQLiteCommand cmd = conn.CreateCommand(cmdText, parameters.ToArray());

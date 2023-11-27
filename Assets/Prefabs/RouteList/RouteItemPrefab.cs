@@ -24,6 +24,7 @@ public class RouteItemPrefab : MonoBehaviour
 
     [Header("Row Settings")]
     public GameObject NewFlag;
+    public GameObject DraftFlag;
     public Button RouteButton;
 
     [Header("Events")]
@@ -57,6 +58,7 @@ public class RouteItemPrefab : MonoBehaviour
         StatusCell.FillCell(Route.RouteStatusDescriptions[route.Status], route.Status);
 
         NewFlag.SetActive(!route.FromAPI);
+        DraftFlag.SetActive(route.IsDraftUpdated == true);
 
         WayItem = way;
         RouteItem = route;

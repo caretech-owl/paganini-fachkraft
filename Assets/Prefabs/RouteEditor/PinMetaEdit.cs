@@ -23,19 +23,33 @@ public class PinMetaEdit : MonoBehaviour
 
     }
 
-    public void PopulateMetadata(Pathpoint point)
+    public void PopulateMetadata(Pathpoint point, Way way)
     {
         CurrentPathpoint = point;
-
-        PinDescription.text = point.Description;
-        PinInstruction.text = point.Instruction;
+        if (point.POIType == Pathpoint.POIsType.WayStart)
+        {
+            PinDescription.text = way.Start;
+            PinDescription.interactable = false;
+        }
+        else if (point.POIType == Pathpoint.POIsType.WayDestination)
+        {
+            PinDescription.text = way.Destination;
+            PinDescription.interactable = false;
+        }
+        else
+        {
+            PinDescription.text = point.Description;
+            PinDescription.interactable = true;
+        }
+            
+        PinInstruction.text = point.Notes;
     }
 
 
     public void SaveChanges()
     {
         CurrentPathpoint.Description = PinDescription.text;
-        CurrentPathpoint.Instruction = PinInstruction.text;
+        CurrentPathpoint.Notes = PinInstruction.text;
         CurrentPathpoint.InsertDirty();
     }
 

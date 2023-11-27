@@ -123,6 +123,16 @@ public class RouteEditorController : MonoBehaviour
     }
 
 
+    public void FlagChangesToDraft()
+    {
+        SharedData.CurrentRoute.IsDraftUpdated = true;
+        SharedData.CurrentRoute.Insert();
+
+    }
+
+    // private functions
+
+
     private void RouteSharedData_OnDataDownloaded(object sender, EventArgs e)
     {
         RouteOnboardingView.LoadReadyView();

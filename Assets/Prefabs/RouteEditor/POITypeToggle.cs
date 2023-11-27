@@ -15,6 +15,7 @@ public class POITypeToggle : MonoBehaviour
 
     private ToggleGroup toggleGroup;
 
+    private bool enableEvents = false;
 
     // Start is called before the first frame update
     void Start()
@@ -24,6 +25,7 @@ public class POITypeToggle : MonoBehaviour
         foreach (var item in toggleGroup.GetComponentsInChildren<Toggle>())
         {
             item.onValueChanged.AddListener(delegate {
+                if (!enableEvents) return;
                 if (item.isOn)
                 {
                     OnValueChanged.Invoke(GetSelectedPOIType());
@@ -39,6 +41,8 @@ public class POITypeToggle : MonoBehaviour
 
     public void SetSelectedPOIType(Pathpoint.POIsType pOIsType) {
 
+        enableEvents = false;
+
         toggleGroup = GetComponent<ToggleGroup>();
 
         foreach (Toggle toggle in toggleGroup.GetComponentsInChildren<Toggle>())
@@ -50,6 +54,8 @@ public class POITypeToggle : MonoBehaviour
                 toggle.isOn = false;
             }
         }
+
+        enableEvents = true;
     }
 
 

@@ -64,6 +64,7 @@ public class DBConnector : PersistentLazySingleton<DBConnector>
         this.connection.DeleteAll<Way>();
         this.connection.DeleteAll<Address>();
         this.connection.DeleteAll<PathpointPhoto>();
+        this.connection.DeleteAll<PhotoData>();
     }
 
     public void DropTables()
@@ -76,7 +77,7 @@ public class DBConnector : PersistentLazySingleton<DBConnector>
         try
         {
             this.connection.DropTable<AuthToken>();
-    }
+        }
         catch { }
         try
         {
@@ -98,6 +99,17 @@ public class DBConnector : PersistentLazySingleton<DBConnector>
             this.connection.DropTable<Address>();
         }
         catch { }
+        try
+        {
+            this.connection.DropTable<PathpointPhoto>();
         }
+        catch { }
+        try
+        {
+            this.connection.DropTable<PhotoData>();
+        }
+        catch { }
+    }
+
     #endregion
 }

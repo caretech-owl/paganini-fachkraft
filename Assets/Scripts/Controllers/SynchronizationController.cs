@@ -593,6 +593,8 @@ public class SynchronizationController : MonoBehaviour
         r.SocialWorkerId = erw.SocialWorkerId;
         r.LocalVideoResolution = erw.LocalVideoResolution;
 
+        //TODO: Warning if there is no video
+
         r.Status = (Int32)Route.RouteStatus.New;
         r.WayId = w.Id;
         r.LocalVideoFilename = currentWayFolderName + "/Videos/" + erw.Videos[0];
@@ -639,6 +641,9 @@ public class SynchronizationController : MonoBehaviour
 
     public List<Pathpoint> CleanRoutePathpoints(List<Pathpoint> points)
     {
+        if (points.Count < 3)
+            return points;
+
         var pipeline = new LocationUtils.GPSCleaningPipeline
         {
             ToleranceSimplify = ToleranceSimplify,
@@ -734,10 +739,18 @@ public class SynchronizationController : MonoBehaviour
         {
             DisplayScreenPanel(UI_PanelProcessingData);
             CurrentStatus = SyncStatus.FINISH;
-            ProcessDownloadedData(FileManagement.persistentDataPath + "/"+ FTS._downloadFolder);
 
-            DisplayScreenPanel(UI_PanelEnd);
-
+            try
+            {
+                ProcessDownloadedData(FileManagement.persistentDataPath + "/" + FTS._downloadFolder);
+                DisplayScreenPanel(UI_PanelEnd);
+            }
+            catch(Exception e)
+            {
+                DisplayScreenPanel(UI_PanelError);
+                LogError("Error processing downloaded data: " + e.Message);
+            }
+                       
             ResetOrDisposeProcessProtocol();
         }
         else if (file._sourceName.Equals("CANCELSYNC")) {

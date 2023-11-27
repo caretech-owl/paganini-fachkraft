@@ -8,6 +8,7 @@ public class POIEdit : MonoBehaviour
     public PhotoGallery Gallery;
     public VideoGallery Video;
     public PhotoSlideShow SlideShow;
+    public PinMetaEdit PinMeta;
 
 
     private RouteSharedData SharedData;   
@@ -33,7 +34,7 @@ public class POIEdit : MonoBehaviour
 
     public void LoadView(int index)
     {
-        gameObject.SetActive(true);
+        gameObject.SetActive(true);        
 
         // Editor mode (Cleaning, Discussion)
         SetupEditorMode();
@@ -44,6 +45,7 @@ public class POIEdit : MonoBehaviour
         // Gallery
         LoadGallery();
     }
+
 
     public void LoadGallery()
     {
@@ -62,6 +64,13 @@ public class POIEdit : MonoBehaviour
         PinEdit.EnableSwitchToGallery(false);
     }
 
+    public void LoadPinMeta()
+    {
+        //HideAllButThisView(PinMeta.gameObject);
+
+        PinMeta.gameObject.SetActive(true);
+        PinMeta.PopulateMetadata(SharedData.CurrentPOI, SharedData.CurrentWay);
+    }
 
     public void LoadVideo()
     {
@@ -82,6 +91,7 @@ public class POIEdit : MonoBehaviour
 
     private void LoadPinEdit(int index) {
         PinEdit.EditMode = SharedData.CurrentEditorMode;
+        //PinEdit.DisableChangesOnPOI(false);
         PinEdit.PopulateMetadata(SharedData.CurrentPOI, SharedData.CurrentWay, index);
     }
 
@@ -104,6 +114,9 @@ public class POIEdit : MonoBehaviour
         {
             Video.CleanupView();
         }
+
+        PinMeta.gameObject.SetActive(PinMeta.gameObject == view);
+
     }
 
     private void SetupEditorMode() {

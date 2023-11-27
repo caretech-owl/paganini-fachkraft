@@ -22,7 +22,8 @@ public class PhotoGallery : MonoBehaviour
 
     [Header("Events")]
     public GalleryEvent OnPhotoOpened;
-    
+    public UnityEvent OnPhotoCurated;
+
 
     public RouteSharedData.EditorMode EditMode
     {
@@ -152,7 +153,9 @@ public class PhotoGallery : MonoBehaviour
         } else {
             photo.CleaningFeedback = PathpointPhoto.PhotoFeedback.Delete;
         }
-        photo.InsertDirty();        
+        photo.InsertDirty();
+
+        OnPhotoCurated?.Invoke();
     }
 
     public void CleanupView()

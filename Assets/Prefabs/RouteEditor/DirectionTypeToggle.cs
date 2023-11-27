@@ -16,6 +16,7 @@ public class DirectionTypeToggle : MonoBehaviour
 
     private ToggleGroup toggleGroup;
     private Toggle prevActive;
+    private bool enableEvents = false;
 
     // Start is called before the first frame update
     void Start()
@@ -25,6 +26,8 @@ public class DirectionTypeToggle : MonoBehaviour
         foreach (var item in toggleGroup.GetComponentsInChildren<Toggle>())
         {
             item.onValueChanged.AddListener(delegate {
+                if (!enableEvents) return;
+
                 if (item.isOn)
                 {
                     OnValueChanged.Invoke(GetSelectedDirectionType());
@@ -41,12 +44,13 @@ public class DirectionTypeToggle : MonoBehaviour
 
     public void SetSelectedDirectionType(string direction)
     {
-
+        enableEvents = false;
         toggleGroup = GetComponent<ToggleGroup>();
 
         if (direction == null || direction.Trim() == "")
         {
             toggleGroup.SetAllTogglesOff(false);
+            enableEvents = true;
             return;
         }
 
@@ -61,6 +65,8 @@ public class DirectionTypeToggle : MonoBehaviour
                 toggle.isOn = false;
             }
         }
+
+        enableEvents = true;
     }
 
     string GetSelectedDirectionType()
@@ -85,5 +91,6 @@ public class DirectionTypeToggle : MonoBehaviour
 
         return null;
     }
+   
 
 }

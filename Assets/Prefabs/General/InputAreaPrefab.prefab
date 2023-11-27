@@ -124,8 +124,32 @@ PrefabInstance:
       value: 5
       objectReference: {fileID: 0}
     - target: {fileID: 6354388818578787061, guid: 51c30e1a502cb4eaeb0254ea28d4c5d3, type: 3}
+      propertyPath: m_Interactable
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6354388818578787061, guid: 51c30e1a502cb4eaeb0254ea28d4c5d3, type: 3}
+      propertyPath: m_TargetGraphic
+      value: 
+      objectReference: {fileID: 3273432326487168923}
+    - target: {fileID: 6354388818578787061, guid: 51c30e1a502cb4eaeb0254ea28d4c5d3, type: 3}
       propertyPath: m_GlobalPointSize
       value: 25
+      objectReference: {fileID: 0}
+    - target: {fileID: 6354388818578787061, guid: 51c30e1a502cb4eaeb0254ea28d4c5d3, type: 3}
+      propertyPath: m_Colors.m_DisabledColor.a
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6354388818578787061, guid: 51c30e1a502cb4eaeb0254ea28d4c5d3, type: 3}
+      propertyPath: m_Colors.m_DisabledColor.b
+      value: 0.96862745
+      objectReference: {fileID: 0}
+    - target: {fileID: 6354388818578787061, guid: 51c30e1a502cb4eaeb0254ea28d4c5d3, type: 3}
+      propertyPath: m_Colors.m_DisabledColor.g
+      value: 0.96862745
+      objectReference: {fileID: 0}
+    - target: {fileID: 6354388818578787061, guid: 51c30e1a502cb4eaeb0254ea28d4c5d3, type: 3}
+      propertyPath: m_Colors.m_DisabledColor.r
+      value: 0.96862745
       objectReference: {fileID: 0}
     - target: {fileID: 6354388818578787062, guid: 51c30e1a502cb4eaeb0254ea28d4c5d3, type: 3}
       propertyPath: m_Sprite
@@ -255,6 +279,10 @@ PrefabInstance:
       propertyPath: m_Material
       value: 
       objectReference: {fileID: 0}
+    - target: {fileID: 8836081094769540966, guid: 51c30e1a502cb4eaeb0254ea28d4c5d3, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 51c30e1a502cb4eaeb0254ea28d4c5d3, type: 3}
 --- !u!114 &359017943004447538 stripped
@@ -307,3 +335,14 @@ MonoBehaviour:
   m_EffectColor: {r: 0, g: 0, b: 0, a: 0.5}
   m_EffectDistance: {x: 2, y: 2}
   m_UseGraphicAlpha: 1
+--- !u!114 &3273432326487168923 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8194791312404487775, guid: 51c30e1a502cb4eaeb0254ea28d4c5d3, type: 3}
+  m_PrefabInstance: {fileID: 6689022046105487812}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1422647359691999911}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

@@ -46,6 +46,18 @@ public class RouteSharedData : PersistentLazySingleton<RouteSharedData>
     {
         PathpointList = Pathpoint.GetPathpointListByRoute(CurrentRoute.Id);
         POIList = PathpointList.Where(item => item.POIType != Pathpoint.POIsType.Point).ToList();
+
+    }
+
+    private void FlagIfDraftUpdated(bool? updated)
+    {
+        if (CurrentWay.IsDirty || CurrentRoute.IsDirty)
+        {
+            updated = true;
+        }
+
+        CurrentRoute.IsDraftUpdated = updated;
+        CurrentRoute.Insert();
     }
 
 
@@ -59,6 +71,8 @@ public class RouteSharedData : PersistentLazySingleton<RouteSharedData>
         Debug.Log("Downloading Route Definition.");
         CurrentWay = Way.Get(AppState.CurrentRoute.WayId);
         CurrentRoute = AppState.CurrentRoute;
+        // Let's start the flag with no changes
+        CurrentRoute.IsDraftUpdated = false;
 
         if (CurrentRoute.FromAPI)
         {
@@ -197,6 +211,9 @@ public class RouteSharedData : PersistentLazySingleton<RouteSharedData>
     {
         InformStatus("UploadRouteDefinition");
 
+        // Before uploading the route, let's get rid of POIs we discarded that shouldn't be synced        
+        DeleteDiscardedPOIsLocally(CurrentRoute.Id);
+
         // get latest definition from db
         var route = Route.Get(CurrentRoute.Id);
 
@@ -212,10 +229,31 @@ public class RouteSharedData : PersistentLazySingleton<RouteSharedData>
 
     }
 
+    // We delete information about the discarded POIs, so that they do not get uploaded
+    private void DeleteDiscardedPOIsLocally(int parentRouteId)
+    {
+        var removeList = Pathpoint.GetPathpointListByRoute(parentRouteId, p => p.CleaningFeedback == Pathpoint.POIFeedback.No);
+
+        foreach (var poi in removeList)
+        {
+            PhotoData.DeleteByPOI(poi.Id);
+            PathpointPhoto.DeleteByPOI(poi.Id);
+            // If the POI is from the API, we do update it as 'discarded'
+            // If not, we delete it locally, so that it's never sent to the server
+            if (!poi.FromAPI)
+            {
+                Pathpoint.Delete(poi.Id);
+            }
+            
+        }
+
+    }
+
     // upload the new pathpoints + photos in batch the first time
     public void UploadNewAddedPathPhotos(int parentRouteId)
     {
-        InformStatus("UploadNewAddedPathPhotos");
+        InformStatus("UploadNewAddedPathPhotos");        
+
         // get new photos that belong to pathpoints (from the API) on the current route
         var photos = PathpointPhoto.GetListByRoute(parentRouteId, true, p => p.FromAPI == false);
 
@@ -421,6 +459,10 @@ public class RouteSharedData : PersistentLazySingleton<RouteSharedData>
             return;
         }
 
+        // Everything uploaded, nothing left to be updated
+        CurrentRoute.IsDraftUpdated = false;
+        CurrentRoute.Insert();
+
         OnDataUploaded?.Invoke(this, EventArgs.Empty);
     }
 
@@ -447,6 +489,7 @@ public class RouteSharedData : PersistentLazySingleton<RouteSharedData>
         // Delete local cache
         Pathpoint.DeleteNonDirtyCopies();
 
+        int nDirty = 0;
         // Insert clean verion
         foreach (var point in res.pathpoints)
         {
@@ -456,7 +499,16 @@ public class RouteSharedData : PersistentLazySingleton<RouteSharedData>
                 Pathpoint p = new Pathpoint(point);
                 p.Insert();
             }
+            else
+            {
+                nDirty++;
+            }
+        }
 
+        if (nDirty >0)
+        {
+            Debug.Log($"There are some dirty pathpoints: {nDirty}");
+            CurrentRoute.IsDraftUpdated = true;
         }
 
         DownloadPathpointPhotos();
@@ -467,6 +519,7 @@ public class RouteSharedData : PersistentLazySingleton<RouteSharedData>
         Debug.Log("Processing Photos.");
         PathpointPhoto.DeleteNonDirtyCopies();
 
+        int nDirty = 0;
         if (res != null && res.pois != null)
         {
             // Insert clean verion
@@ -480,9 +533,19 @@ public class RouteSharedData : PersistentLazySingleton<RouteSharedData>
                         PathpointPhoto p = new PathpointPhoto(photo);
                         p.Insert();
                     }
+                    else
+                    {
+                        nDirty++;
+                    }
                 }
 
             }
+        }
+
+        if (nDirty > 0)
+        {
+            Debug.Log($"There are some dirty pois: {nDirty}");
+            CurrentRoute.IsDraftUpdated = true;
         }
 
         OnDataPartiallyDownloaded?.Invoke(this, EventArgs.Empty);
@@ -493,6 +556,7 @@ public class RouteSharedData : PersistentLazySingleton<RouteSharedData>
     private void GetPhotoDataSucceeded(PhotoDataAPIList res)
     {
         int nUpdated = 0;
+        int nDirty = 0;
         if (res != null && res.data != null)
         {
             foreach (var photo in res.data)
@@ -504,17 +568,27 @@ public class RouteSharedData : PersistentLazySingleton<RouteSharedData>
                     data.Insert();
                     nUpdated++;
                 }
+                else
+                {
+                    nDirty++;
+                }
 
             }
         }
 
+        if (nDirty > 0)
+        {
+            Debug.Log($"There are some dirty photos: {nDirty}");
+            CurrentRoute.IsDraftUpdated = true;
+        }
+
+        // Let's update the Route, and the isdraftupdated flag.
+        FlagIfDraftUpdated(CurrentRoute.IsDraftUpdated);
+
         Debug.Log($"Done Downloading Route Definition. (Updated = {nUpdated} photos)");
         // Load editor
         OnDataDownloaded?.Invoke(this, EventArgs.Empty);
-    }
-    
-
-
+    }   
 
     /// <summary>
     /// This function is called when the CreateOrUpdate method of the Way class in the PaganiniRestAPI namespace succeeds.
@@ -675,6 +749,10 @@ public class RouteSharedData : PersistentLazySingleton<RouteSharedData>
         //Pathpoint.DeletePathpointListByRoute(CurrentRoute.Id, p => p.FromAPI == false && p.POIType == Pathpoint.POIsType.Point);
 
         Debug.Log(poiAPIList);
+
+        // We signal that we submitted the draft, and nothing to update anymore
+        CurrentRoute.IsDraftUpdated = false;
+        CurrentRoute.Insert();
 
         OnDataUploaded?.Invoke(this, EventArgs.Empty);
     }
