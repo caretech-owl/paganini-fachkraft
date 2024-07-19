@@ -20,4 +20,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/SyncManager.unity
     guid: bb0b87456491f1e44bd76585a5029dc8
+  - enabled: 1
+    path: Assets/Scenes/RouteMonitor.unity
+    guid: 525976127cca54eef8679eb1e2e2b4dd
   m_configObjects: {}
