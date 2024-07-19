@@ -131,4 +131,98 @@ public class BaseModel<T> where T : BaseModel<T>, new()
         conn.Execute(query);
     }
 
+    /// <summary>
+    /// Gets the model instance with the minimum Id.
+    /// </summary>
+    /// <param name="idSelector">A function to select the Id property from a model instance.</param>
+    /// <returns>The model instance with the minimum Id, if found; otherwise, null.</returns>
+    public static T GetWithMinId(Func<T, int> idSelector)
+    {
+        var conn = DBConnector.Instance.GetConnection();
+        var query = conn.Table<T>();
+
+        // The query will be null if the table is empty
+        if (query.Count() == 0)
+            return null;
+
+        return query.OrderBy(idSelector).FirstOrDefault();
+    }
+
+
+    /// Provides utility methods for handling nullable enums when interacting with SQLite.
+    /// SQLite does not handle nullable enums directly, hence the need for conversion methods.
+
+    /// <summary>
+    /// Converts a nullable enum value to its string representation.
+    /// </summary>
+    /// <typeparam name="TEnum">The enum type.</typeparam>
+    /// <param name="enumValue">The nullable enum value to convert.</param>
+    /// <returns>The string representation of the nullable enum value.</returns>
+    /// <remarks>
+    /// SQLite does not natively support nullable enum types. These methods facilitate the conversion
+    /// between nullable enums and their string representations for proper storage and retrieval in the database.
+    /// </remarks>
+    protected string ConvertNullableEnumToString<TEnum>(TEnum? enumValue) where TEnum : struct
+    {
+        if (enumValue.HasValue)
+        {
+            return enumValue.Value.ToString();
+        }
+        return null; // Handle 'None' or 'Unknown' values
+    }
+
+    /// <summary>
+    /// Converts a string representation to a nullable enum value.
+    /// </summary>
+    /// <typeparam name="TEnum">The enum type.</typeparam>
+    /// <param name="stringValue">The string representation of the enum value.</param>
+    /// <returns>The nullable enum value parsed from the string representation.</returns>
+    /// <remarks>
+    /// SQLite does not natively support nullable enum types. These methods facilitate the conversion
+    /// between nullable enums and their string representations for proper storage and retrieval in the database.
+    /// </remarks>
+    protected TEnum? ConvertStringToNullableEnum<TEnum>(string stringValue) where TEnum : struct
+    {
+        if (!string.IsNullOrEmpty(stringValue) && Enum.TryParse(typeof(TEnum), stringValue, out object result))
+        {
+            return (TEnum)result;
+        }
+        return null;
+    }
+
+
+    /// <summary>
+    /// Converts a list of enum values to a comma-separated string representation.
+    /// </summary>
+    /// <typeparam name="T">The enum type.</typeparam>
+    /// <param name="enumList">The list of enum values to convert.</param>
+    /// <returns>The comma-separated string representation of the enum list, or null if the list is null.</returns>
+    /// <remarks>
+    /// This method is useful for storing lists of enum values as strings in a database that does not natively support list or array types.
+    /// </remarks>
+    protected string ConvertEnumListToString<T>(List<T> enumList) where T : Enum
+    {
+        return enumList != null ? string.Join(",", enumList.Select(e => e.ToString())) : null;
+    }
+
+    /// <summary>
+    /// Converts a comma-separated string representation to a list of enum values.
+    /// </summary>
+    /// <typeparam name="T">The enum type.</typeparam>
+    /// <param name="enumString">The comma-separated string representation of the enum list.</param>
+    /// <returns>The list of enum values parsed from the string representation.</returns>
+    /// <remarks>
+    /// This method is useful for retrieving lists of enum values stored as strings in a database that does not natively support list or array types.
+    /// </remarks>
+    protected List<T> ConvertStringToEnumList<T>(string enumString) where T : Enum
+    {
+        if (string.IsNullOrEmpty(enumString))
+        {
+            return new List<T>();
+        }
+
+        return enumString.Split(',').Select(e => (T)Enum.Parse(typeof(T), e)).ToList();
+    }
+
+
 }

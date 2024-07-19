@@ -1,22 +1,31 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using LocationUtils;
+using LocationTools;
 using NinevaStudios.GoogleMaps;
 using PaganiniRestAPI;
 using Unity.Entities.UniversalDelegates;
 using Unity.VisualScripting;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class MapManager : MonoBehaviour
 {
     public GameObject MapContainer;
+    public CanvasScaler ReferenceCanvasScaler;
+
+    [Header("Route elements")]
     public Texture2D DefaultMarkerIcon;
     public Texture2D POILandmarkMarkerIcon;
     public Texture2D POIReassuranceMarkerIcon;
+    public Color RouteColor;
+    
 
     //PRIVATE
-    private static Texture2D StaticMarkerIcon;
+    private static Texture2D ColoredMarkerIcon;
+    private static Texture2D ScaledPOILandmarkMarkerIcon;
+    private static Texture2D ScaledPOIReassuranceMarkerIcon;
+
     private GoogleMapsView Map;
     private List<Pathpoint> PathpointList;
     private RouteSharedData SharedData;
@@ -45,7 +54,18 @@ public class MapManager : MonoBehaviour
     public void LoadMap()
     {
         PathpointList = SharedData.PathpointList;
-        LoadMap(19);
+        if (ColoredMarkerIcon == null)
+        {
+            ColoredMarkerIcon = ChangeIconColor(DefaultMarkerIcon, RouteColor);
+            ScaledPOILandmarkMarkerIcon = ResizeTexture(POILandmarkMarkerIcon);
+            ScaledPOIReassuranceMarkerIcon = ResizeTexture(POIReassuranceMarkerIcon);
+        }
+
+        if (Map == null)
+        {
+            LoadMap(19);
+        }
+        
     }
 
     /// <summary>
@@ -53,7 +73,10 @@ public class MapManager : MonoBehaviour
     /// </summary>
     public void DisableMap()
     {
-        Map.IsVisible = false;
+        if (Map != null)
+        {
+            Map.IsVisible = false;
+        }
         MapContainer.SetActive(false);
     }
 
@@ -62,7 +85,10 @@ public class MapManager : MonoBehaviour
     /// </summary>
     public void EnableMap()
     {
-        Map.IsVisible = true;
+        if (Map != null)
+        {
+            Map.IsVisible = true;
+        }
         MapContainer.SetActive(true);
     }
 
@@ -80,24 +106,25 @@ public class MapManager : MonoBehaviour
 
         foreach (var pathpoint in pathpoints)
         {
-            Debug.Log("DisplayMarkers: "+ pathpoint.Id);
+            Debug.Log("DisplayMarkers: " + pathpoint.Id);
+            var icon = ColoredMarkerIcon;
 
             if (pathpoint.POIType == Pathpoint.POIsType.Point)
             {
-                StaticMarkerIcon = DefaultMarkerIcon;
+                icon = ColoredMarkerIcon;
             }
             else if (pathpoint.POIType == Pathpoint.POIsType.Landmark)
             {
-                StaticMarkerIcon = POILandmarkMarkerIcon;
+                icon = ScaledPOILandmarkMarkerIcon;
             }               
             else
             {
-                StaticMarkerIcon = POIReassuranceMarkerIcon;
+                icon = ScaledPOIReassuranceMarkerIcon;
             }
 
             var mo = new MarkerOptions()
                     .Position(new LatLng(pathpoint.Latitude, pathpoint.Longitude))
-                    .Icon(NewCustomDescriptor(StaticMarkerIcon))
+                    .Icon(NewCustomDescriptor(icon))
                     .Title($"Marker {i} Lat: {pathpoint.Latitude} Lon: {pathpoint.Longitude}");
 
             Map.AddMarker(mo);
@@ -105,56 +132,16 @@ public class MapManager : MonoBehaviour
         }
     }
 
-    int count = 0;
-    public void RenderMarker(PathpointTraceMessage traceMessage)
-    {
-        Texture2D icon = DefaultMarkerIcon;
-
-        if (traceMessage.eventType == SocketsAPI.POIState.OnPOI.ToString())
-        {
-            icon = ChangeIconColor(icon, 0.8f, 0.8f, 1.2f);
-        }
-        else if (traceMessage.eventType == SocketsAPI.POIState.OffTrack.ToString())
-        {
-            icon = ChangeIconColor(icon, 1.2f, 0.8f, 0.8f);
-        }
-        else if (traceMessage.eventType == SocketsAPI.POIState.Invalid.ToString())
-        {
-            icon = ChangeIconColor(icon, 1.2f, 0.6f, 0.2f);
-        }
-        else if (traceMessage.eventType == SocketsAPI.POIState.OnTrack.ToString())
-        {
-            icon = ChangeIconColor(icon, 0.8f, 1.2f, 0.8f);            
-        }
-        else
-        {
-            icon = ChangeIconColor(icon, 1.2f, 0.8f, 1.2f);
-        }
-
-        
-
-        var pathpoint = traceMessage.pathpoint;
-
-        var mo = new MarkerOptions()
-        .Position(new LatLng(pathpoint.ppoint_lat, pathpoint.ppoint_lon))
-        .Icon(NewCustomDescriptor(icon))
-        .Title($"Seq: {traceMessage.seq} Lat: {pathpoint.ppoint_lat} Lon: {pathpoint.ppoint_lon}"); 
-
-        Map.AddMarker(mo);
-        count++;
-    }
-
 
 
     private void LoadMap(int zoom)
     {
-        StaticMarkerIcon = DefaultMarkerIcon;
 
         // initialize Map
 
         var options = new GoogleMapsOptions();        
 
-        if (PathpointList != null && PathpointList.Capacity > 0)
+        if (PathpointList != null && PathpointList.Count > 0)
         {
             // start point
             Pathpoint startPoint = PathpointList[0];
@@ -166,11 +153,44 @@ public class MapManager : MonoBehaviour
 
         }
 
-        options.MapType(GoogleMapType.Hybrid);
+        options.MapType(AppState.DefaultMapType);
+        GoogleMapsView.CreateAndShow(options, GetScaledComponentSize(), OnMapReady);
+    }
 
-        Map = new GoogleMapsView(options);
-       
-        Map.Show(GetComponentSize(), OnMapReady);
+    private Rect GetScaledComponentSize()
+    {
+        Rect originalRect = GetComponentSize();
+
+        if (ReferenceCanvasScaler != null)
+        {
+            // Get the reference resolution from the CanvasScaler
+            Vector2 referenceResolution = ReferenceCanvasScaler.referenceResolution;
+
+            float scaleRatio = GetScaleRatio();
+
+            float scaledWidth = originalRect.width * scaleRatio;
+            float scaledHeight = originalRect.height * scaleRatio;
+
+            Rect scaledRect = new Rect(originalRect.x, originalRect.y, scaledWidth, scaledHeight);
+            return scaledRect;
+        }
+        else
+        {
+            Debug.LogWarning("CanvasScaler not found in the parent hierarchy.");
+            return originalRect;
+        }
+    }
+
+    private float GetScaleRatio()
+    {
+        Vector2 referenceResolution = ReferenceCanvasScaler.referenceResolution;
+
+        float screenWidth = Screen.width;
+        float screenHeight = Screen.height;
+
+        float widthRatio = screenWidth / referenceResolution.x;
+        float heightRatio = screenHeight / referenceResolution.y;
+        return Mathf.Min(widthRatio, heightRatio);
     }
 
     public Rect GetComponentSize()
@@ -208,14 +228,15 @@ public class MapManager : MonoBehaviour
     /// <summary>
     /// Event listener when map is ready for operations
     /// </summary>
-    private void OnMapReady()
+    private void OnMapReady(GoogleMapsView googleMapsView)
     {
         Debug.Log("The map is ready!");
+        Map = googleMapsView;
 
         DisplayMarkers(PathpointList);
     }
 
-    private Texture2D ChangeIconColor(Texture2D icon, float r, float g, float b)
+    private Texture2D ChangeIconColor(Texture2D icon, Color color)
     {
         // Create a new Texture2D object with the same size as the original texture
         Texture2D newIcon = new Texture2D(icon.width, icon.height);
@@ -223,12 +244,13 @@ public class MapManager : MonoBehaviour
         // Get the pixel data from the original texture
         Color[] pixels = icon.GetPixels();
 
-        // Modify the color values to give the texture a green hue
+        // Modify the color values based on the color multiplier
         for (int i = 0; i < pixels.Length; i++)
         {
-            pixels[i].r = pixels[i].r * r;
-            pixels[i].g = pixels[i].g * g;
-            pixels[i].b = pixels[i].b * b;
+            pixels[i].r *= color.r;
+            pixels[i].g *= color.g;
+            pixels[i].b *= color.b;
+            //pixels[i].a *= color.a; // Adjust alpha if necessary
         }
 
         // Apply the modified pixel data to the new texture
@@ -236,12 +258,47 @@ public class MapManager : MonoBehaviour
         newIcon.Apply();
 
         return newIcon;
+    }
 
+    private Texture2D ResizeTexture(Texture2D source)
+    {
+        float scaleFactor = GetScaleRatio();
+        int newWidth = Mathf.RoundToInt(source.width * scaleFactor);
+        int newHeight = Mathf.RoundToInt(source.height * scaleFactor);
+
+        RenderTexture rt = RenderTexture.GetTemporary(newWidth, newHeight);
+        rt.filterMode = FilterMode.Bilinear;
+
+        RenderTexture.active = rt;
+        Graphics.Blit(source, rt);
+        Texture2D result = new Texture2D(newWidth, newHeight);
+        result.ReadPixels(new Rect(0, 0, newWidth, newHeight), 0, 0);
+        result.Apply();
+
+        RenderTexture.active = null;
+        RenderTexture.ReleaseTemporary(rt);
+
+        Debug.Log($"Source texture: {source.width}x{source.height} scaledDimensions: {newWidth}x{newHeight} result:{result.width}x{result.height}");
+
+        return result;
     }
 
     static ImageDescriptor NewCustomDescriptor(Texture2D icon)
     {
         return ImageDescriptor.FromTexture2D(icon);
+    }
+
+    void OnDestroy()
+    {
+        DestroyImmediate(ColoredMarkerIcon);
+        DestroyImmediate(ScaledPOILandmarkMarkerIcon);
+        DestroyImmediate(ScaledPOIReassuranceMarkerIcon);
+
+        if (Map != null)
+        {
+            Map.Dismiss();
+        }
+        
     }
 
 

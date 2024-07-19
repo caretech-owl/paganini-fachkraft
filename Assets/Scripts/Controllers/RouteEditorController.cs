@@ -14,7 +14,7 @@ public class RouteEditorController : MonoBehaviour
 
     //public VideoPlayerPrefab VideoManager;
     //public PinListPrefab PinList;
-    public MapManager GMap;
+    public MapManager MapView;
 
 
     public UnityEvent OnWayDefinitionUploaded;
@@ -82,8 +82,8 @@ public class RouteEditorController : MonoBehaviour
 
     public void LoadMap()
     {
-        HideAllButThisView(GMap.gameObject);
-        GMap.LoadMap();
+        HideAllButThisView(MapView.gameObject);
+        MapView.LoadMap();
     }
 
     public void LoadChangeStatusAndSave()
@@ -154,6 +154,15 @@ public class RouteEditorController : MonoBehaviour
         RouteOnboardingView.gameObject.SetActive(RouteOnboardingView.gameObject == view);
         RouteTimelineView.gameObject.SetActive(RouteTimelineView.gameObject == view);
 
+        if (MapView.gameObject != view && MapView.gameObject.activeInHierarchy)
+        {
+            MapView.DisableMap();
+        }
+        else if (MapView.gameObject == view)
+        {
+            MapView.EnableMap();
+        }
+
         if (RouteTimelineView.gameObject != view)
         {
             //RouteTimelineView.CleanupView();
@@ -165,7 +174,7 @@ public class RouteEditorController : MonoBehaviour
             POIEditView.CleanupView();
         }
 
-        GMap.gameObject.SetActive(GMap.gameObject == view);
+        MapView.gameObject.SetActive(MapView.gameObject == view);
         StatusChange.gameObject.SetActive(StatusChange.gameObject == view);
 
         RouteInfoEditView.gameObject.SetActive(RouteInfoEditView.gameObject == view);

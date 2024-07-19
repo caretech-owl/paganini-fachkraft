@@ -14,11 +14,17 @@ using NetTopologySuite.Geometries;
 using NetTopologySuite.Geometries.Utilities;
 using NetTopologySuite.Operation.Valid;
 using NetTopologySuite.Simplify;
-
 using UnityEngine;
 
-namespace LocationUtils
+namespace LocationTools
 {
+    public enum NavigationIssue
+    {
+        Deviation = 1,
+        WrongDirection = 2,
+        MissedTurn = 3,
+        WrongTurn = 4
+    }
 
     public static class GPSSmooth
     {
@@ -345,8 +351,8 @@ namespace LocationUtils
         public double DistanceOutlier = 100;
         public int SegmentSplit = 300;
         public double OutlierFactor = 1.5;
-        public double MinEvenly = 3;
-        public double MaxEvenly = 6;
+        public double MinEvenly = 2;
+        public double MaxEvenly = 3;
         public double POIClusterDistance = 10;
 
 
@@ -360,20 +366,28 @@ namespace LocationUtils
 
             // select only POIs
             List<Pathpoint> POIList = points.Where(item => item.POIType != Pathpoint.POIsType.Point).OrderBy(item => item.TimeInVideo).ToList();
-            POIList = LocationUtils.GPSSmooth.ClusterPoints(POIList, POIClusterDistance);
+            POIList = LocationTools.GPSSmooth.ClusterPoints(POIList, POIClusterDistance);
 
 
             //// keep track of where to insert POIs?
             var tolerance = GPSSmooth.EstimateSimplicationDistanceTolerance(ppList, ToleranceSimplify);
-            ppList = LocationUtils.GPSUtils.RemoveInnacuratePoints(ppList, MaxAccuracyRadio);
-            ppList = LocationUtils.GPSUtils.RemoveOutliers(ppList, DistanceOutlier);
-            ppList = LocationUtils.GPSUtils.RemoveSelfIntersections(ppList);
-            ppList = LocationUtils.GPSUtils.RemoveInnacuratePointsBasedOnData(ppList, SegmentSplit, OutlierFactor);
-            ppList = LocationUtils.GPSSmooth.SimplifyTrackVWSimplifier(ppList, tolerance);
-            ppList = LocationUtils.GPSUtils.EvenlySpaced(ppList, MinEvenly, MaxEvenly);
+            ppList = LocationTools.GPSUtils.RemoveInnacuratePoints(ppList, MaxAccuracyRadio);
+            ppList = LocationTools.GPSUtils.RemoveOutliers(ppList, DistanceOutlier);
+            ppList = LocationTools.GPSUtils.RemoveSelfIntersections(ppList);
+            //ppList = LocationUtils.GPSUtils.RemoveInnacuratePointsBasedOnData(ppList, SegmentSplit, OutlierFactor);
+            //ppList = LocationUtils.GPSSmooth.SimplifyTrackVWSimplifier(ppList, tolerance);
+            ppList = LocationTools.GPSUtils.EvenlySpaced(ppList, MinEvenly, MaxEvenly);
 
             // merge
             ppList = MergeSortedLists(POIList, ppList);
+
+            // Remove all the 'points'  in the list that appear before the first landmark
+            // which will become the start
+            int removeIndex = ppList.FindIndex(p => p.POIType != Pathpoint.POIsType.Point);
+            if (removeIndex > 0)
+            {
+                ppList.RemoveRange(0, removeIndex);
+            }
 
             return ppList;
         }

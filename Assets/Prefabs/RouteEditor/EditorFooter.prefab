@@ -38,7 +38,7 @@ RectTransform:
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 6.800007}
-  m_SizeDelta: {x: 80, y: 80}
+  m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 1, y: 0.5}
 --- !u!114 &8965425850449308760
 MonoBehaviour:
@@ -198,8 +198,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0.5}
   m_AnchorMax: {x: 1, y: 0.5}
-  m_AnchoredPosition: {x: -111.7, y: 6.800007}
-  m_SizeDelta: {x: 80, y: 80}
+  m_AnchoredPosition: {x: -120, y: 6.800007}
+  m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 1, y: 0.5}
 --- !u!114 &3252124420406109256
 MonoBehaviour:
@@ -261,6 +261,7 @@ MonoBehaviour:
   textObject: {fileID: 0}
   Wrapper: {fileID: 1795072076102679818}
   ClickBackground: {fileID: 6093701121746054050}
+  pressedColor: {r: 0, g: 0, b: 0, a: 1}
 --- !u!222 &6883618790412903300
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -596,7 +597,7 @@ RectTransform:
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 80, y: 80}
+  m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!222 &6060591743709536713
 CanvasRenderer:
@@ -666,8 +667,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.5}
   m_AnchorMax: {x: 0, y: 0.5}
-  m_AnchoredPosition: {x: 0.00012207031, y: 9}
-  m_SizeDelta: {x: 600, y: 80}
+  m_AnchoredPosition: {x: -10, y: 9}
+  m_SizeDelta: {x: 600, y: 100}
   m_Pivot: {x: 0, y: 0.5}
 --- !u!114 &6649021082524903666
 MonoBehaviour:
@@ -729,6 +730,7 @@ MonoBehaviour:
   textObject: {fileID: 4208538311337667823}
   Wrapper: {fileID: 3285589993058292428}
   ClickBackground: {fileID: 5827489289829528258}
+  pressedColor: {r: 0, g: 0, b: 0, a: 1}
 --- !u!222 &8991142836532726046
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -936,7 +938,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3291947449434263298, guid: 828f8d37a8cce4347a4b2f60af7b73b1, type: 3}
       propertyPath: m_AnchoredPosition.x
-      value: 78.8
+      value: 80
       objectReference: {fileID: 0}
     - target: {fileID: 3291947449434263298, guid: 828f8d37a8cce4347a4b2f60af7b73b1, type: 3}
       propertyPath: m_AnchoredPosition.y

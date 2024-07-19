@@ -10,12 +10,13 @@ public class PhotoElementEvent : UnityEvent<PhotoElementPrefab>
 }
 
 public class PhotoElementPrefab : MonoBehaviour
-{
+{    
     public RawImage POIPhoto;
+    public AspectRatioFitter PhotoAspectRatio;
     public Toggle SelectedToggle;
     public Toggle KeepItToggle;
     public Button OpenPhoto;
-    public PathpointPhoto CurrentPathpointPhoto;
+    public PathpointPhoto CurrentPathpointPhoto;    
     public int CurrentIndex;
 
 
@@ -83,7 +84,10 @@ public class PhotoElementPrefab : MonoBehaviour
         }
 
         POIPhoto.texture = texture;
-    }
+
+        //PhotoAspectRatio.aspectRatio = texture.width / texture.height;
+
+}
 
     private void DestroyTexture(Texture texture)
     {
@@ -129,6 +133,19 @@ public class PhotoElementPrefab : MonoBehaviour
     private void EnableSelection(bool enable)
     {
         SelectedToggle.gameObject.SetActive(enable);
+    }
+
+    public void CleanupView()
+    {
+        if (POIPhoto.texture != null)
+        {
+            DestroyTexture(POIPhoto.texture);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        CleanupView();
     }
 
 }

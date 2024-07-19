@@ -9,6 +9,7 @@ public class SceneSwitcher : MonoBehaviour
     public static string RouteExplorerScene = "RouteExplorer";
     public static string SynchronisationScene = "SyncManager";
     public static string RouteEditorScene = "RouteEditor";
+    public static string RouteMonitorScene = "RouteMonitor";
     public static string LoginScene = "Login";
 
     public static void LoadUserManager()
@@ -38,6 +39,14 @@ public class SceneSwitcher : MonoBehaviour
     public static void LoadRouteEditor()
     {
         SceneManager.LoadScene(RouteEditorScene);
+
+        // Restore default screen dimming timeout
+        Screen.sleepTimeout = AppState.ScreenSleepTimeout;
+    }
+
+    public static void LoadRouteMonitor()
+    {
+        SceneManager.LoadScene(RouteMonitorScene);
 
         // Restore default screen dimming timeout
         Screen.sleepTimeout = AppState.ScreenSleepTimeout;

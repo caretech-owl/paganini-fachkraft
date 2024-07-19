@@ -35,13 +35,24 @@ public class RouteTimeline: MonoBehaviour
         SaveButton.SetActive(true);
 
         TitleText.text = SharedData.CurrentRoute.Name;
-
-        LoadPathpointList();
+        if (SharedData.CurrentPOI == null)
+        {
+            LoadPathpointList();
+        }
+        else
+        {
+            UpdateTimelineChanges();
+        }
+        
 
         SharedData.CurrentPOI = null;
         SharedData.CurrentPOIIndex = -1;
     }
 
+    private void UpdateTimelineChanges()
+    {
+        POITimelineView.RenderPOIChanges(SharedData.CurrentPOIIndex);
+    }
 
     // <summary>
     // Populates the Route Onboarding view based on the status of the Route
@@ -52,32 +63,45 @@ public class RouteTimeline: MonoBehaviour
         int index = 0;
         foreach (var item in SharedData.POIList)
         {
-            try { 
-            // We load photos
+            try {
+                // We load photos                
                 item.Photos = PathpointPhoto.GetPathpointPhotoListByPOI(item.Id);
                 //item.Photos
             }
             catch (Exception e)
             {
-                Debug.Log($"Id: {item.Id} POIType: {item.POIType} --> Error loading photos");
+                Debug.Log($"Index: {index} Id: {item.Id} POIType: {item.POIType} --> Error loading photos");
+                index++;
                 continue;
             }
 
             // Add item to list
             if (index == 0) {
                 //TODO: Remove hack
-                item.POIType = Pathpoint.POIsType.WayStart;
+                if (item.POIType != Pathpoint.POIsType.WayStart) { 
+                    item.POIType = Pathpoint.POIsType.WayStart;
+                    item.InsertDirty();
+                }
                 POITimelineView.AddStart(item, SharedData.CurrentWay);
+                
             } else if (index == SharedData.POIList.Count -1) {
                 //TODO: Remove hack
-                item.POIType = Pathpoint.POIsType.WayDestination;
+                if (item.POIType != Pathpoint.POIsType.WayDestination)
+                {
+                    item.POIType = Pathpoint.POIsType.WayDestination;
+                    item.InsertDirty();
+                }
                 POITimelineView.AddDestination(item, SharedData.CurrentWay);
+                
             } else {
                 POITimelineView.AddPOI(item);
             }
+
+            Debug.Log($"Index: {index} Id: {item.Id} POIType: {item.POIType}");
+
             index++;
 
-            Debug.Log($"Id: {item.Id} POIType: {item.POIType}");
+            
 
         }
 

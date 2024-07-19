@@ -48,15 +48,47 @@ public class RouteExplorerController : MonoBehaviour
     /// This function processes the selected route, and opens it in the editor
     /// scene.
     /// </summary>
+    /// <param name="way">The selected way.</param>
     /// <param name="route">The selected route.</param>
-    public void LoadRoute(Way way, Route route)
+    public void LoadRouteEditor(Way way, Route route)
     {
         AppState.CurrentWay = way;
         AppState.CurrentRoute = route;
         SceneSwitcher.LoadRouteEditor();
     }
 
+    /// <summary>
+    /// This function processes the selected route, and opens the monitor on the last route walk
+    /// scene.
+    /// </summary>
+    /// <param name="way">The selected way.</param>
+    /// <param name="route">The selected route.</param>
+    public void LoadRouteMonitor(Way way, Route route)
+    {
+        AppState.CurrentWay = way;
+        AppState.CurrentRoute = Route.GetWithLastRouteWalk(route.Id);
+        AppState.CurrentRouteWalk = AppState.CurrentRoute.LastRouteWalk;
 
+        SceneSwitcher.LoadRouteMonitor();
+    }
+
+    /// <summary>
+    /// This function processes the selected route, and opens the monitor on the last route walk
+    /// scene.
+    /// </summary>
+    /// <param name="way">The selected way.</param>
+    /// <param name="route">The selected route.</param>
+    public void LoadRouteTool(Way way, Route route)
+    {
+        if (route.Status == Route.RouteStatus.Training || route.Status == Route.RouteStatus.Completed)
+        {
+            LoadRouteMonitor(way, route);
+        }
+        else
+        {
+            LoadRouteEditor(way, route);
+        }
+    }
 
 
     /// <summary>
@@ -95,7 +127,7 @@ public class RouteExplorerController : MonoBehaviour
         // Delete the current local copy of ways
 
         Way.DeleteNonDirtyCopies();
-        Route.DeleteIfUpdatedDrafts(false);
+        Route.DeleteIfUpdatedDrafts(IsDraftUpdated : false, KeepTraining : true ); // except those under training
 
         // Create a local copy of the API results
         foreach (WayAPIResult wres in list)
@@ -122,13 +154,25 @@ public class RouteExplorerController : MonoBehaviour
                     else
                     {
                         var localRoute = Route.Get(rres.erw_id);
-                        if (!localRoute.IsDirty && localRoute.IsDraftUpdated!= null && (bool)localRoute.IsDraftUpdated)
+                        if (!localRoute.IsDirty &&
+                            localRoute.IsDraftUpdated!= null && (bool)localRoute.IsDraftUpdated ||
+                            localRoute.IsPIMUpdated != null && (bool)localRoute.IsPIMUpdated)
                         {
-                            // Keep the flag
+                            // Keep the flag & LastUpdate
                             Route r = new Route(rres);
                             r.IsDraftUpdated = localRoute.IsDraftUpdated;
+                            r.IsPIMUpdated = localRoute.IsPIMUpdated;
+                            r.LastUpdate = localRoute.LastUpdate;
                             r.Insert();
                         }
+                        // we update the last route walk locally (if there a new one from the api)
+                        else if (rres.last_routewalk != null)
+                        {
+                            localRoute.LastRouteWalkId = rres.last_routewalk.rw_id;
+                            localRoute.Insert();
+                        }
+                        
+
                     }                    
                 }
             }            

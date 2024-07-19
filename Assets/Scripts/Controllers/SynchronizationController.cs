@@ -644,7 +644,7 @@ public class SynchronizationController : MonoBehaviour
         if (points.Count < 3)
             return points;
 
-        var pipeline = new LocationUtils.GPSCleaningPipeline
+        var pipeline = new LocationTools.GPSCleaningPipeline
         {
             ToleranceSimplify = ToleranceSimplify,
             MaxAccuracyRadio = MaxAccuracyRadio,

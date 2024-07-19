@@ -5,6 +5,16 @@ using System.Globalization;
 public static class DateUtils 
 {
 
+    public static long UTCMilliseconds()
+    {
+        return new DateTimeOffset(DateTime.Now).ToUnixTimeMilliseconds();
+    }
+
+    public static DateTime DateTimeNow()
+    {
+        return DateTime.Now;
+    }
+
     public static long? ConvertUTCStringToTsMilliseconds(string timeText, string dateFormat = "yyyy-MM-dd HH:mm:ss")
     {
         if (timeText == null || timeText.Trim() == "") return null;
@@ -29,9 +39,14 @@ public static class DateUtils
 
     }
 
-    public static string ConvertUTCToLocalString(DateTime dateTime, string dateFormat = "yyyy-MM-dd HH:mm:ss")
+    public static string ConvertUTCToLocalString(DateTime dateTime, string dateFormat = "yyyy-MM-dd HH:mm:ss", CultureInfo culture = null)
     {
-        return dateTime.ToLocalTime().ToString(dateFormat);
+        if (culture == null)
+        {
+            return dateTime.ToLocalTime().ToString(dateFormat);
+        }
+
+        return dateTime.ToLocalTime().ToString(dateFormat, culture);
     }
 
     public static DateTime? ConvertUTCStringToUTCDate(string timeText, string dateFormat = "yyyy-MM-dd HH:mm:ss")
@@ -43,9 +58,14 @@ public static class DateUtils
 
     }
 
-    public static string ConvertUTCDateToUTCString(DateTime dateTime, string dateFormat = "yyyy-MM-dd HH:mm:ss")
+    public static string ConvertUTCDateToUTCString(DateTime dateTime, string dateFormat = "yyyy-MM-dd HH:mm:ss", CultureInfo culture = null)
     {
-        return dateTime.ToString(dateFormat);
+        if (culture == null) { 
+            return dateTime.ToString(dateFormat);
+        }
+        // CultureInfo.CreateSpecificCulture("en-US")
+
+        return dateTime.ToString(dateFormat, culture);
     }
 
 }

@@ -48,7 +48,8 @@ public class PhotoSlideShow : MonoBehaviour, IBeginDragHandler, IDragHandler, IE
             slideContainer.anchoredPosition = originalPosition;
             // generate the slides, and normalise the starting index to the list of actually rendered ones
             // which skip the 'unselected' pictures.
-            currentSlideIndex = GenerateSlides(startIndex);            
+            // cleaning = relative index, discussion & training = actualIndex
+            currentSlideIndex = GenerateSlides(startIndex, EditMode == RouteSharedData.EditorMode.Cleaning);            
 
             // set the starting photo           
             float targetX = -currentSlideIndex * slideContainer.rect.width;
@@ -143,7 +144,8 @@ public class PhotoSlideShow : MonoBehaviour, IBeginDragHandler, IDragHandler, IE
         SlideStatus.SetActiveSlide(currentSlideIndex);
     }
 
-    private int GenerateSlides(int startIndex)
+    // rendered index or actual index?
+    private int GenerateSlides(int startIndex, bool relativeIndex)
     {
         slides = new List<Image>();
         renderedPhotos = new List<PathpointPhoto>();
@@ -175,7 +177,7 @@ public class PhotoSlideShow : MonoBehaviour, IBeginDragHandler, IDragHandler, IE
                 renderListIndex++;
             }
 
-            if (startIndex == i)
+            if (relativeIndex && startIndex == i)
             {
                 startIndex = renderListIndex;
             }

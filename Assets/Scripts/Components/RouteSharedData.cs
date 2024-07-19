@@ -744,7 +744,7 @@ public class RouteSharedData : PersistentLazySingleton<RouteSharedData>
         PathpointPhoto.DeleteFromPOIs(CurrentRoute.Id, false, false);
 
         // Delete the newly uploaded Pathpoints POIs 
-        Pathpoint.DeleteFromRoute(CurrentRoute.Id, new bool[] { false }, new Pathpoint.POIsType[] { Pathpoint.POIsType.Landmark, Pathpoint.POIsType.Reassurance });
+        Pathpoint.DeleteFromRoute(CurrentRoute.Id, new bool[] { false }, new Pathpoint.POIsType[] { Pathpoint.POIsType.Landmark, Pathpoint.POIsType.Reassurance, Pathpoint.POIsType.WayStart, Pathpoint.POIsType.WayDestination });
 
         //Pathpoint.DeletePathpointListByRoute(CurrentRoute.Id, p => p.FromAPI == false && p.POIType == Pathpoint.POIsType.Point);
 

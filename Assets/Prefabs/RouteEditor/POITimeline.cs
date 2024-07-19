@@ -14,11 +14,13 @@ public class POITimeline : MonoBehaviour
 
     private int CurrentIndex;
     private float TimelineWidth = 0f;
+    private List<POITimelineItem> _poiItems;
 
     // Start is called before the first frame update
     void Awake()
     {
         CurrentIndex = 0;
+        _poiItems = new List<POITimelineItem>();
     }
 
     // Update is called once per frame
@@ -32,6 +34,12 @@ public class POITimeline : MonoBehaviour
         //    w = contentRectTransform.rect.width;
         //}
 
+    }
+
+    public void RenderPOIChanges(int index)
+    {
+        Debug.Log($"Rendering Changes to POI [{index}]");
+        _poiItems[index].RenderChanges();
     }
     
     public void AddPOI(Pathpoint p)
@@ -69,11 +77,13 @@ public class POITimeline : MonoBehaviour
         POITimelineItem item = neu.GetComponent<POITimelineItem>();
         item.OnSelected = OnItemSelected;
 
+        _poiItems.Add(item);
+
         return item;
     }
 
     public void Clearlist()
-    {
+    {        
         Transform content = Content.GetComponent<Transform>();
 
         // Remove all children
@@ -89,6 +99,7 @@ public class POITimeline : MonoBehaviour
         TimelineWidth = 0;
         CurrentIndex = 1;
         w = -1;
+        _poiItems.Clear();
     }
 
     void ResizePanel()

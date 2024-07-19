@@ -36,6 +36,15 @@ namespace PaganiniRestAPI
         public const string SwPathpointList = SwRoutes + "/pathpoints";
         public const string SwPathpoints = BaseUrl + "sw/pathpoints/{0}";
 
+        public const string SwRouteWalk = BaseUrl + "sw/routewalks/{0}";
+        public const string SwRouteWalkList =  SwRoutes + "/routewalks";
+
+        public const string SwRouteWalkPIMList = SwRoutes + "/pims";
+
+        public const string SwRouteWalkEventList = SwRoutes + "/routewalks/events";
+
+        
+
 
         // Function to build a query string from a dictionary
         public static string BuildQueryString(Dictionary<string, string> query)
@@ -175,6 +184,71 @@ namespace PaganiniRestAPI
             }
         }
 
+    }
+
+    public class RouteWalk
+    {
+
+        public static void Get(Int32 routeWalkId, UnityAction<RouteWalkAPIResult> successCallback, UnityAction<string> errorCallback)
+        {
+            Dictionary<string, string> headers = new Dictionary<string, string>
+            {
+                { "apitoken", AppState.APIToken }
+            };
+
+
+            string url = string.Format(Path.SwRouteWalk, routeWalkId);
+            RESTAPI.Instance.Get<RouteWalkAPIResult>(url, successCallback, errorCallback, headers);
+        }
+
+        public static void GetAll(Int32 routeId, UnityAction<RouteWalkAPIList> successCallback, UnityAction<string> errorCallback)
+        {
+            Dictionary<string, string> headers = new Dictionary<string, string>
+            {
+                { "apitoken", AppState.APIToken }
+            };
+
+
+            string url = string.Format(Path.SwRouteWalkList, routeId);
+            RESTAPI.Instance.Get<RouteWalkAPIList>(url, successCallback, errorCallback, headers);
+        }
+
+    }
+
+    public class RouteWalkEvent
+    {
+
+        public static void GetAll(Int32 routeId, Dictionary<string, string> query, UnityAction<RouteWalkEventAPIList> successCallback, UnityAction<string> errorCallback)
+        {
+            Dictionary<string, string> headers = new Dictionary<string, string>
+            {
+                { "apitoken", AppState.APIToken }
+            };
+
+            var queryString = Path.BuildQueryString(query);
+
+            string url = string.Format(Path.SwRouteWalkEventList, routeId) + queryString;
+
+
+            RESTAPI.Instance.Get<RouteWalkEventAPIList>(url, successCallback, errorCallback, headers);
+        }
+
+    }
+
+    public class PathpointPIM
+    {
+
+        public static void BatchCreate(Int32 routeWalkId, PathpointPIMAPIBatch batch, UnityAction<PathpointPIMAPIList> successCallback, UnityAction<string> errorCallback)
+        {
+            Dictionary<string, string> headers = new Dictionary<string, string>
+            {
+                { "apitoken", AppState.APIToken }
+            };
+
+
+            string url = string.Format(Path.SwRouteWalkPIMList, routeWalkId);
+            RESTAPI.Instance.Post<PathpointPIMAPIList>(url, batch, successCallback, errorCallback, headers);
+        }
     }
 
 

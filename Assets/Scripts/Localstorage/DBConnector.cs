@@ -53,6 +53,11 @@ public class DBConnector : PersistentLazySingleton<DBConnector>
         this.connection.CreateTable<Address>();
         this.connection.CreateTable<PathpointPhoto>();
         this.connection.CreateTable<PhotoData>();
+
+        this.connection.CreateTable<RouteWalk>();
+        this.connection.CreateTable<RouteWalkEventLog>();
+        this.connection.CreateTable<PathpointLog>();
+        this.connection.CreateTable<PathpointPIM>();
     }
 
     public void TruncateTables()
@@ -65,6 +70,11 @@ public class DBConnector : PersistentLazySingleton<DBConnector>
         this.connection.DeleteAll<Address>();
         this.connection.DeleteAll<PathpointPhoto>();
         this.connection.DeleteAll<PhotoData>();
+
+        this.connection.DeleteAll<RouteWalk>();
+        this.connection.DeleteAll<RouteWalkEventLog>();
+        this.connection.DeleteAll<PathpointLog>();
+        this.connection.DeleteAll<PathpointPIM>();
     }
 
     public void DropTables()
@@ -107,6 +117,26 @@ public class DBConnector : PersistentLazySingleton<DBConnector>
         try
         {
             this.connection.DropTable<PhotoData>();
+        }
+        catch { }
+        try
+        {
+            this.connection.DropTable<RouteWalk>();
+        }
+        catch { }
+        try
+        {
+            this.connection.DropTable<RouteWalkEventLog>();
+        }
+        catch { }
+        try
+        {
+            this.connection.DropTable<PathpointLog>();
+        }
+        catch { }
+        try
+        {
+            this.connection.DropTable<PathpointPIM>();
         }
         catch { }
     }

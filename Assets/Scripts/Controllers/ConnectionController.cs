@@ -21,6 +21,9 @@ public class ConnectionController : MonoBehaviour
 
     private void Update()
     {
+        if (ConnectionErrorView == null)
+            return;
+
         // Check for internet connection status.
         if (!IsInternetConnected())
         {

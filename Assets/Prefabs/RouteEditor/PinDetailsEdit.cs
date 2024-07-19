@@ -1,13 +1,15 @@
+using System;
 using UnityEngine;
 using UnityEngine.UI;
+using static Pathpoint;
 
 public class PinDetailsEdit : MonoBehaviour
 {
     [Header("Pin Data")]
     public POITimelineItem POIMetadata;
     //public TMPro.TMP_InputField PinDescription;
-    public RawImage POIVideoThumbnail;
-    public RawImage POIPhotoThumbnail;
+    public PhotoElementPrefab POIVideoThumbnail;
+    public PhotoElementPrefab POIPhotoThumbnail;
     public DirectionTypeToggle DirectionType;
     public POITypeToggle POIType;
     public POIFeedbackToggle POIFeedback;
@@ -77,7 +79,7 @@ public class PinDetailsEdit : MonoBehaviour
         if (point.Photos != null && point.Photos.Count > 0) {
             // render picture
             var previewPhoto = PathpointPhoto.GetDefaultPhoto(point.Photos);
-            RenderThumbnail(previewPhoto.Data.Photo);
+            RenderThumbnail(previewPhoto);
         }
 
     }
@@ -133,7 +135,7 @@ public class PinDetailsEdit : MonoBehaviour
         if (point.POIType == Pathpoint.POIsType.Landmark)
         {
             DirectionType.gameObject.SetActive(true);
-            DirectionType.SetSelectedDirectionType(point.Instruction);
+            DirectionType.SetSelectedDirectionType(point.Instruction.ToString());
         }
         else
         {
@@ -213,27 +215,34 @@ public class PinDetailsEdit : MonoBehaviour
         }
     }
 
-    private void RenderThumbnail(byte[] imageBytes)
+    private void RenderThumbnail(PathpointPhoto pathpointPhoto)
     {
         // Destroy the old texture before creating a new one
-        if (POIVideoThumbnail.texture != null)
-        {
-            Destroy(POIVideoThumbnail.texture);
-        }
+        //if (POIVideoThumbnail.texture != null)
+        //{
+        //    Destroy(POIVideoThumbnail.texture);
+        //}
 
-        Texture2D texture = new Texture2D(2, 2);
-        texture.LoadImage(imageBytes);
+        //Texture2D texture = new Texture2D(2, 2);
+        //texture.LoadImage(imageBytes);
 
-        POIVideoThumbnail.texture = texture;
+        //POIVideoThumbnail.texture = texture;
+        //POIVideoThumbnail.gameObject.SetActive(true);
+
+        //if (POIPhotoThumbnail.texture != null)
+        //{
+        //    Destroy(POIPhotoThumbnail.texture);
+        //}
+
+        //POIPhotoThumbnail.texture = texture;
+        //POIPhotoThumbnail.gameObject.SetActive(true);
+
+
+        POIPhotoThumbnail.FillPhoto(pathpointPhoto, false,0);
+        POIPhotoThumbnail.gameObject.SetActive(true);
+        POIVideoThumbnail.FillPhoto(pathpointPhoto, false, 0);
         POIVideoThumbnail.gameObject.SetActive(true);
 
-        if (POIPhotoThumbnail.texture != null)
-        {
-            Destroy(POIPhotoThumbnail.texture);
-        }
-
-        POIPhotoThumbnail.texture = texture;
-        POIPhotoThumbnail.gameObject.SetActive(true);
     }
 
     public void OnPOITypeValueChanged(Pathpoint.POIsType pOIType)
@@ -248,10 +257,12 @@ public class PinDetailsEdit : MonoBehaviour
 
         PopulateMetadata(CurrentPathpoint, CurrentWay, CurrentIndex, true);
     }
-
     public void OnDirectionTypeValueChanged(string direction)
     {
-        CurrentPathpoint.Instruction = direction;
+        direction = direction == "" || direction == null ? "None" : direction;
+        var instruction = Enum.Parse<NavDirection>(direction);
+
+        CurrentPathpoint.Instruction = instruction;
         CurrentPathpoint.InsertDirty();
 
         Debug.Log($"OnDirectionTypeValueChanged: {direction}");
@@ -282,8 +293,8 @@ public class PinDetailsEdit : MonoBehaviour
         CurrentWay = null;
 
         // Destroy textures to release memory
-        DestroyTexture(POIVideoThumbnail.texture);
-        DestroyTexture(POIPhotoThumbnail.texture);
+        POIVideoThumbnail.CleanupView();
+        POIPhotoThumbnail.CleanupView();
 
         POIMetadata.CleanupView();
 

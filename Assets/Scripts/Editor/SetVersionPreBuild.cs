@@ -11,7 +11,7 @@ public class SetVersionPreBuild : UnityEditor.Build.IPreprocessBuildWithReport
     {
         string buildDateString = DateTime.Now.ToString("yyyyMMddHHmmss");        
 
-        PlayerSettings.bundleVersion = PlayerSettings.bundleVersion + "." + buildDateString;
+        PlayerSettings.bundleVersion =  "v1." + buildDateString;
         Debug.Log("Setting bundle version to: " + PlayerSettings.bundleVersion);
     }
 }

@@ -18,12 +18,14 @@ public class VideoPlayerPrefab : MonoBehaviour
     public GameObject FwdControl;
     public GameObject BackControl;
     public GameObject PreviewWrapper;
+    public GameObject VideoWrapper;
     public GameObject ControlWrapper;
     public RawImage Preview;
 
     private double StartTimestamp;
     private double EndTimestamp;
     private bool awaitingPlaybackAction;
+    private bool VideoRotated = false;
 
 
     // Start is called before the first frame update
@@ -173,11 +175,19 @@ public class VideoPlayerPrefab : MonoBehaviour
     }
 
 
-    public void LoadVideo(string url, float? aspectRatio = null)
+    public void LoadVideo(string url, float? aspectRatio = null, bool rotate = false)
     {
         if (File.Exists(url)) {
             BlankState.SetActive(false);
             DataState.SetActive(true);
+
+            VideoRotated = rotate;
+
+            if (rotate)
+            {
+                var t = VideoManager.gameObject.GetComponent<RectTransform>();
+                t.localRotation = Quaternion.Euler(0, 0, 90); // Rotate 90 degrees clockwise
+            }
 
             if (VideoManager != null)
             {
@@ -215,16 +225,24 @@ public class VideoPlayerPrefab : MonoBehaviour
     }
 
     public void SetAspectRatioToVideo(GameObject targetObject, float videoAspectRatio)
-    {        
-        var wrapperTransform = DataState.GetComponent<RectTransform>();
+    {
+        var wrapperTransform = VideoWrapper.GetComponent<RectTransform>();
 
-        float height = wrapperTransform.sizeDelta.y;
+        var refMeasure = wrapperTransform.sizeDelta.y;
+
+        float height = refMeasure;
         float width = height * videoAspectRatio;
 
 
         Vector3 newScale = targetObject.transform.localScale;
         newScale.y = height;
-        newScale.x = width;
+        newScale.x = width;        
+
+        if (VideoRotated)
+        {
+            newScale.y = width;
+            newScale.x = height; 
+        }
 
         targetObject.transform.localScale = newScale;
 
@@ -243,7 +261,7 @@ public class VideoPlayerPrefab : MonoBehaviour
         // Clear any loaded preview texture
         if (Preview.texture != null)
         {
-            Destroy(Preview.texture);
+            DestroyImmediate(Preview.texture, true);
             Preview.texture = null;
         }
 

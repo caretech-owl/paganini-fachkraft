@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using PaganiniRestAPI;
 using SQLite4Unity3d;
 //using SQLiteNetExtensions.Attributes;
 
@@ -20,12 +21,20 @@ public class Route : BaseModel<Route>
     public long? EndTimestamp { set; get; }
     public int SocialWorkerId { set; get; }
     public bool? IsDraftUpdated { set; get; }
+    public bool? IsPIMUpdated { set; get; }
+
+    public int RouteWalkCount { set; get; }
+    public int? LastRouteWalkId { set; get; }
+    public long? LastUpdate { set; get; }
 
     //[Indexed]
     public int WayId { get; set; }
 
     [Ignore]
     public List<Pathpoint> Pathpoints { get; set; }
+
+    [Ignore]
+    public RouteWalk LastRouteWalk { get; set; }
 
     public override string ToString()
     {
@@ -71,6 +80,13 @@ public class Route : BaseModel<Route>
         StartTimestamp = DateUtils.ConvertUTCStringToTsMilliseconds(erw.erw_start_time, "yyyy-MM-dd'T'HH:mm:ss");
         EndTimestamp = DateUtils.ConvertUTCStringToTsMilliseconds(erw.erw_end_time, "yyyy-MM-dd'T'HH:mm:ss");
         SocialWorkerId = erw.erw_socialworker_id??-1;
+
+        RouteWalkCount = erw.routewalk_count;
+        if (erw.last_routewalk != null)
+        {
+            LastRouteWalkId = erw.last_routewalk.rw_id;
+            LastRouteWalk = new RouteWalk(erw.last_routewalk);
+        }
     }
 
     public RouteAPI ToAPI()
@@ -131,27 +147,84 @@ public class Route : BaseModel<Route>
 
     }
 
+    ///// <summary>
+    ///// Deletes all non-dirty (unmodified) model instances from the database, except those under training.
+    ///// </summary>
+    //public static void DeleteIfUpdatedDrafts(bool? IsDraftUpdated = null, bool? KeepTraining = null)
+    //{
+    //    var conn = DBConnector.Instance.GetConnection();
+
+
+    //    // Create the SQL command with the update query and parameters
+    //    string cmdText = "DELETE from Route where IsDirty = 0 "; // we exclude training
+
+
+    //    if (IsDraftUpdated != null)
+    //    {
+    //        cmdText = cmdText + " AND IsDraftUpdated = ?";
+    //        SQLiteCommand cmd = conn.CreateCommand(cmdText, IsDraftUpdated);
+    //        cmd.ExecuteNonQuery();
+    //        return;
+    //    }
+    //    if (KeepTraining != null)
+    //    {
+    //        cmdText = cmdText + " AND Status <> ?";
+    //        SQLiteCommand cmd = conn.CreateCommand(cmdText, KeepTraining);
+    //        cmd.ExecuteNonQuery();
+    //        return;
+    //    }
+
+
+    //    conn.Execute(cmdText);
+    //}
+
     /// <summary>
-    /// Deletes all non-dirty (unmodified) model instances from the database.
+    /// Deletes all non-dirty (unmodified) model instances from the database, except those under training.
     /// </summary>
-    public static void DeleteIfUpdatedDrafts(bool? IsDraftUpdated = null)
+    public static void DeleteIfUpdatedDrafts(bool? IsDraftUpdated = null, bool? KeepTraining = null)
     {
         var conn = DBConnector.Instance.GetConnection();
 
+        // Create the base SQL command
+        string cmdText = "DELETE FROM Route WHERE IsDirty = 0";
 
-        // Create the SQL command with the update query and parameters
-        string cmdText = "DELETE from Route where IsDirty = 0 ";
-
-
+        // Add conditions based on the provided parameters
         if (IsDraftUpdated != null)
         {
-            cmdText = cmdText + " AND IsDraftUpdated = ?";
-            SQLiteCommand cmd = conn.CreateCommand(cmdText, IsDraftUpdated);
-            cmd.ExecuteNonQuery();
-            return;
+            cmdText += " AND IsDraftUpdated = ?";
         }
-                    
-        conn.Execute(cmdText);
+        if (KeepTraining != null && (bool)KeepTraining)
+        {
+            cmdText += " AND Status <> ?";
+        }
+
+        // Create the command
+        var cmd = conn.CreateCommand(cmdText);
+
+        // Add parameters to the command if they are provided
+        if (IsDraftUpdated != null)
+        {
+            cmd.Bind(IsDraftUpdated);
+        }
+        if (KeepTraining != null && (bool)KeepTraining)
+        {
+            cmd.Bind((int)RouteStatus.Training);
+        }
+
+        // Execute the command
+        cmd.ExecuteNonQuery();
+    }
+
+
+    public static Route GetWithLastRouteWalk(int id)
+    {
+        Route route = Route.Get(id);
+        if (route.LastRouteWalkId != null)
+        {
+            //route.LastRouteWalk = RouteWalk.Get((int)route.LastRouteWalkId);
+        }
+
+        return route;
     }
 
 }

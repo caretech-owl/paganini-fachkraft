@@ -17,6 +17,7 @@ public class POITimelineItem : MonoBehaviour
     public TMPro.TMP_Text PinTitle;
     public TMPro.TMP_Text PinSubtitle;
     public RawImage POIPhoto;
+    public GameObject POIFigure;
     public GameObject NoData;
 
     [Header("Icons")]
@@ -36,7 +37,8 @@ public class POITimelineItem : MonoBehaviour
     [Header("Events")]
     public PathpointItemEvent OnSelected;
 
-    private Pathpoint PathpointItem;
+    private Pathpoint CurrentPOI;
+    private Way CurrentWay;
     private int CurrentIndex;
 
     private Color grayColor;
@@ -45,7 +47,7 @@ public class POITimelineItem : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        PinButton.onClick.AddListener(itemSelected);        
+        PinButton?.onClick.AddListener(itemSelected);        
     }
 
     // Update is called once per frame
@@ -54,6 +56,26 @@ public class POITimelineItem : MonoBehaviour
 
     }
 
+    public void RenderChanges()
+    {
+        if (POIPhoto.texture != null)
+        {
+            Destroy(POIPhoto.texture);
+        }
+
+        if (CurrentPOI.POIType == Pathpoint.POIsType.WayStart)
+        {
+            FillPathpointStart(CurrentPOI, CurrentWay);
+        }
+        else if (CurrentPOI.POIType == Pathpoint.POIsType.WayDestination)
+        {
+            FillPathpointDestination(CurrentPOI, CurrentWay);
+        }
+        else
+        {
+            FillPathpoint(CurrentPOI, CurrentIndex);
+        }
+    }
 
     public void FillPathpoint(Pathpoint pathpoint, int index)
     {
@@ -87,6 +109,7 @@ public class POITimelineItem : MonoBehaviour
     public void FillPathpointDestination(Pathpoint pathpoint, Way way)
     {
         FillPathpointData(pathpoint);
+        CurrentWay = way;
         PinTitle.text = "Ziel";
         PinSubtitle.text = way.Destination;
 
@@ -105,6 +128,10 @@ public class POITimelineItem : MonoBehaviour
         {            
             RenderPicture(previewPhoto.Data.Photo);
         }
+        else
+        {
+            POIPhoto.gameObject.SetActive(false);
+        }
         
 
         // render description
@@ -114,19 +141,19 @@ public class POITimelineItem : MonoBehaviour
         }   
 
         // Set current pathpoint
-        PathpointItem = pathpoint;
+        CurrentPOI = pathpoint;
     }
 
     private void RenderPOIType()
     {
 
-        ReassuranceIcon.SetActive(PathpointItem.POIType == Pathpoint.POIsType.Reassurance);
-        LandmarkIcon.SetActive(PathpointItem.POIType == Pathpoint.POIsType.Landmark);
+        ReassuranceIcon.SetActive(CurrentPOI.POIType == Pathpoint.POIsType.Reassurance);
+        LandmarkIcon.SetActive(CurrentPOI.POIType == Pathpoint.POIsType.Landmark);
 
-        bool isLandmark = PathpointItem.POIType == Pathpoint.POIsType.Landmark;
-        StraightIcon.SetActive(isLandmark && PathpointItem.Instruction== "Straight");
-        TurnLeftIcon.SetActive(isLandmark && PathpointItem.Instruction == "LeftTurn");
-        TurnRightIcon.SetActive(isLandmark && PathpointItem.Instruction == "RightTurn");    
+        bool isLandmark = CurrentPOI.POIType == Pathpoint.POIsType.Landmark;
+        StraightIcon.SetActive(isLandmark && CurrentPOI.Instruction.ToString() == "Straight");
+        TurnLeftIcon.SetActive(isLandmark && CurrentPOI.Instruction.ToString() == "LeftTurn");
+        TurnRightIcon.SetActive(isLandmark && CurrentPOI.Instruction.ToString() == "RightTurn");    
     }
 
     private void RenderIrrelevant(bool irrelevant) {
@@ -165,7 +192,7 @@ public class POITimelineItem : MonoBehaviour
         
         EditIcon.SetActive(!completed);
 
-        POIPhoto.gameObject.SetActive(completed);
+        POIFigure.SetActive(completed);
         
     }
 
@@ -173,7 +200,7 @@ public class POITimelineItem : MonoBehaviour
     {
         if (POIPhoto.texture != null)
         {
-            Destroy(POIPhoto.texture);
+            DestroyImmediate(POIPhoto.texture, true);
         }
 
         Texture2D texture = new Texture2D(2, 2);
@@ -181,16 +208,17 @@ public class POITimelineItem : MonoBehaviour
 
         POIPhoto.texture = texture;
         POIPhoto.gameObject.SetActive(true);
+        POIFigure.SetActive(true);
     }
 
     private void itemSelected()
     {
         if (OnSelected != null)
         {
-            OnSelected.Invoke(PathpointItem, CurrentIndex);
+            OnSelected.Invoke(CurrentPOI, CurrentIndex);
         }
 
-        Debug.Log("Item PathpointItem " + PathpointItem.Id + " label: " + PinTitle.text);
+        Debug.Log("Item PathpointItem " + CurrentPOI.Id + " label: " + PinTitle.text);
     }
 
 
@@ -198,7 +226,7 @@ public class POITimelineItem : MonoBehaviour
     {
         // Remove any event listeners or cleanup any other resources as needed.
         // For example, if you have registered event listeners, unregister them here.
-        PinButton.onClick.RemoveAllListeners();
+        PinButton?.onClick.RemoveAllListeners();
 
         // Clear references to objects
         if (POIPhoto.texture != null)

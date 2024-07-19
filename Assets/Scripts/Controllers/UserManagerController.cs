@@ -8,6 +8,7 @@ using UnityEngine;
 public class UserManagerController : MonoBehaviour
 {
     public GameObject UserListView;
+    public TMPro.TMP_Text OrganisationTitle;
     private UserListPrefab UserList;
 
     private void Awake()
@@ -18,6 +19,7 @@ public class UserManagerController : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
+        OrganisationTitle.text = AppState.CurrenSocialWorker.WorksName;
         UserList = UserListView.GetComponent<UserListPrefab>();
 
         PaganiniRestAPI.User.GetAll(GetUserSucceeded, GetUserFailed);

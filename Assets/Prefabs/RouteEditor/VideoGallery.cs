@@ -27,19 +27,50 @@ public class VideoGallery : MonoBehaviour
 
     public void LoadVideo(Pathpoint start )
     {
+        (float? aspectRatio, bool rotate) = ProcessResolution(AppState.CurrentRoute.LocalVideoResolution);
+
+        POIStart = start;
+        VideoPlayer.LoadVideo(FileManagement.persistentDataPath + "/" + AppState.CurrentRoute.LocalVideoFilename, aspectRatio, rotate);
+    }
+
+    private (float?, bool) ProcessResolution(string resolutionString)
+    {
         float? aspectRatio = null;
+        bool rotate = false;
         if (AppState.CurrentRoute.LocalVideoResolution != null)
         {
-            string[] res = AppState.CurrentRoute.LocalVideoResolution.Split("x");
+            string[] resList = resolutionString.Split(":");
+
+            aspectRatio = getAspectRadio(resList[0]);
+
+            if (resList.Length > 1)
+            {
+                var requestedAspectRatio = getAspectRadio(resList[1]);
+
+                if (aspectRatio != requestedAspectRatio)
+                {
+                    rotate = true;
+                    //aspectRatio = requestedAspectRatio;
+                }
+            }
+        }
+
+        return (aspectRatio, rotate);
+    }
+
+    private float getAspectRadio(string resolutionString)
+    {        
+        string[] res = resolutionString.Split("x");
+        if (res.Length == 2)
+        {
             float width = float.Parse(res[0]);
             float height = float.Parse(res[1]);
 
-            aspectRatio = width / height;
+            return width / height;
         }
-
-        POIStart = start;
-        VideoPlayer.LoadVideo(FileManagement.persistentDataPath + "/" + AppState.CurrentRoute.LocalVideoFilename, aspectRatio);
+        return -1;
     }
+
 
     /// <summary>
     /// Moves the VideoPlayback to the pathpoint timestamp, so as to

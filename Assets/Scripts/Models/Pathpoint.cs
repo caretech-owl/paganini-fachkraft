@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Xml.Serialization;
+using Newtonsoft.Json;
 using SQLite4Unity3d;
 using Unity.VisualScripting;
 
@@ -21,11 +22,36 @@ public class Pathpoint : BaseModel<Pathpoint>
 	public string Description { set; get; }
     public string Notes { set; get; }
     public string PhotoFilename { set; get; }
-    public string Instruction { set; get; }
+    public NavDirection Instruction { set; get; }
     public double? TimeInVideo { set; get; }
     public POIFeedback CleaningFeedback { set; get; }
     public POIFeedback RelevanceFeedback { set; get; }
     public POIFeedback FamiliarityFeedback { set; get; }
+
+
+
+    public int? PathpointPIMId { set; get; }
+    public string SerializedInstructionMode { get; set; }
+
+    [Ignore] // This will be ignored by SQLite
+    public PathpointPIM CurrentInstructionMode
+    {
+        get
+        {
+            // Deserialize the serialized string to InstructionMode
+            if (!string.IsNullOrEmpty(SerializedInstructionMode))
+            {
+                return JsonConvert.DeserializeObject<PathpointPIM>(SerializedInstructionMode);
+            }
+            return null;
+        }
+        set
+        {
+            // Serialize the InstructionMode object to a string
+            SerializedInstructionMode = JsonConvert.SerializeObject(value);
+        }
+    }
+
 
     [Ignore]
     public List<PathpointPhoto> Photos { get; set; }
@@ -51,6 +77,14 @@ public class Pathpoint : BaseModel<Pathpoint>
         None = 0,
         Yes = 1,
         No = 2,
+    }
+
+    public enum NavDirection
+    {
+        None = 0,
+        Straight = 1,
+        RightTurn = 2,
+        LeftTurn = 3
     }
 
     public enum POIsType
@@ -81,7 +115,8 @@ public class Pathpoint : BaseModel<Pathpoint>
         POIType = (POIsType) pathpoint.ppoint_poitype;
         Description = pathpoint.ppoint_description;
         Notes = pathpoint.ppoint_notes;
-        Instruction = pathpoint.ppoint_instruction == "None"? "" : pathpoint.ppoint_instruction;
+        string direction = pathpoint.ppoint_instruction == "" || pathpoint.ppoint_instruction == null ? "None" : pathpoint.ppoint_instruction;
+        Instruction = Enum.Parse<NavDirection>(direction);
 
         RelevanceFeedback = ((POIFeedback?) pathpoint.ppoint_relevance_feedback) ?? POIFeedback.None;
         FamiliarityFeedback = ((POIFeedback?) pathpoint.ppoint_familiarity_feedback) ?? POIFeedback.None;
@@ -93,7 +128,23 @@ public class Pathpoint : BaseModel<Pathpoint>
 
 
         TimeInVideo = pathpoint.ppoint_time_in_video== null? null: Double.Parse(pathpoint.ppoint_time_in_video);
-}
+
+        PathpointPIMId = pathpoint.current_pim_id;
+        if (pathpoint.current_pim != null)
+        {
+            // if there is a cached PIM, we overwrite the API one
+            var cached = PathpointPIM.GetAll(p => p.Id == PathpointPIMId);
+            if (cached.Count > 0)
+            {
+                CurrentInstructionMode = cached.First();
+            }
+            else
+            {
+                CurrentInstructionMode = new PathpointPIM(pathpoint.current_pim);
+            }
+            
+        }
+    }
 
     public static List<Pathpoint> GetPathpointListByRoute(int routeId, Func<Pathpoint, bool> whereCondition = null)
     {
@@ -200,7 +251,7 @@ public class Pathpoint : BaseModel<Pathpoint>
         pp.ppoint_timestamp = DateUtils.ConvertMillisecondsToUTCString(Timestamp, "yyyy-MM-dd'T'HH:mm:ss"); 
         pp.ppoint_description = Description;
         pp.ppoint_notes = Notes;
-        pp.ppoint_instruction = Instruction == ""? "None" : Instruction;
+        pp.ppoint_instruction = Instruction.ToString();
         pp.ppoint_time_in_video = TimeInVideo != null? TimeInVideo.Value.ToString("0.00", CultureInfo.InvariantCulture) : null;
 
         pp.ppoint_relevance_feedback = (int)RelevanceFeedback;

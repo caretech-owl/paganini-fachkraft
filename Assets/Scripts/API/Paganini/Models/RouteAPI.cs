@@ -15,6 +15,11 @@ public interface IRouteAPI
     public string erw_end_time { get; set; }
     public int? erw_socialworker_id { get; set; }
     public RouteStatusAPI status { get; set; }
+
+    public int routewalk_count { get; set; }
+    public RouteWalkAPIResult last_routewalk { get; set; }
+
+
     public bool IsNew { get; set; }
 }
 
@@ -39,6 +44,12 @@ public class RouteAPI : RouteAPIBase, IRouteAPI
 
     [JsonIgnore]
     public int way_id { get; set; }
+
+    [JsonIgnore]
+    public int routewalk_count { get; set; }
+
+    [JsonIgnore]
+    public RouteWalkAPIResult last_routewalk { get; set; }
 }
 
 [System.Serializable]
@@ -49,6 +60,12 @@ public class RouteAPIResult : RouteAPIBase, IRouteAPI
 
     [JsonProperty]
     public int way_id { get; set; }
+
+    [JsonProperty]
+    public int routewalk_count { get; set; }
+
+    [JsonProperty]
+    public RouteWalkAPIResult last_routewalk { get; set; }
 }
 
 public class RouteAPIList

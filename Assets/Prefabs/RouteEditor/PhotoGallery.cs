@@ -124,6 +124,8 @@ public class PhotoGallery : MonoBehaviour
         item.OnSelectedChanged.AddListener(OnPhotoSelectedHandler);
         item.FillPhoto(p, EditMode == RouteSharedData.EditorMode.Cleaning, index);
 
+        Debug.Log($"Index: {index} Photo: {p.Id}");
+
     }
 
     private void DestroyItem(GameObject itemObject)
