@@ -9,6 +9,8 @@ public class AdaptationEnactment : MonoBehaviour
 {
     public ToggleGroup ModesToggleGroup;
 
+    public event EventHandler OnAdaptationValueChanged;
+
     private List<Toggle> toggles;
     private Pathpoint CurrentPOI;
     private bool IsPOI;
@@ -73,6 +75,8 @@ public class AdaptationEnactment : MonoBehaviour
             var item = toggle.GetComponent<AdaptationItem>();
 
             UpdateInstructionMode(item.GetSupportMode());
+
+            OnAdaptationValueChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 

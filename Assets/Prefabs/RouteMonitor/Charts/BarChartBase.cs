@@ -9,6 +9,7 @@ using static StatCompute;
 public class BarChartBase : MonoBehaviour
 {
     private BarChart chart;
+    private RingChart ringChart;
     private static string DateFormat = "MMM dd";
 
 
@@ -33,6 +34,11 @@ public class BarChartBase : MonoBehaviour
         LoadAggregatedData(stats);
     }
 
+    public void RenderPercentage(string label, double percentage)
+    {
+        int value = Mathf.RoundToInt((float)percentage * 100);
+        AddRingChart(label, value);
+    }
 
 
     private void AddSimpleBar(string title, string axisLabel)
@@ -54,10 +60,51 @@ public class BarChartBase : MonoBehaviour
 
         chart.RemoveData();
         var serie = chart.AddSerie<Bar>(axisLabel);
-        
-        
+               
+    }
+
+    private void AddRingChart(string axisLabel, int value)
+    {
+        ringChart = gameObject.GetComponent<RingChart>();
+        if (chart == null)
+        {
+            ringChart = gameObject.AddComponent<RingChart>();
+            ringChart.Init();
+        }
+        //ringChart.EnsureChartComponent<Title>().text = title;
+        //chart.EnsureChartComponent<Title>().subText = subtitle;
+
+        ringChart.RemoveData();
+        var serie = ringChart.AddSerie<Ring>();
+        serie.roundCap = true;
+        serie.gap = 10;
+        serie.radius = new float[] { 0.3f, 0.35f };
+
+        var label = serie.EnsureComponent<LabelStyle>();
+        label.show = true;
+        label.position = LabelStyle.Position.Center;
+        label.formatter = "{d:f0}%";
+        label.textStyle.autoColor = true;
+        label.textStyle.fontSize = 28;
+
+        //var titleStyle = serie.EnsureComponent<TitleStyle>();
+        //titleStyle.show = false;
+        //titleStyle.offset = new Vector2(0, 30);
+
+        var background = ringChart.EnsureChartComponent<Background>();
+        background.show = false;
+
+        var title = ringChart.EnsureChartComponent<Title>();
+        title.text = "";
+        title.show = false;
+
+        ringChart.theme.transparentBackground = true;
+
+        var max = 100;
+        ringChart.AddData(serie.index, value, max, axisLabel);
 
     }
+
 
     private void LoadValueData(List<(RouteWalk walk, double? value)> stats)
     {

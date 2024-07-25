@@ -14,13 +14,10 @@ public class RouteWalkStats : MonoBehaviour
     public GameObject POIStats;
     public GameObject SegmentStats;
 
-    public GameObject SegmentAdapt;
-    public GameObject POIAdapt;
-
     [Header("POI")]
     public BubbleIcon POIIcon;
     public StatViz POIDetailsViz;
-    public AdaptationEnactment POIAdaptation;
+    
 
     public GameObject POINoData;
     public GameObject POIData;
@@ -38,8 +35,7 @@ public class RouteWalkStats : MonoBehaviour
     [Header("Segment")]
     public BubbleIcon SegmentStartIcon;
     public BubbleIcon SegmentEndIcon;
-    public StatViz SegDetailsViz;
-    public AdaptationEnactment SegAdaptation;
+    public StatViz SegDetailsViz;    
 
     public GameObject SegmentNoData;
     public GameObject SegmentData;
@@ -54,6 +50,10 @@ public class RouteWalkStats : MonoBehaviour
     public StatCard SegRecoveryCard;
 
     public ToggleGroup SegCardGroup;
+
+    [Header("Adaptation")]
+    public AdaptationStats AdaptModeStats;
+
 
     private int CurrentIndex;
     private Pathpoint CurrentPOI;
@@ -203,10 +203,11 @@ public class RouteWalkStats : MonoBehaviour
 
     public void RenderPOIStats()
     {
-        POIIcon.FillPathpoint(CurrentPOI, CurrentWay, CurrentIndex);
-        POIAdaptation.LoadAdaptation(CurrentPOI, isPOI: true);
-
+        POIIcon.FillPathpoint(CurrentPOI, CurrentWay, CurrentIndex);        
         var poiEvents = WalkSharedData.RouteWalkEventList.FindAll(e => e.TargetPOIId == CurrentPOI.Id);
+
+        // Render Adaptation component
+        AdaptModeStats.RenderAdaptPOIStats(CurrentPOI, poiEvents);
 
         //1. Select the main Decision Event
         RouteWalkEventLog decision = WalkStatCompute.FilterRelevantDecision(poiEvents);
@@ -290,7 +291,7 @@ public class RouteWalkStats : MonoBehaviour
         SegmentStartIcon.FillPathpoint(CurrentPOI, CurrentWay, CurrentIndex);
         SegmentEndIcon.FillPathpoint(nextPOI, CurrentWay, nextIndex);
 
-        SegAdaptation.LoadAdaptation(nextPOI, isPOI: false);
+        //SegAdaptation.LoadAdaptation(nextPOI, isPOI: false);
 
         // We take the first walk over that path
         var segEvent = WalkSharedData.RouteWalkEventList.Find(e => e.SegPOIStartId == CurrentPOI.Id &&
@@ -302,6 +303,10 @@ public class RouteWalkStats : MonoBehaviour
             return;
         }
 
+        var eventsAtSeg = WalkSharedData.RouteWalkEventList.FindAll(e => e.StartTimestamp > segEvent.StartTimestamp &&
+                                                                    e.StartTimestamp < segEvent.EndTimestamp);
+
+        AdaptModeStats.RenderSegmentStats(nextPOI, eventsAtSeg);
         ShowSegData(SegmentData);
 
         var stats = WalkStatCompute.CalculateSegmentStats(WalkSharedData.CurrentRouteWalk, segEvent);
@@ -322,8 +327,7 @@ public class RouteWalkStats : MonoBehaviour
         SegPaceCard.FillCardGoodValueNumber((double)segEvent.WalkingPace, stats.WalkPace, fmtText: pace);
 
         // offtrack
-        var eventsAtSeg = WalkSharedData.RouteWalkEventList.FindAll(e=> e.StartTimestamp > segEvent.StartTimestamp &&
-                                                                    e.StartTimestamp < segEvent.EndTimestamp);
+
 
         var offtrackList = eventsAtSeg.FindAll(e => e.EvenLogType == RouteWalkEventLogBase.RouteEvenLogType.Offtrack);
 
@@ -419,9 +423,6 @@ public class RouteWalkStats : MonoBehaviour
     {
         POIStats.SetActive(POIStats == view);
         SegmentStats.SetActive(SegmentStats == view);
-
-        POIAdapt.SetActive(POIStats.activeSelf);
-        SegmentAdapt.SetActive(SegmentStats.activeSelf);
     }
 
     public void ShowPOIData(GameObject view)

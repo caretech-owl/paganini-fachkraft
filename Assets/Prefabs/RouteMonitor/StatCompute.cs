@@ -18,6 +18,7 @@ public class StatCompute : PersistentLazySingleton<StatCompute>
     private void Start()
     {
         WalkSharedData = RouteWalkSharedData.Instance;
+        SharedData = RouteSharedData.Instance;
     }
 
     public class StatResults
@@ -129,7 +130,87 @@ public class StatCompute : PersistentLazySingleton<StatCompute>
         }
     }
 
+    /*PKI compute*/
+    public double CalculatePKITrainingProgress()
+    {
+        double atPoiRaPoints = 0;
+        double atPoiLmPoints = 0;
+        double toPoiPoints = 0;
 
+        int raCount = 0;
+        int lmCount= 0;
+        int segCount = SharedData.POIList.Count -1;
+
+        // to properly score segment after a muted poi   (poi)-mute-(poi)
+        bool wasMuted = false;
+
+        foreach (var poi in SharedData.POIList)
+        {
+            if (poi.CurrentInstructionMode!= null)
+            {
+                (int topoi, int atpoiLandmark, int atpoiReassurance) = GetPerformancePoints(poi.CurrentInstructionMode, poi.POIType);
+                atPoiLmPoints = atPoiLmPoints + atpoiLandmark;
+                atPoiRaPoints = atPoiRaPoints + atpoiReassurance;
+                
+
+                if (wasMuted) // maxout points for this segment
+                {
+                    toPoiPoints = toPoiPoints + _toPOIModesScore.Count;
+                }
+                else // according to the mode set for the segment
+                {
+                    toPoiPoints = toPoiPoints + topoi;
+                }
+
+                wasMuted = poi.CurrentInstructionMode.AtPOIMode == PathpointPIM.SupportMode.Mute; 
+            }
+
+            raCount+= poi.POIType == Pathpoint.POIsType.Reassurance? 1: 0;
+            lmCount += poi.POIType == Pathpoint.POIsType.Landmark ? 1 : 0;
+        }
+
+        double score = atPoiLmPoints / (lmCount * _atPOIModesScore.Count) +
+                       atPoiRaPoints / (raCount * _atPOIReassuranceModesScore.Count) +
+                        toPoiPoints / (segCount * _toPOIModesScore.Count);
+
+        return score / 3;
+
+    }
+    private List<PathpointPIM.SupportMode> _atPOIModesScore = new List<PathpointPIM.SupportMode> {
+        PathpointPIM.SupportMode.Trivia,
+        PathpointPIM.SupportMode.Challenge,
+        PathpointPIM.SupportMode.Mute
+    };
+
+    private List<PathpointPIM.SupportMode> _toPOIModesScore = new List<PathpointPIM.SupportMode> {
+        PathpointPIM.SupportMode.Trivia,
+        PathpointPIM.SupportMode.Challenge
+    };
+
+    private List<PathpointPIM.SupportMode> _atPOIReassuranceModesScore = new List<PathpointPIM.SupportMode> {
+        PathpointPIM.SupportMode.Mute
+    };
+
+    private (int, int, int) GetPerformancePoints(PathpointPIM pim, Pathpoint.POIsType poiType)
+    {
+        int topoi = 0;
+        int atpoiLandmark = 0;
+        int atpoiReassurance = 0;
+
+        topoi = _toPOIModesScore.IndexOf(pim.ToPOIMode) + 1;
+
+        if (poiType == Pathpoint.POIsType.Landmark)
+        {
+            atpoiLandmark = _atPOIModesScore.IndexOf(pim.AtPOIMode) + 1;
+        }
+        else
+        {
+            atpoiReassurance = _atPOIReassuranceModesScore.IndexOf(pim.AtPOIMode) + 1;
+        }
+        
+
+        return (topoi, atpoiLandmark, atpoiReassurance);
+    }
 
     /*Stat compute*/
 

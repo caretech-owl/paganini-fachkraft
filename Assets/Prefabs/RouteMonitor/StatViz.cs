@@ -62,6 +62,12 @@ public class StatViz : MonoBehaviour
         ShowContent(SimpleBarChart.gameObject);
     }
 
+    public void RenderChartPercentage(string label, double percentage)
+    {
+        SimpleBarChart.RenderPercentage(label, percentage);
+        ShowContent(SimpleBarChart.gameObject);
+    }
+
     private void LoadPicture(RawImage image, byte[] imageBytes)
     {
         if (image.texture != null)
@@ -80,8 +86,8 @@ public class StatViz : MonoBehaviour
 
     private void ShowContent(GameObject view)
     {
-        PictureContent.SetActive(PictureContent == view);
-        SimpleBarChart.gameObject.SetActive(SimpleBarChart.gameObject == view);
+        if (PictureContent != null) PictureContent.SetActive(PictureContent == view);
+        if (SimpleBarChart != null) SimpleBarChart.gameObject.SetActive(SimpleBarChart.gameObject == view);
     }
 
 }
