@@ -15,6 +15,21 @@ public class StatCompute : PersistentLazySingleton<StatCompute>
     private RouteWalkSharedData WalkSharedData;
     private RouteSharedData SharedData;
 
+    private List<PathpointPIM.SupportMode> _atPOIModesScore = new List<PathpointPIM.SupportMode> {
+        PathpointPIM.SupportMode.Trivia,
+        PathpointPIM.SupportMode.Challenge,
+        PathpointPIM.SupportMode.Mute
+    };
+
+    private List<PathpointPIM.SupportMode> _toPOIModesScore = new List<PathpointPIM.SupportMode> {
+        PathpointPIM.SupportMode.Trivia,
+        PathpointPIM.SupportMode.Challenge
+    };
+
+    private List<PathpointPIM.SupportMode> _atPOIReassuranceModesScore = new List<PathpointPIM.SupportMode> {
+        PathpointPIM.SupportMode.Mute
+    };
+
     private void Start()
     {
         WalkSharedData = RouteWalkSharedData.Instance;
@@ -176,20 +191,50 @@ public class StatCompute : PersistentLazySingleton<StatCompute>
         return score / 3;
 
     }
-    private List<PathpointPIM.SupportMode> _atPOIModesScore = new List<PathpointPIM.SupportMode> {
-        PathpointPIM.SupportMode.Trivia,
-        PathpointPIM.SupportMode.Challenge,
-        PathpointPIM.SupportMode.Mute
-    };
 
-    private List<PathpointPIM.SupportMode> _toPOIModesScore = new List<PathpointPIM.SupportMode> {
-        PathpointPIM.SupportMode.Trivia,
-        PathpointPIM.SupportMode.Challenge
-    };
+    public double CalculatePKITrainingPerformance()
+    {
+        return 0;
+    }
 
-    private List<PathpointPIM.SupportMode> _atPOIReassuranceModesScore = new List<PathpointPIM.SupportMode> {
-        PathpointPIM.SupportMode.Mute
-    };
+    public double CalculatePKITrainingCompleteness()
+    {
+        if (WalkSharedData.CurrentRouteWalk == null)
+            return double.NaN;
+
+
+        if (WalkSharedData.CurrentRouteWalk.WalkCompletion == RouteWalk.RouteWalkCompletion.Completed)
+        {
+            return 1;
+        }
+
+        return WalkSharedData.CurrentRouteWalk.WalkCompletionPercentage;
+    }
+
+    public double CalculatePKITrainingAccuracy()
+    {
+        double poiErrorCount = 0;
+        double segErrorCount = 0;
+        var errorList = WalkSharedData.RouteWalkEventList.FindAll(e => e.EvenLogType == RouteWalkEventLogBase.RouteEvenLogType.Offtrack);
+        foreach (var poi in SharedData.POIList)
+        {
+            if (poi.POIType == Pathpoint.POIsType.WayDestination)
+                break;
+
+            int poiIndex = errorList.FindIndex(e => e.TargetPOIId == poi.Id);
+            int segIndex = errorList.FindIndex(e => e.SegPOIStartId == poi.Id);
+
+            poiErrorCount = poiErrorCount + (poiIndex < 0 ? 0 : 1);
+            segErrorCount = segErrorCount + (segIndex < 0 ? 0 : 1);
+        }
+
+        double n_decisions = SharedData.POIList.Count -1 + // pois where decisions are made (arrival doesn't count
+                             SharedData.POIList.Count -1;  // segments where user walks
+
+        double score = 1- (poiErrorCount + segErrorCount) / n_decisions;
+
+        return score;
+    }
 
     private (int, int, int) GetPerformancePoints(PathpointPIM pim, Pathpoint.POIsType poiType)
     {

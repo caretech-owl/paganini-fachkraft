@@ -42,9 +42,17 @@ public class RouteWalkOverview : MonoBehaviour
 
     public void LoadView()
     {
-        double score = WalkStatCompute.CalculatePKITrainingProgress();
+        double progressScore = WalkStatCompute.CalculatePKITrainingProgress();
+        TrainingProgressChart.RenderChartPercentage("Autonomy goal", progressScore); // percentage
 
-        TrainingProgressChart.RenderChartPercentage("Autonomy goal", score); // percentage
+        double performanceScore = WalkStatCompute.CalculatePKITrainingPerformance();
+        TrainingPerformanceChart.RenderChartPercentage("Autonomy performance", performanceScore);
+
+        double walkCompletness = WalkStatCompute.CalculatePKITrainingCompleteness();
+        WalkCompletenessChart.RenderChartPercentage("Walk completeness", walkCompletness);
+
+        double walkPerformance = WalkStatCompute.CalculatePKITrainingAccuracy();
+        WalkPerformanceChart.RenderChartPercentage("Walk accuracy", walkPerformance);
 
     }
 
