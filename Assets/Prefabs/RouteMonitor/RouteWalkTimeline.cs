@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
@@ -86,6 +87,8 @@ public class RouteWalkTimeline: MonoBehaviour
                 }
                 TimelineVizView.AddStart(item, SharedData.CurrentWay);
                 LoadPOISegment(item, SharedData.POIList[index + 1]);
+                LoadSegAdaptation(item);
+                LoadPOIAdaptation(item); // hides
 
             } else if (index == SharedData.POIList.Count -1) {
                 //TODO: Remove hack
@@ -95,11 +98,14 @@ public class RouteWalkTimeline: MonoBehaviour
                     item.InsertDirty();
                 }
                 TimelineVizView.AddDestination(item, SharedData.CurrentWay);
-                
+                LoadPOIAdaptation(item); // hides
 
             } else {
                 TimelineVizView.AddPOI(item);
                 LoadPOISegment(item, SharedData.POIList[index+1]);
+                LoadSegAdaptation(item);
+                LoadPOIAdaptation(item);
+                //todo: segments in between
             }
 
             Debug.Log($"Index: {index} Id: {item.Id} POIType: {item.POIType}");
@@ -156,6 +162,36 @@ public class RouteWalkTimeline: MonoBehaviour
             TimelineVizView.AddDecisionMade(decisionEvent);
         }
 
+    }
+
+    private void LoadPOIAdaptation(Pathpoint item)
+    {
+        var list = WalkSharedData.RouteWalkEventList.FindAll(e=> e.TargetPOIId == item.Id && e.EvenLogType == RouteWalkEventLogBase.RouteEvenLogType.Adaptation);
+        var adaptationLog = GetRelevantAdaptation(list);
+
+        TimelineVizView.LoadPOIAdaptation(adaptationLog);
+    }
+
+    private void LoadSegAdaptation(Pathpoint item)
+    {
+        var list = WalkSharedData.RouteWalkEventList.FindAll(e => e.SegPOIStartId == item.Id && e.EvenLogType == RouteWalkEventLogBase.RouteEvenLogType.Adaptation);
+        var adaptationLog = GetRelevantAdaptation(list);
+        TimelineVizView.LoadSegAdaptation(adaptationLog);
+    }
+
+    private RouteWalkEventLog GetRelevantAdaptation(List<RouteWalkEventLog> adapList)
+    {        
+        RouteWalkEventLog adaptation = null;
+        if (adapList.Count > 0)
+        {
+            adaptation = adapList.OrderBy(a => a.StartTimestamp).ToList().First();
+        }
+        else if (adapList.Count == 1)
+        {
+            adaptation = adapList.First();
+        }
+
+        return adaptation;
     }
 
     private void LoadNoData() {

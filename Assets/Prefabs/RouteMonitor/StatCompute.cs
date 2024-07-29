@@ -194,7 +194,61 @@ public class StatCompute : PersistentLazySingleton<StatCompute>
 
     public double CalculatePKITrainingPerformance()
     {
-        return 0;
+        var adaptList = WalkSharedData.RouteWalkEventList.FindAll(e => e.EvenLogType == RouteWalkEventLogBase.RouteEvenLogType.Adaptation);
+        int destSegId = -1;
+
+        double totSegCorrect = 0;
+        double totPoiCorrect = 0;
+
+        int segCount = 0;
+        int poiCount = 0;
+
+        foreach (var poi in SharedData.POIList)
+        {
+            if (poi.CurrentInstructionMode != null)
+            {
+                if (poi.POIType == Pathpoint.POIsType.WayDestination)
+                    break;
+
+                var poiMode = adaptList.Find(e => e.TargetPOIId == poi.Id);
+                var segMode = adaptList.Find(e => e.SegPOIStartId == poi.Id);
+
+                int poiOK = poiMode != null && poiMode.AdaptationTaskCorrect == true ? 1 : 0;
+                int segOK = segMode != null && segMode.AdaptationTaskCorrect == true ? 1 : 0;
+
+                // we revisit, since we could be jumping over this poi
+                // there are poi muted and we are jumping over it?
+                if (destSegId > 0 && poi.Id != destSegId)
+                {
+                    // we are we jumping over this
+                    poiOK = 1;
+                    segOK = 1;
+                }
+                else if (destSegId > 0 && poi.Id == destSegId)
+                {
+                    // this is the destination
+                    segOK = 1;
+                    destSegId = -1;
+                }
+                else if (segOK > 0 && segMode.AdaptationSupportMode == PathpointPIM.SupportMode.Challenge)
+                {
+                    // we have a correct seg challenge
+                    poiOK = 1;
+                    destSegId = segMode.SegReachedPOIEndId != null? (int)segMode.SegReachedPOIEndId : -1;
+                }
+
+                totSegCorrect += segOK;
+                totPoiCorrect += poiOK;
+
+                segCount++;
+                poiCount++;
+            }
+
+        }
+
+        double score = totSegCorrect / segCount + totPoiCorrect / poiCount;
+
+        return score / 2;
     }
 
     public double CalculatePKITrainingCompleteness()

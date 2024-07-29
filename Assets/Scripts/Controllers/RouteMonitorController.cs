@@ -9,6 +9,7 @@ public class RouteMonitorController : MonoBehaviour
     [Header("Main views")]
     public RouteWalkOverview OverviewView;
     public RouteWalkTimeline TimelineView;
+    public RouteWalkOnboarding OnboardingView;
     public RouteWalkMap MapView;
     public PIMPublish PublishView;
     public GameObject LoadingView;
@@ -36,7 +37,7 @@ public class RouteMonitorController : MonoBehaviour
         SharedData.DownloadRouteDefinition();
         HeaderText.text = AppState.CurrentRoute.Name;
 
-        HideAllButThisView(LoadingView);
+        HideAllButThisView(OnboardingView.gameObject);
 
     }
 
@@ -47,6 +48,7 @@ public class RouteMonitorController : MonoBehaviour
     public void LoadComponents()
     {
         TimelineView.OnViewLoaded.AddListener(OnTimelineViewLoaded);
+        OnboardingView.OnUserConfirmed.AddListener(OnUserConfirmedOnboarding);
 
         TimelineView.LoadView();
         OverviewView.LoadView();
@@ -59,6 +61,11 @@ public class RouteMonitorController : MonoBehaviour
 
     private void OnTimelineViewLoaded()
     {
+        OnboardingView.LoadReadyView();        
+    }
+
+    public void OnUserConfirmedOnboarding()
+    {        
         SwitchView(true);
     }
 
@@ -130,7 +137,17 @@ public class RouteMonitorController : MonoBehaviour
 
 
     private void RouteSharedData_OnDataDownloaded(object sender, EventArgs e)
-    {
+    {        
+        OnboardingView.LoadBusyView();
+
+        if (SharedData.CurrentRoute.LastRouteWalkId == null)
+        {
+            OnboardingView.LoadNoData();
+            return;
+        }
+
+        OnboardingView.LoadOnboarding();
+
         // Trigger to  Dowload the RouteWalk
         WalkSharedData.DownloadRouteWalkDefinition();
 
@@ -147,7 +164,7 @@ public class RouteMonitorController : MonoBehaviour
     private void WalkSharedData_OnDataDownloaded(object sender, EventArgs e)
     {
         // Load route walk information in memory
-        WalkSharedData.LoadRouteWalkFromDatabase();
+        WalkSharedData.LoadRouteWalkFromDatabase();        
 
         LoadComponents();
     }
@@ -162,30 +179,13 @@ public class RouteMonitorController : MonoBehaviour
             MapView.EnableMap();
         }
 
+        OnboardingView.gameObject.SetActive(OnboardingView.gameObject == view);
         OverviewView.gameObject.SetActive(OverviewView.gameObject == view);
         TimelineView.gameObject.SetActive(TimelineView.gameObject == view);
         PublishView.gameObject.SetActive(PublishView.gameObject == view);
         MapView.gameObject.SetActive(MapView.gameObject == view);
         LoadingView.SetActive(LoadingView == view);
         
-
-
-
-        //if (RouteTimelineView.gameObject != view)
-        //{
-        //    //RouteTimelineView.CleanupView();
-        //}
-
-        //POIEditView.gameObject.SetActive(POIEditView.gameObject == view);
-        //if (POIEditView.gameObject != view)
-        //{
-        //    POIEditView.CleanupView();
-        //}
-
-
-        //StatusChange.gameObject.SetActive(StatusChange.gameObject == view);
-
-        //RouteInfoEditView.gameObject.SetActive(RouteInfoEditView.gameObject == view);
     }
 
     private void OnDestroy()
@@ -194,6 +194,10 @@ public class RouteMonitorController : MonoBehaviour
         SharedData.OnDataPartiallyDownloaded -= RouteSharedData_OnDataPartiallyDownloaded;
 
         WalkSharedData.OnDataDownloaded -= WalkSharedData_OnDataDownloaded;
+
+        TimelineView.OnViewLoaded.RemoveListener(OnTimelineViewLoaded);
+        OnboardingView.OnUserConfirmed.RemoveListener(OnUserConfirmedOnboarding);
+
     }
 
 

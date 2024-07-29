@@ -128,11 +128,22 @@ public class RouteWalkTimelineViz : MonoBehaviour
 
         var segment = _poiItem.GetComponent<RouteWalkTimelineSegment>();
 
-        var decisionMade = eventList.FirstOrDefault(e => !(bool)e.IsCorrectDecision) ?? eventList[0];
+        var decisionMade = eventList.FirstOrDefault(e => e.IsCorrectDecision == false) ?? eventList[0];
 
         segment.RenderDecision(decisionMade);
     }
 
+    public void LoadPOIAdaptation(RouteWalkEventLog adaptationLog)
+    {
+        var segment = _poiItem.GetComponent<RouteWalkTimelineSegment>();
+        segment.RenderPracticedPOIAdaptation(adaptationLog);
+    }
+
+    public void LoadSegAdaptation(RouteWalkEventLog adaptationLog)
+    {
+        var segment = _poiItem.GetComponent<RouteWalkTimelineSegment>();
+        segment.RenderPracticedSegAdaptation(adaptationLog);
+    }
 
     public void Clearlist()
     {

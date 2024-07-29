@@ -32,7 +32,12 @@ public class RouteWalkTimelineSegment : MonoBehaviour
     public Image CirclePanel;
     public Toggle CircleToggle;
 
-    //[Header("Adaptation")]
+    [Header("Adaptation")]
+    public StatCard POIPracticedMode;
+    public AdaptationPractice POIPracticeOutcome;
+    public StatCard SegPracticedMode;
+    public AdaptationPractice SegPracticeOutcome;
+    public GameObject MuteOverlay;
     private SupportMode _atPOISupportMode;
 
 
@@ -57,6 +62,11 @@ public class RouteWalkTimelineSegment : MonoBehaviour
         // transparent
         NoColor = Color.white;
         NoColor.a = 1;
+
+        // hiding adaptation
+        //POIPracticedMode.gameObject.SetActive(false);
+        //SegPracticedMode.gameObject.SetActive(false);
+        //MuteOverlay.gameObject.SetActive(false);
     }
 
     // Update is called once per frame
@@ -121,7 +131,7 @@ public class RouteWalkTimelineSegment : MonoBehaviour
     public void RenderDecision(RouteWalkEventLog decisionMadeEvent)
     {
         // Correct decision
-        if ((bool)decisionMadeEvent.IsCorrectDecision)
+        if (decisionMadeEvent.IsCorrectDecision == true)
         {
             CirclePanel.color = OntrackColor;
             return;
@@ -167,41 +177,58 @@ public class RouteWalkTimelineSegment : MonoBehaviour
         CurrentPOIIndex = poiIndex;
     }
 
-    public void RenderAdaptation()
+    public void RenderPracticedPOIAdaptation(RouteWalkEventLog adaptationLog)
     {
-        var current_pim = CurrentPOI.CurrentInstructionMode;
-        if (current_pim != null && current_pim.AtPOIMode != _atPOISupportMode)
-        {
-            if (current_pim.AtPOIMode == PathpointPIM.SupportMode.Mute)
-            {
-                SetObjectOpacity(CircleToggle.gameObject, 0.5f); // Set opacity to 50%
-            }
-            else
-            {
-                SetObjectOpacity(CircleToggle.gameObject, 1f); // Set opacity back to 100%
-            }
-
-            _atPOISupportMode = current_pim.AtPOIMode;
-        }
+        RenderAdaptation(adaptationLog, POIPracticedMode, POIPracticeOutcome, isPOI: true);
     }
 
-    private void SetObjectOpacity(GameObject obj, float opacity)
+    public void RenderPracticedSegAdaptation(RouteWalkEventLog adaptationLog)
     {
-        // Ensure object has a renderer component
-        Renderer renderer = obj.GetComponent<Renderer>();
-        if (renderer != null)
+        RenderAdaptation(adaptationLog, SegPracticedMode, SegPracticeOutcome, isPOI: false);
+    }
+
+    public void RenderCurrentSegAdaptation(Pathpoint point)
+    {
+        if (point.CurrentInstructionMode != null)
         {
-            // Create a new material instance
-            Material material = renderer.material;
-            Color color = material.color;
-            color.a = opacity; // Set the alpha (opacity) value
-            material.color = color; // Apply the modified color to the material
+            SegPracticedMode.FillModes(new List<string> { point.CurrentInstructionMode.ToPOIMode.ToString()});
+        }
+        
+        SegPracticedMode.gameObject.SetActive(point.CurrentInstructionMode != null);
+        SegPracticeOutcome.HideView();
+    }
+
+    public void RenderCurrentPOIAdaptation(Pathpoint point)
+    {
+        if (point.CurrentInstructionMode != null)
+        {
+            POIPracticedMode.FillModes(new List<string> { point.CurrentInstructionMode.AtPOIMode.ToString() });
+        }
+
+        POIPracticedMode.gameObject.SetActive(point.CurrentInstructionMode != null);
+        POIPracticeOutcome.HideView();
+    }
+
+    public void RenderAdaptation(RouteWalkEventLog adaptationLog, StatCard statCard, AdaptationPractice practice, bool isPOI)
+    {
+        if (adaptationLog != null)
+        {
+            statCard.FillModes(new List<string> { adaptationLog.AdaptationSupportMode.ToString() });
+            statCard.gameObject.SetActive(true);
+            practice.RenderAdaptationPracticed(adaptationLog);
+
+            if (isPOI)
+            {
+                MuteOverlay.gameObject.SetActive(adaptationLog.AdaptationSupportMode == SupportMode.Mute);
+            }
         }
         else
         {
-            Debug.LogError("Object does not have a renderer component.");
-        }
+            statCard.gameObject.SetActive(false);
+            MuteOverlay.gameObject.SetActive(false);
+        }        
     }
+
 
     private void SetupSegmentGrid(int gridSize, GameObject segment, Color fillColor)
     {
