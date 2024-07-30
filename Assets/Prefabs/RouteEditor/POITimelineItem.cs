@@ -95,6 +95,7 @@ public class POITimelineItem : MonoBehaviour
     public void FillPathpointStart(Pathpoint pathpoint, Way way)
     {
         FillPathpointData(pathpoint);
+        CurrentWay = way;
         PinTitle.text = "Start";
         PinSubtitle.text = way.Start;
 

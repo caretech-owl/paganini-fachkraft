@@ -203,18 +203,23 @@ public class StatCompute : PersistentLazySingleton<StatCompute>
         int segCount = 0;
         int poiCount = 0;
 
+        Pathpoint prevPoi = null;
+
         foreach (var poi in SharedData.POIList)
         {
-            if (poi.CurrentInstructionMode != null)
+            if (poi.CurrentInstructionMode != null &&
+                poi.POIType != Pathpoint.POIsType.WayDestination &&
+                poi.POIType != Pathpoint.POIsType.WayStart)
             {
-                if (poi.POIType == Pathpoint.POIsType.WayDestination)
-                    break;
 
                 var poiMode = adaptList.Find(e => e.TargetPOIId == poi.Id);
-                var segMode = adaptList.Find(e => e.SegPOIStartId == poi.Id);
+                var segMode = adaptList.Find(e => e.SegPOIStartId == prevPoi.Id);
 
                 int poiOK = poiMode != null && poiMode.AdaptationTaskCorrect == true ? 1 : 0;
                 int segOK = segMode != null && segMode.AdaptationTaskCorrect == true ? 1 : 0;
+
+                bool skipped = false;
+                bool landing = false;
 
                 // we revisit, since we could be jumping over this poi
                 // there are poi muted and we are jumping over it?
@@ -223,12 +228,14 @@ public class StatCompute : PersistentLazySingleton<StatCompute>
                     // we are we jumping over this
                     poiOK = 1;
                     segOK = 1;
+                    skipped = true;
                 }
                 else if (destSegId > 0 && poi.Id == destSegId)
                 {
                     // this is the destination
                     segOK = 1;
                     destSegId = -1;
+                    landing = true;
                 }
                 else if (segOK > 0 && segMode.AdaptationSupportMode == PathpointPIM.SupportMode.Challenge)
                 {
@@ -237,12 +244,19 @@ public class StatCompute : PersistentLazySingleton<StatCompute>
                     destSegId = segMode.SegReachedPOIEndId != null? (int)segMode.SegReachedPOIEndId : -1;
                 }
 
-                totSegCorrect += segOK;
-                totPoiCorrect += poiOK;
-
-                segCount++;
-                poiCount++;
+                if (skipped || landing || poi.CurrentInstructionMode.ToPOIMode != PathpointPIM.SupportMode.Instruction)
+                {
+                    totSegCorrect += segOK;
+                    segCount++;
+                }
+                if (skipped || poi.CurrentInstructionMode.AtPOIMode != PathpointPIM.SupportMode.Instruction)
+                {
+                    totPoiCorrect += poiOK;
+                    poiCount++;
+                }                               
+                        
             }
+            prevPoi = poi;
 
         }
 
