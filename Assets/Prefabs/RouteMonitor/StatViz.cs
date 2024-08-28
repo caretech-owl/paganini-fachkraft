@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using NetTopologySuite.Geometries;
 using UnityEngine;
 using UnityEngine.UI;
+using XCharts.Runtime;
 using static StatCompute;
 
 public class StatViz : MonoBehaviour
@@ -13,6 +14,7 @@ public class StatViz : MonoBehaviour
     public TMPro.TMP_Text CardSubtitle;
 
     [Header("Content")]
+    public GameObject BlankState;
     public GameObject PictureContent;
     public BarChartBase SimpleBarChart;
     //public GameObject DecisionCard;
@@ -36,6 +38,12 @@ public class StatViz : MonoBehaviour
         CardTitle.text = title;
     }
 
+    public void RenderBlankState()
+    {
+        CardTitle.text = "";
+        ShowContent(BlankState);
+    }
+
     public void RenderPicture(Pathpoint pathpoint)
     {
         
@@ -50,15 +58,15 @@ public class StatViz : MonoBehaviour
         ShowContent(PictureContent);
     }
 
-    public void RenderChart(List<(RouteWalk walk, double? value)> stats)
+    public void RenderChart(string label, List<(RouteWalk walk, double? value)> stats, string units = null)
     {
-        SimpleBarChart.RenderDuration(stats);
+        SimpleBarChart.RenderDuration(label, stats, units);
         ShowContent(SimpleBarChart.gameObject);
     }
 
-    public void RenderChartAggregated(List<(RouteWalk walk, StatResults value)> stats)
+    public void RenderChartAggregated(string label, List<(RouteWalk walk, StatResults value)> stats, string units = null)
     {
-        SimpleBarChart.RenderAggregatedStats(stats);
+        SimpleBarChart.RenderAggregatedStats(label, stats, units);
         ShowContent(SimpleBarChart.gameObject);
     }
 
@@ -86,6 +94,7 @@ public class StatViz : MonoBehaviour
 
     private void ShowContent(GameObject view)
     {
+        if (BlankState != null) BlankState.SetActive(BlankState == view);
         if (PictureContent != null) PictureContent.SetActive(PictureContent == view);
         if (SimpleBarChart != null) SimpleBarChart.gameObject.SetActive(SimpleBarChart.gameObject == view);
     }

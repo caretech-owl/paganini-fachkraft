@@ -33,8 +33,10 @@ public class AdaptationStats : MonoBehaviour
 
 
     [Header("Adaptation details")]
-    public TMPro.TMP_Text DetailsCardTitle;
-    public TMPro.TMP_Text DetailsCardSubtitle;
+    public TMPro.TMP_Text SegDetailsCardTitle;
+    public TMPro.TMP_Text SegDetailsCardSubtitle;
+    public TMPro.TMP_Text POIDetailsCardTitle;
+    public TMPro.TMP_Text POIDetailsCardSubtitle;
 
     private int CurrentIndex;
     private Pathpoint CurrentPOI;
@@ -67,11 +69,15 @@ public class AdaptationStats : MonoBehaviour
     private void SegAdaptation_OnAdaptationValueChanged(object sender, System.EventArgs e)
     {
         LoadNextModeCard(CurrentPOI.CurrentInstructionMode, SegCurrentMode, isPOI: false);
+        AppState.MonitoringView.UpdatedModeInTimeline = true;
+        AppState.MonitoringView.UpdatedModePOI = CurrentPOI;
     }
 
     private void POIAdaptation_OnAdaptationValueChanged(object sender, System.EventArgs e)
     {
         LoadNextModeCard(CurrentPOI.CurrentInstructionMode, POICurrentMode, isPOI: true);
+        AppState.MonitoringView.UpdatedModeInTimeline = true;
+        AppState.MonitoringView.UpdatedModePOI = CurrentPOI;
     }
 
     // Update is called once per frame
@@ -110,10 +116,10 @@ public class AdaptationStats : MonoBehaviour
         if (CurrentPOI == null) // fired before initialisaiton
             return;
 
-        //DetailsCardTitle.text = title;
+        RenderPOITitle(name);
 
         if (name == "PracticedModeCard")
-        {
+        {            
             ShowDetail(POIHistory.gameObject);
             //POIDetailsViz.RenderPicture(CurrentPOI);
         }
@@ -127,9 +133,9 @@ public class AdaptationStats : MonoBehaviour
     private void RenderSegmentDetails(string name, string title)
     {
         if (CurrentPOI == null) // fired before initialisaiton
-            return; 
+            return;
 
-        //DetailsCardTitle.text = title;
+        RenderSegmentTitle(name);
 
         if (name == "PracticedModeCard")
         {
@@ -143,12 +149,37 @@ public class AdaptationStats : MonoBehaviour
         }
     }
 
+    public void RenderSegmentTitle(string name)
+    {
+        RenderCardTitle(name, SegDetailsCardTitle, SegDetailsCardSubtitle);
+    }
+
+    public void RenderPOITitle(string name)
+    {
+        RenderCardTitle(name, POIDetailsCardTitle, POIDetailsCardSubtitle);
+    }
+
+    private void RenderCardTitle(string name, TMPro.TMP_Text title, TMPro.TMP_Text subtitle)
+    {
+        if (name == "PracticedModeCard")
+        {
+            title.text = "Historische Trainingsmodi";
+            subtitle.text = "Anpassungsaufgabe in vorherigen Sitzungen durchgeführt";
+        }
+        else if (name == "CurrentModeCard")
+        {
+            title.text = "Nächster Trainingsmodus";
+            subtitle.text = "Anpassungsaufgabe für nächste Sitzung festlegen";
+        }
+    }
+
 
     public void RenderAdaptPOIStats(Pathpoint currentPOI, List<RouteWalkEventLog> poiEvents)
     {
         CurrentPOI = currentPOI;
 
         ShowPanel(POIAdapt);
+        RenderPOITitle(POICurrentMode.name);
         POIAdaptation.LoadAdaptation(currentPOI, isPOI: true);
 
         // Practiced mode
@@ -158,22 +189,38 @@ public class AdaptationStats : MonoBehaviour
 
         LoadNextModeCard(currentPOI.CurrentInstructionMode, POICurrentMode, isPOI : true);
 
+        LoadPOIHistory(currentPOI, adaptation);
+
     }
 
 
-    public void RenderSegmentStats(Pathpoint currentPOI, List<RouteWalkEventLog> segEvents)
+    public void RenderAdaptSegmentStats(Pathpoint startPOI, Pathpoint destPOI, List<RouteWalkEventLog> segEvents)
     {
-        CurrentPOI = currentPOI;
+        CurrentPOI = destPOI;
 
+        RenderSegmentTitle(SegCurrentMode.name);
         ShowPanel(SegmentAdapt);
-        SegAdaptation.LoadAdaptation(currentPOI, isPOI: false);
+        SegAdaptation.LoadAdaptation(destPOI, isPOI: false);
 
         RouteWalkEventLog adaptation = GetRelevantAdaptation(segEvents);
 
         LoadPracticedModeCard(adaptation, SegPracticedMode, SegPracticeOutcome);
 
-        LoadNextModeCard(currentPOI.CurrentInstructionMode, SegCurrentMode, isPOI: false);
+        LoadNextModeCard(destPOI.CurrentInstructionMode, SegCurrentMode, isPOI: false);
 
+        LoadSegHistory(startPOI, adaptation);
+    }
+
+    private void LoadPOIHistory(Pathpoint currentPOI, RouteWalkEventLog adaptation)
+    {
+        var stats = WalkStatCompute.CalculatePOIAdaptHistory(currentPOI.Id, adaptation);
+        POIHistory.LoadHistory(stats);
+    }
+
+    private void LoadSegHistory(Pathpoint currentPOI, RouteWalkEventLog adaptation)
+    {
+        var stats = WalkStatCompute.CalculateSegAdaptHistory(currentPOI.Id, adaptation);
+        SegHistory.LoadHistory(stats);
     }
 
     private void LoadPracticedModeCard(RouteWalkEventLog adaptation, StatCard modeCard, AdaptationPractice adaptationPractice)
@@ -204,6 +251,8 @@ public class AdaptationStats : MonoBehaviour
 
     private RouteWalkEventLog GetRelevantAdaptation(List<RouteWalkEventLog> logEvents)
     {
+        if (logEvents == null) return null;
+
         var adapList = logEvents.FindAll(e => e.EvenLogType == RouteWalkEventLogBase.RouteEvenLogType.Adaptation);
         RouteWalkEventLog adaptation = null;
         if (adapList.Count > 0)

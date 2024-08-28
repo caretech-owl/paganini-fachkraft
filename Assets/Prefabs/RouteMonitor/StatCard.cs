@@ -32,6 +32,7 @@ public class StatCard : MonoBehaviour
     public GameObject WrongDirection;
     public GameObject DeviationPanel;
     public GameObject CorrectPanel;
+    public GameObject InterruptPanel;
 
     [Header("Modes Card")]
     public DynamicIconList IconModesList;
@@ -49,6 +50,7 @@ public class StatCard : MonoBehaviour
     private void Awake()
     {
         tmplExplanation = StatExplanation.text ?? "";
+        OnSelectionChangeHanle(SelectionToggle.isOn);
     }
 
     void Start()
@@ -116,6 +118,30 @@ public class StatCard : MonoBehaviour
         }
     }
 
+    public void FillCardTimeAggregated(List<RouteWalkEventLog> currentEvents, StatCompute.TimeStats prevStats,
+        bool isLowerBetter = true)
+    {
+        double totalDuration = currentEvents.Sum(e => e.DurationEvent);
+        string timeString = formatTime(totalDuration);
+        string count = currentEvents.Count().ToString();
+
+        //FillCardTime(totalDuration, prevStats);
+        FillTrendCard(timeString, count);
+
+        if (prevStats.Duration.Count > 0 && prevStats.Duration.Sum > 0)
+        {
+            RenderTrendContinuous(totalDuration, prevStats.Duration, isLowerBetter);
+        }
+        else if (prevStats.TimeEvents.Count > 1) // more than the current? but no instances
+        {
+            VizTrend.FillTrendDiscrete(0, isLowerBetter);
+        }
+        else
+        {
+            VizTrend.FillNoData();
+        }
+    }
+
     public void FillCardBadCountNumber(int count, StatCompute.StatResults prevStats)
     {
         FillTrendCard(count.ToString());
@@ -148,6 +174,7 @@ public class StatCard : MonoBehaviour
     public void FillCardDecision(RouteWalkEventLog decisionEvent)
     {
         CorrectPanel.SetActive(decisionEvent.IsCorrectDecision == true);
+        InterruptPanel.SetActive(decisionEvent.WasEventInterrupted == true);
         WrongTurnPanel.SetActive(decisionEvent.NavIssue == LocationTools.NavigationIssue.WrongTurn);
         MissedTurnPanel.SetActive(decisionEvent.NavIssue == LocationTools.NavigationIssue.MissedTurn);
         WrongDirection.SetActive(decisionEvent.NavIssue == LocationTools.NavigationIssue.WrongDirection);

@@ -18,4 +18,26 @@ public class AppState
 
     public static GoogleMapType DefaultMapType = GoogleMapType.Normal;
 
+    public class MonitoringView
+    {
+        public static bool ShowPracticeModeInTimeline = true;
+        public static bool UpdatedModeInTimeline = false;
+        public static Pathpoint UpdatedModePOI = null;
+    }
+
+    public static void ResetValues()
+    {
+        APIToken = null;
+        CurrenSocialWorker = null;
+
+        ScreenSleepTimeout = Screen.sleepTimeout;
+
+        CurrentUser = null;
+        CurrentRoute = null;
+        CurrentWay = null;
+        CurrentRouteWalk = null;
+
+        MonitoringView.ShowPracticeModeInTimeline = true;
+    }
+
 }

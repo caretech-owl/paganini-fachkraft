@@ -17,6 +17,12 @@ public class AdaptationEnactment : MonoBehaviour
 
     private void Awake()
     {
+        EnsureSetupToggles();
+    }
+
+    private void EnsureSetupToggles()
+    {
+        if (toggles != null) return;
         // Get all the toggles associated with the toggle group
         toggles = new List<Toggle>(ModesToggleGroup.GetComponentsInChildren<Toggle>());
 
@@ -25,7 +31,7 @@ public class AdaptationEnactment : MonoBehaviour
         {
             toggle.onValueChanged.AddListener(OnToggleSelected);
         }
-    }    
+    }
 
     // public 
 
@@ -82,6 +88,8 @@ public class AdaptationEnactment : MonoBehaviour
 
     private void RenderInstructionMode(SupportMode supportMode)
     {
+        EnsureSetupToggles();
+
         foreach (Toggle toggle in toggles)
         {
             var item = toggle.GetComponent<AdaptationItem>();
@@ -161,7 +169,7 @@ public class AdaptationEnactment : MonoBehaviour
 
         CurrentPOI.CurrentInstructionMode = current_pim;
 
-        current_pim.InsertDirty();
+        current_pim.InsertDirty();        
     }
 
     private void OnDestroy()

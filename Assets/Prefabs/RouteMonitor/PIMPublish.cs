@@ -24,6 +24,8 @@ public class PIMPublish : MonoBehaviour
 
     private RouteWalkSharedData WalkSharedData;
 
+    
+
     void Awake()
     {
 
@@ -80,7 +82,9 @@ public class PIMPublish : MonoBehaviour
 
     public void DeleteLocalPIMChanges()
     {
-        //WalkSharedData.DeleteWayDefinition();
+        bool[] options = new bool[] { false } ;
+
+        PathpointPIM.DeleteFromRoute(WalkSharedData.CurrentRoute.Id, fromAPI : options);
 
         OnPublishDone?.Invoke();
     }

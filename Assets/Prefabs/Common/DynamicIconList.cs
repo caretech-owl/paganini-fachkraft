@@ -8,6 +8,13 @@ public class DynamicIconList : MonoBehaviour
 
     private void Awake()
     {
+        EnsureSetupComponents();
+    }
+
+    private void EnsureSetupComponents()
+    {
+        if (IconList != null) return;
+
         // the icons components are already in the view
         IconList = new List<GameObject>();
         foreach (Transform child in transform)
@@ -30,7 +37,9 @@ public class DynamicIconList : MonoBehaviour
 
     public void RenderIcons(List<string> iconNames)
     {
-        foreach(var icon in IconList)
+        EnsureSetupComponents();
+
+        foreach (var icon in IconList)
         {
             icon.SetActive(iconNames.Contains(icon.name));
         }
@@ -39,6 +48,8 @@ public class DynamicIconList : MonoBehaviour
 
     public void RenderNoData()
     {
+        EnsureSetupComponents();
+
         foreach (var icon in IconList)
         {
             icon.SetActive(icon.name == "NoData");

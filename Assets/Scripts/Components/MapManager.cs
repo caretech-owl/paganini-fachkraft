@@ -13,6 +13,7 @@ public class MapManager : MonoBehaviour
 {
     public GameObject MapContainer;
     public CanvasScaler ReferenceCanvasScaler;
+    public Image MapSnapshot;
 
     [Header("Route elements")]
     public Texture2D DefaultMarkerIcon;
@@ -25,6 +26,9 @@ public class MapManager : MonoBehaviour
     private static Texture2D ColoredMarkerIcon;
     private static Texture2D ScaledPOILandmarkMarkerIcon;
     private static Texture2D ScaledPOIReassuranceMarkerIcon;
+
+    private Texture2D currentSnapshot;
+    private Sprite currentSprite;
 
     private GoogleMapsView Map;
     private List<Pathpoint> PathpointList;
@@ -75,10 +79,11 @@ public class MapManager : MonoBehaviour
     {
         if (Map != null)
         {
+            //Map.TakeSnapshot(OnSnapshotReady);
             Map.IsVisible = false;
         }
         MapContainer.SetActive(false);
-    }
+    }    
 
     /// <summary>
     /// Enable Map component
@@ -132,6 +137,17 @@ public class MapManager : MonoBehaviour
         }
     }
 
+
+    private void OnSnapshotReady(Texture2D snapshot)
+    {
+        // Clean up the previous snapshot and sprite, if they exist
+        CleanupSnapshots();
+
+        // Assign the new snapshot and create a new Sprite
+        currentSnapshot = snapshot;
+        currentSprite = Sprite.Create(snapshot, new Rect(0, 0, snapshot.width, snapshot.height), new Vector2(0.5f, 0.5f));
+        MapSnapshot.sprite = currentSprite;
+    }
 
 
     private void LoadMap(int zoom)
@@ -288,11 +304,29 @@ public class MapManager : MonoBehaviour
         return ImageDescriptor.FromTexture2D(icon);
     }
 
+    private void CleanupSnapshots()
+    {
+        if (currentSnapshot != null)
+        {
+            Destroy(currentSnapshot);
+            currentSnapshot = null;
+        }
+
+        if (currentSprite != null)
+        {
+            Destroy(currentSprite);
+            currentSprite = null;
+        }
+    }
+
+
     void OnDestroy()
     {
         DestroyImmediate(ColoredMarkerIcon);
         DestroyImmediate(ScaledPOILandmarkMarkerIcon);
         DestroyImmediate(ScaledPOIReassuranceMarkerIcon);
+
+        CleanupSnapshots();
 
         if (Map != null)
         {

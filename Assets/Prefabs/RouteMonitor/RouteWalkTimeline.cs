@@ -6,6 +6,7 @@ using Unity.VisualScripting;
 using UnityEditor;
 using UnityEngine;
 using UnityEngine.Events;
+using UnityEngine.UI;
 
 public class RouteWalkTimeline: MonoBehaviour
 {
@@ -56,6 +57,11 @@ public class RouteWalkTimeline: MonoBehaviour
         SharedData.CurrentPOIIndex = -1;
     }
 
+    public void OnAdaptationModeChanged(bool showPracticed)
+    {
+        AppState.MonitoringView.ShowPracticeModeInTimeline = showPracticed;
+    }
+
 
     // <summary>
     // Populates the Route Onboarding view based on the status of the Route
@@ -63,6 +69,7 @@ public class RouteWalkTimeline: MonoBehaviour
     private void LoadPathpointList()
     {
         TimelineVizView.Clearlist();
+        RouteWalkEventLog challengeLog = null;
         int index = 0;
         foreach (var item in SharedData.POIList)
         {
@@ -79,33 +86,33 @@ public class RouteWalkTimeline: MonoBehaviour
             }
 
             // Add item to list
-            if (index == 0) {
-                //TODO: Remove hack
-                if (item.POIType != Pathpoint.POIsType.WayStart) { 
-                    item.POIType = Pathpoint.POIsType.WayStart;
-                    item.InsertDirty();
-                }
+            if (item.POIType == Pathpoint.POIsType.WayStart) {
                 TimelineVizView.AddStart(item, SharedData.CurrentWay);
                 LoadPOISegment(item, SharedData.POIList[index + 1]);
-                LoadSegAdaptation(item);
+                challengeLog = LoadSegAdaptation(item, SharedData.POIList[index + 1]);
                 LoadPOIAdaptation(item); // hides
 
-            } else if (index == SharedData.POIList.Count -1) {
-                //TODO: Remove hack
-                if (item.POIType != Pathpoint.POIsType.WayDestination)
-                {
-                    item.POIType = Pathpoint.POIsType.WayDestination;
-                    item.InsertDirty();
-                }
+            } else if (item.POIType == Pathpoint.POIsType.WayDestination) {
                 TimelineVizView.AddDestination(item, SharedData.CurrentWay);
                 LoadPOIAdaptation(item); // hides
 
             } else {
                 TimelineVizView.AddPOI(item);
                 LoadPOISegment(item, SharedData.POIList[index+1]);
-                LoadSegAdaptation(item);
-                LoadPOIAdaptation(item);
-                //todo: segments in between
+
+                // adaptation
+                bool arrived = false;
+                if (challengeLog != null)
+                {
+                    arrived = CheckIfSkipBecauseChallenge(challengeLog, item, SharedData.POIList[index + 1]);
+                }
+
+                if (challengeLog == null || arrived)
+                {
+                    challengeLog = LoadSegAdaptation(item, SharedData.POIList[index + 1]);
+                    LoadPOIAdaptation(item);
+                }
+
             }
 
             Debug.Log($"Index: {index} Id: {item.Id} POIType: {item.POIType}");
@@ -120,6 +127,19 @@ public class RouteWalkTimeline: MonoBehaviour
 
         Debug.Log("Number of POIs: "+ SharedData.POIList.Count);
         OnViewLoaded?.Invoke();
+    }
+
+    private bool CheckIfSkipBecauseChallenge(RouteWalkEventLog challengeLog, Pathpoint targetPOI, Pathpoint nextPOI)
+    {
+        if (challengeLog.SegReachedPOIEndId != targetPOI.Id)
+        {
+            TimelineVizView.LoadPOIAdaptation(challengeLog, targetPOI, skipPOI: true);
+            TimelineVizView.LoadSegAdaptation(challengeLog, nextPOI, skipPOI: true);
+
+            return false;
+        }
+
+        return true; //
     }
 
     private void LoadPOISegment(Pathpoint item, Pathpoint nextItem)
@@ -169,14 +189,24 @@ public class RouteWalkTimeline: MonoBehaviour
         var list = WalkSharedData.RouteWalkEventList.FindAll(e=> e.TargetPOIId == item.Id && e.EvenLogType == RouteWalkEventLogBase.RouteEvenLogType.Adaptation);
         var adaptationLog = GetRelevantAdaptation(list);
 
-        TimelineVizView.LoadPOIAdaptation(adaptationLog);
+        TimelineVizView.LoadPOIAdaptation(adaptationLog, item);
     }
 
-    private void LoadSegAdaptation(Pathpoint item)
+    private RouteWalkEventLog LoadSegAdaptation(Pathpoint startPOI, Pathpoint destPOI)
     {
-        var list = WalkSharedData.RouteWalkEventList.FindAll(e => e.SegPOIStartId == item.Id && e.EvenLogType == RouteWalkEventLogBase.RouteEvenLogType.Adaptation);
+        var list = WalkSharedData.RouteWalkEventList.FindAll(e => e.SegPOIStartId == startPOI.Id && e.EvenLogType == RouteWalkEventLogBase.RouteEvenLogType.Adaptation);
         var adaptationLog = GetRelevantAdaptation(list);
-        TimelineVizView.LoadSegAdaptation(adaptationLog);
+        TimelineVizView.LoadSegAdaptation(adaptationLog, destPOI);
+
+        if (adaptationLog != null && adaptationLog.AdaptationSupportMode == PathpointPIM.SupportMode.Challenge)
+        {
+            if (adaptationLog.SegReachedPOIEndId != null && (int)adaptationLog.SegReachedPOIEndId > 0)
+            {
+                return adaptationLog;
+            }
+        }
+
+        return null;
     }
 
     private RouteWalkEventLog GetRelevantAdaptation(List<RouteWalkEventLog> adapList)
@@ -203,6 +233,13 @@ public class RouteWalkTimeline: MonoBehaviour
     public void CleanupView()
     {
         TimelineVizView.CleanupView();
+    }
+
+    private void OnDestroy()
+    {
+        AppState.MonitoringView.ShowPracticeModeInTimeline = true;
+
+        CleanupView();
     }
 
 }

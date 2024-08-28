@@ -33,7 +33,6 @@ public class RouteMonitorController : MonoBehaviour
         WalkSharedData = RouteWalkSharedData.Instance;
         WalkSharedData.OnDataDownloaded += WalkSharedData_OnDataDownloaded;
 
-
         SharedData.DownloadRouteDefinition();
         HeaderText.text = AppState.CurrentRoute.Name;
 

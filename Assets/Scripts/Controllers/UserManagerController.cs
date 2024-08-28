@@ -65,4 +65,12 @@ public class UserManagerController : MonoBehaviour
         AppState.CurrentUser = user;
         SceneSwitcher.LoadRouteExplorer();
     }
+
+    public void Logout()
+    {
+        AuthToken.DeleteAll();
+        AppState.ResetValues();
+        SceneSwitcher.LoadLogin();
+    }
+
 }

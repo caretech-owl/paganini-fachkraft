@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
@@ -8,6 +9,9 @@ using static StatCompute;
 [DisallowMultipleComponent]
 public class BarChartBase : MonoBehaviour
 {
+    public GameObject BarChartObj;
+    public GameObject RingChartObj;
+
     private BarChart chart;
     private RingChart ringChart;
     private static string DateFormat = "MMM dd";
@@ -21,16 +25,17 @@ public class BarChartBase : MonoBehaviour
     }
 
 
-    public void RenderDuration(List<(RouteWalk walk, double? value)> stats)
+    public void RenderDuration(string label, List<(RouteWalk walk, double? value)> stats, string units = null)
     {
-        AddSimpleBar("Duration","Duration");
+        string fmt = units != null ? $" ({units})" : "";
+        AddSimpleBar(label + fmt);
         LoadValueData(stats);
-
     }
 
-    public void RenderAggregatedStats(List<(RouteWalk walk, StatResults)> stats)
+    public void RenderAggregatedStats(string label, List<(RouteWalk walk, StatResults)> stats, string units = null)
     {
-        AddSimpleBar("Aggregated", "Aggregated");
+        string fmt = units != null ? $" ({units})" : "";
+        AddSimpleBar(label + fmt);
         LoadAggregatedData(stats);
     }
 
@@ -41,70 +46,111 @@ public class BarChartBase : MonoBehaviour
     }
 
 
-    private void AddSimpleBar(string title, string axisLabel)
+    private void AddSimpleBar(string axisLabel)
     {
-        chart = gameObject.GetComponent<BarChart>();
+        ShowView(BarChartObj);
+        chart = BarChartObj.GetComponent<BarChart>();
         if (chart == null)
         {
-            chart = gameObject.AddComponent<BarChart>();
+            chart = BarChartObj.AddComponent<BarChart>();
             chart.Init();
         }
-        chart.EnsureChartComponent<Title>().text = title;
+        //chart.EnsureChartComponent<Title>().text = title;
         //chart.EnsureChartComponent<Title>().subText = subtitle;
 
         var yAxis = chart.EnsureChartComponent<YAxis>();
         yAxis.minMaxType = Axis.AxisMinMaxType.Default;
+        yAxis.ClearData();
 
         var xAxis = chart.EnsureChartComponent<XAxis>();
         xAxis.minCategorySpacing = 1;
+        xAxis.ClearData();
 
-        chart.RemoveData();
-        var serie = chart.AddSerie<Bar>(axisLabel);
-               
+        //chart.RemoveData();
+
+        var serie = chart.GetSerie<Bar>();
+        if (serie == null)
+        {
+            serie = chart.AddSerie<Bar>(axisLabel);           
+        }
+        serie.ClearData();
+        serie.serieName = axisLabel;
+        ApplyCommonStyle(chart);
+    }
+
+    private void ClearSerie(Bar bar)
+    {        
+        int count = bar.dataCount;
+        for(int i=0; i< count; i++)
+        {
+            bar.RemoveData(i);
+        }
     }
 
     private void AddRingChart(string axisLabel, int value)
     {
-        ringChart = gameObject.GetComponent<RingChart>();
-        if (chart == null)
+        ShowView(RingChartObj);
+        ringChart = RingChartObj.GetComponent<RingChart>();
+        if (ringChart == null)
         {
-            ringChart = gameObject.AddComponent<RingChart>();
+            ringChart = RingChartObj.AddComponent<RingChart>();
             ringChart.Init();
         }
         //ringChart.EnsureChartComponent<Title>().text = title;
         //chart.EnsureChartComponent<Title>().subText = subtitle;
 
-        ringChart.RemoveData();
-        var serie = ringChart.AddSerie<Ring>();
-        serie.roundCap = true;
-        serie.gap = 10;
-        serie.radius = new float[] { 0.3f, 0.35f };
+        //ringChart.RemoveData();
 
-        var label = serie.EnsureComponent<LabelStyle>();
-        label.show = true;
-        label.position = LabelStyle.Position.Center;
-        label.formatter = "{d:f0}%";
-        label.textStyle.autoColor = true;
-        label.textStyle.fontSize = 28;
+        var serie = ringChart.GetSerie<Ring>();
+        if (serie == null)
+        {
+            serie = ringChart.AddSerie<Ring>(axisLabel);
+            serie.roundCap = true;
+            serie.gap = 10;
+            serie.radius = new float[] { 0.3f, 0.35f };
+
+            var label = serie.EnsureComponent<LabelStyle>();
+            label.show = true;
+            label.position = LabelStyle.Position.Center;
+            label.formatter = "{d:f0}%";
+            label.textStyle.color = Color.black;
+            label.textStyle.fontSize = 48;
+
+        }
+        serie.ClearData();
+
 
         //var titleStyle = serie.EnsureComponent<TitleStyle>();
         //titleStyle.show = false;
         //titleStyle.offset = new Vector2(0, 30);
 
-        var background = ringChart.EnsureChartComponent<Background>();
-        background.show = false;
+        //var background = ringChart.EnsureChartComponent<Background>();
+        //background.show = false;
 
-        var title = ringChart.EnsureChartComponent<Title>();
-        title.text = "";
-        title.show = false;
+        //var title = ringChart.EnsureChartComponent<Title>();
+        //title.text = "";
+        //title.show = false;
 
-        ringChart.theme.transparentBackground = true;
+        //ringChart.theme.transparentBackground = true;
+
+        ApplyCommonStyle(ringChart);
 
         var max = 100;
         ringChart.AddData(serie.index, value, max, axisLabel);
 
     }
 
+    private void ApplyCommonStyle(BaseChart baseChart)
+    {
+        var background = baseChart.EnsureChartComponent<Background>();
+        background.show = false;
+
+        var title = baseChart.EnsureChartComponent<Title>();
+        title.text = "";
+        title.show = false;
+
+        baseChart.theme.transparentBackground = true;
+    }
 
     private void LoadValueData(List<(RouteWalk walk, double? value)> stats)
     {
@@ -112,7 +158,7 @@ public class BarChartBase : MonoBehaviour
         {
             string fmtDate = DateUtils.ConvertUTCToLocalString(logStat.walk.StartDateTime, DateFormat, CultureInfo.CurrentCulture);
             chart.AddXAxisData(fmtDate);
-            chart.AddData(0, logStat.value == null? double.NaN : (double)logStat.value);
+            chart.AddData(0, logStat.value == null? double.NaN : (double)Math.Round((float)logStat.value,2));
         }
     }
 
@@ -122,8 +168,15 @@ public class BarChartBase : MonoBehaviour
         {
             string fmtDate = DateUtils.ConvertUTCDateToUTCString(logStat.walk.StartDateTime, DateFormat, CultureInfo.CurrentCulture);
             chart.AddXAxisData(fmtDate);
-            chart.AddData(0, logStat.value == null ? double.NaN : (double)logStat.value.Sum);
+            chart.AddData(0, logStat.value == null ? double.NaN : (double) Math.Round((float)logStat.value.Sum,2));
         }
+    }
+
+
+    public void ShowView(GameObject view)
+    {
+        BarChartObj.SetActive(BarChartObj == view);
+        RingChartObj.SetActive(RingChartObj == view);
     }
 
 

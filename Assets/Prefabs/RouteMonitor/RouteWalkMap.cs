@@ -12,12 +12,16 @@ using UnityEngine.UI;
 public class RouteWalkMap : MonoBehaviour
 {
     public GameObject MapContainer;
+    public GameObject LoadingAnimation;
     public CanvasScaler ReferenceCanvasScaler;
+    public Image MapSnapshot;
 
     [Header("Route elements")]
     public Texture2D DefaultMarkerIcon;
-    public Texture2D POILandmarkMarkerIcon;
-    public Texture2D POIReassuranceMarkerIcon;
+    public Texture2D POILandmarkMarkerIcon1x;
+    public Texture2D POILandmarkMarkerIcon2x;
+    public Texture2D POIReassuranceMarkerIcon1x;    
+    public Texture2D POIReassuranceMarkerIcon2x;
     public Color RouteColor;
 
     [Header("Route Walk elements")]
@@ -27,8 +31,11 @@ public class RouteWalkMap : MonoBehaviour
     public Color OnPOIColor;
 
     private static Texture2D ColoredMarkerIcon;
-    private static Texture2D ScaledPOILandmarkMarkerIcon;
-    private static Texture2D ScaledPOIReassuranceMarkerIcon;
+    private static Texture2D POILandmarkMarkerIcon;
+    private static Texture2D POIReassuranceMarkerIcon;
+
+    private Texture2D currentSnapshot;
+    private Sprite currentSprite;
 
     private Texture2D OffTrackIcon;
     private Texture2D OnTrackIcon;
@@ -87,8 +94,8 @@ public class RouteWalkMap : MonoBehaviour
             OnPOIIcon = ChangeIconColor(RouteWalkMarkerIcon, OnPOIColor);
 
             ColoredMarkerIcon = ChangeIconColor(DefaultMarkerIcon, RouteColor);
-            ScaledPOILandmarkMarkerIcon = ResizeTexture(POILandmarkMarkerIcon);
-            ScaledPOIReassuranceMarkerIcon = ResizeTexture(POIReassuranceMarkerIcon);
+            POILandmarkMarkerIcon = SelectScaledTexture(POILandmarkMarkerIcon1x, POILandmarkMarkerIcon2x);
+            POIReassuranceMarkerIcon = SelectScaledTexture(POIReassuranceMarkerIcon1x, POIReassuranceMarkerIcon2x);
         }
 
         if (Map == null)
@@ -106,6 +113,7 @@ public class RouteWalkMap : MonoBehaviour
     {
         if (Map != null)
         {
+            Map.TakeSnapshot(OnSnapshotReady);
             Map.IsVisible = false;
         }
         MapContainer.SetActive(false);
@@ -121,6 +129,26 @@ public class RouteWalkMap : MonoBehaviour
             Map.IsVisible = true;
         }
         MapContainer.SetActive(true);
+    }
+
+    public void ToggleMapAsSnapshot(bool asSnapshot)
+    {
+        if (Map == null) return;
+        
+        if (asSnapshot)
+        {            
+            Map.TakeSnapshot(OnSnapshotReady);
+            Map.IsVisible = false;
+            MapSnapshot.sprite = currentSprite;
+        }
+        else
+        {
+            LoadingAnimation.SetActive(true);
+            Map.IsVisible = true;
+            MapSnapshot.sprite = null;
+        }
+            
+        
     }
 
     /// <summary>
@@ -146,11 +174,11 @@ public class RouteWalkMap : MonoBehaviour
             }
             else if (pathpoint.POIType == Pathpoint.POIsType.Landmark)
             {
-                icon = ScaledPOILandmarkMarkerIcon;
+                icon = POILandmarkMarkerIcon;
             }
             else
             {
-                icon = ScaledPOIReassuranceMarkerIcon;
+                icon = POIReassuranceMarkerIcon;
             }
 
             var mo = new MarkerOptions()
@@ -225,7 +253,26 @@ public class RouteWalkMap : MonoBehaviour
         count++;
     }
 
+    private void OnSnapshotReady(Texture2D snapshot)
+    {
+        LoadingAnimation.SetActive(false);
 
+        // Clean up the previous snapshot and sprite, if they exist
+        if (!Map.IsVisible) { 
+            CleanupSnapshots();            
+
+            // Assign the new snapshot and create a new Sprite
+            currentSnapshot = snapshot;
+            currentSprite = Sprite.Create(snapshot, new Rect(0, 0, snapshot.width, snapshot.height), new Vector2(0.5f, 0.5f));
+            MapSnapshot.sprite = currentSprite;
+
+            Debug.Log("Snapshot taken!");
+        }
+        else
+        {
+            DestroyImmediate(snapshot);
+        }
+    }
 
     private void LoadMap(int zoom)
     {
@@ -353,6 +400,18 @@ public class RouteWalkMap : MonoBehaviour
         return newIcon;
     }
 
+    private Texture2D SelectScaledTexture(Texture2D texture1x, Texture2D texture2x)
+    {
+        float scaleFactor = GetScaleRatio();
+
+        if (scaleFactor <= 1)
+        {
+            return texture1x;
+        }
+
+        return texture2x;
+    }
+
     private Texture2D ResizeTexture(Texture2D source)
     {
         float scaleFactor = GetScaleRatio();
@@ -393,14 +452,31 @@ public class RouteWalkMap : MonoBehaviour
         return ImageDescriptor.FromTexture2D(icon);
     }
 
+    private void CleanupSnapshots()
+    {
+        if (currentSnapshot != null)
+        {
+            DestroyImmediate(currentSnapshot);
+            currentSnapshot = null;
+        }
+
+        if (currentSprite != null)
+        {
+            DestroyImmediate(currentSprite);
+            currentSprite = null;
+        }
+    }
+
     void OnDestroy(){
         DestroyImmediate(OffTrackIcon);
         DestroyImmediate(OnTrackIcon);
         DestroyImmediate(OnPOIIcon);
+
+        CleanupSnapshots();
         
-        DestroyImmediate(ScaledPOILandmarkMarkerIcon);
-        DestroyImmediate(ScaledPOIReassuranceMarkerIcon);
-        DestroyImmediate(ColoredMarkerIcon);
+        //DestroyImmediate(POILandmarkMarkerIcon);
+        //DestroyImmediate(POIReassuranceMarkerIcon);
+        //DestroyImmediate(ColoredMarkerIcon);
 
         if (Map != null)
         {

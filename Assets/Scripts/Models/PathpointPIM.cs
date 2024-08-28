@@ -4,6 +4,7 @@ using System.Data;
 using System.Globalization;
 using System.Linq;
 using SQLite4Unity3d;
+using Unity.VisualScripting;
 using static StatCompute;
 
 
@@ -82,6 +83,30 @@ public class PathpointPIM : BaseModel<PathpointPIM>
         return pimList;
     }
 
+    public static void DeleteFromRoute(int routeId, bool[] fromAPI)
+    {
+        // Open the SQLliteConnection
+        var conn = DBConnector.Instance.GetConnection();
 
+        // Prepare the base DELETE command text
+        string cmdText = "DELETE FROM PathpointPIM WHERE RouteId = ?";
+
+        List<object> parameters = new List<object> { routeId };
+
+        // Add conditions for FromAPI
+        if (fromAPI != null && fromAPI.Length > 0)
+        {
+            var fromAPIConditions = string.Join(" OR ", fromAPI.Select((val, idx) => $"FromAPI = ?"));
+            cmdText += $" AND ({fromAPIConditions})";
+            parameters.AddRange(fromAPI);
+        }
+        
+
+        // Prepare the SQLiteCommand with the command text and parameters
+        SQLiteCommand cmd = conn.CreateCommand(cmdText, parameters.ToArray());
+
+        // Execute the command
+        cmd.ExecuteNonQuery();
+    }
 
 }

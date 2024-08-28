@@ -16,6 +16,19 @@ public class AdaptationItem : MonoBehaviour
 
     private void Awake()
     {
+
+        EnsureSetupComponents();
+    }
+
+    private void Start()
+    {
+        //FillMode(SelectionSupportMode.ToString());
+    }
+
+    private void EnsureSetupComponents()
+    {
+        if (SelectionToggle != null) return;
+
         SelectionToggle = gameObject.GetComponent<Toggle>();
         SelectionOutline = gameObject.GetComponent<Outline>();
 
@@ -23,11 +36,6 @@ public class AdaptationItem : MonoBehaviour
         OnValueChanged(SelectionToggle.isOn);
 
         SelectionToggle.onValueChanged.AddListener(OnValueChanged);
-
-    }
-    private void Start()
-    {
-        //FillMode(SelectionSupportMode.ToString());
     }
 
     // public 

@@ -19,9 +19,7 @@ public class RouteWalkOverview : MonoBehaviour
     // Start is called before the first frame update
     void Awake()
     {
-        SharedData = RouteSharedData.Instance;
-        WalkSharedData = RouteWalkSharedData.Instance;
-        WalkStatCompute = StatCompute.Instance;
+        EnsureSetupComponents();
     }
 
     private void Start()
@@ -35,6 +33,15 @@ public class RouteWalkOverview : MonoBehaviour
         
     }
 
+    private void EnsureSetupComponents()
+    {
+        if (SharedData != null) return;
+
+        SharedData = RouteSharedData.Instance;
+        WalkSharedData = RouteWalkSharedData.Instance;
+        WalkStatCompute = StatCompute.Instance;
+    }
+
     /**********************
      *  Public UI events (and utilities)  *
      **********************/
@@ -42,17 +49,19 @@ public class RouteWalkOverview : MonoBehaviour
 
     public void LoadView()
     {
+        EnsureSetupComponents();
+
         double progressScore = WalkStatCompute.CalculatePKITrainingProgress();
-        TrainingProgressChart.RenderChartPercentage("Autonomy goal", progressScore); // percentage
+        TrainingProgressChart.RenderChartPercentage("Trainingsfortschritt", progressScore); // percentage
 
         double performanceScore = WalkStatCompute.CalculatePKITrainingPerformance();
-        TrainingPerformanceChart.RenderChartPercentage("Autonomy performance", performanceScore);
+        TrainingPerformanceChart.RenderChartPercentage("Gelöste Aufgaben", performanceScore);
 
         double walkCompletness = WalkStatCompute.CalculatePKITrainingCompleteness();
-        WalkCompletenessChart.RenderChartPercentage("Walk completeness", walkCompletness);
+        WalkCompletenessChart.RenderChartPercentage("Zurückgelegte Strecke", walkCompletness);
 
         double walkPerformance = WalkStatCompute.CalculatePKITrainingAccuracy();
-        WalkPerformanceChart.RenderChartPercentage("Walk accuracy", walkPerformance);
+        WalkPerformanceChart.RenderChartPercentage("Navigationsgenauigkeit", walkPerformance);
 
     }
 

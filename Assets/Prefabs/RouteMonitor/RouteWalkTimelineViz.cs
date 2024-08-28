@@ -4,6 +4,9 @@ using System.Linq;
 using NetTopologySuite.Triangulate;
 using UnityEngine;
 using UnityEngine.UI;
+using static InactiveOverlay;
+using static SocketsAPI;
+using static StatCompute;
 
 public class RouteWalkTimelineViz : MonoBehaviour
 {
@@ -23,6 +26,9 @@ public class RouteWalkTimelineViz : MonoBehaviour
     private POITimelineItem _poiItem;
     private POITimelineItem _firstPoiItem;
 
+    private RouteWalkItemEvent.RouteWalkEventType CurrentEventType;
+    private Pathpoint SelectedPOI;
+
 
     // Start is called before the first frame update
     void Awake()
@@ -35,6 +41,11 @@ public class RouteWalkTimelineViz : MonoBehaviour
     void Update()
     {
 
+    }
+
+    private void OnEnable()
+    {
+        ResizePanel();
     }
 
     public void SelectFirstSegment()
@@ -133,16 +144,33 @@ public class RouteWalkTimelineViz : MonoBehaviour
         segment.RenderDecision(decisionMade);
     }
 
-    public void LoadPOIAdaptation(RouteWalkEventLog adaptationLog)
+    public void LoadPOIAdaptation(RouteWalkEventLog adaptationLog, Pathpoint targetPOI, bool skipPOI = false)
     {
         var segment = _poiItem.GetComponent<RouteWalkTimelineSegment>();
-        segment.RenderPracticedPOIAdaptation(adaptationLog);
+
+        if (skipPOI)
+        {
+            segment.MutePOI(targetPOI);
+        }
+        else
+        {
+            segment.RenderPOIAdaptation(adaptationLog, targetPOI);
+        }
+        
     }
 
-    public void LoadSegAdaptation(RouteWalkEventLog adaptationLog)
+    public void LoadSegAdaptation(RouteWalkEventLog adaptationLog, Pathpoint destPOI, bool skipPOI = false)
     {
         var segment = _poiItem.GetComponent<RouteWalkTimelineSegment>();
-        segment.RenderPracticedSegAdaptation(adaptationLog);
+        if (skipPOI)
+        {
+            segment.MuteSegment(destPOI);
+        }
+        else
+        {
+            segment.RenderSegAdaptation(adaptationLog, destPOI);
+        }
+        
     }
 
     public void Clearlist()
@@ -212,5 +240,6 @@ public class RouteWalkTimelineViz : MonoBehaviour
 
         //Debug.Log("POI Size: " + itemRectTransform.rect.width);
     }
+
 
 }

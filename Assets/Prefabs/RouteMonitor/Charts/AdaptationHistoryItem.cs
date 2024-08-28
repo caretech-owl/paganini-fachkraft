@@ -1,63 +1,72 @@
 
+using System.Collections.Generic;
+using System.Globalization;
 using UnityEngine;
-using UnityEngine.UI;
 using static PathpointPIM;
 
 public class AdaptationHistoryItem : MonoBehaviour
 {
-    // to be assigned on the editor
-    public SupportMode SelectionSupportMode;
-    public Button SelectionButton;
-    public TMPro.TMP_Text ModeName;
+    private static string DateFormat = "MMM dd";
+    public AdaptationPractice ModePractice;
+    public StatCard ModeIcon;
+    public TMPro.TMP_Text ModeNameText;
+    public TMPro.TMP_Text RouteWalkText;
 
-    private Toggle SelectionToggle;
-    private Outline SelectionOutline;
-    
+
+    // SupportModeLabel dictionary to map enum to string labels
+    private static readonly Dictionary<SupportMode, string> SupportModeLabel = new Dictionary<SupportMode, string>
+    {
+        { SupportMode.None, "Nicht zutreffend" },
+        { SupportMode.Instruction, "Normalmodus" },
+        { SupportMode.Trivia, "Quiz" },
+        { SupportMode.Challenge, "Herausforderung" },
+        { SupportMode.Mute, "Versteckmodus" }
+    };
 
     private void Awake()
     {
-        SelectionToggle = gameObject.GetComponent<Toggle>();
-        SelectionOutline = gameObject.GetComponent<Outline>();
-
-        // default
-        OnValueChanged(SelectionToggle.isOn);
-
-        SelectionToggle.onValueChanged.AddListener(OnValueChanged);
-
+        // Any initialization if needed
     }
+
     private void Start()
     {
-        //FillMode(SelectionSupportMode.ToString());
+        // FillMode(SelectionSupportMode.ToString());
     }
 
-    // public 
-    public SupportMode GetSupportMode()
+    // Method to fill the mode practiced
+    public void FillModePracticedMode(RouteWalk walk, RouteWalkEventLog adaptLog)
     {
-        return SelectionSupportMode;
+        //if (adaptLog != null)
+        //{
+        //    var mode = adaptLog.AdaptationSupportMode ?? SupportMode.Instruction;
+        //    ModePractice.RenderAdaptationPracticed(adaptLog);
+        //    ModeIcon.FillModes(new List<string> { mode.ToString() });            
+        //    ModeNameText.text = SupportModeLabel[mode];
+        //}
+        //else
+        //{
+        //    // NA
+        //    ModeIcon.FillModes(new List<string> { });
+        //    ModePractice.HideView();
+        //    ModeNameText.text = SupportModeLabel[SupportMode.None];
+        //}
+
+        SupportMode mode = SupportMode.Instruction;
+
+        if (adaptLog != null)
+        {
+            mode = adaptLog.AdaptationSupportMode ?? SupportMode.Instruction;
+            ModePractice.RenderAdaptationPracticed(adaptLog);
+        }
+        else
+        {
+            ModePractice.HideView();
+        }
+        
+        ModeIcon.FillModes(new List<string> { mode.ToString() });
+        ModeNameText.text = SupportModeLabel[mode];
+
+        string fmtDate = DateUtils.ConvertUTCDateToUTCString(walk.StartDateTime, DateFormat, CultureInfo.CurrentCulture);
+        RouteWalkText.text = fmtDate;
     }
-
-    public void RenderAsSelected(bool selected)
-    {
-        // outline when active
-        var outlineColor = SelectionOutline.effectColor;
-        outlineColor.a = selected ? 1 : 0;
-
-        SelectionOutline.effectColor = outlineColor;
-        SelectionButton.gameObject.SetActive(!selected);
-    }
-
-    public void FillMode(string name)
-    {
-        ModeName.text = name;
-    }
-
-    private void OnValueChanged(bool selected)
-    {
-
-        RenderAsSelected(selected);
-        // button selection when not active
-        //SelectionButton.gameObject.SetActive(!selected);
-
-    }
-
 }

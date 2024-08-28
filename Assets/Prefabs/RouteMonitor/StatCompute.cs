@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Linq;
 using MathNet.Numerics;
 using NetTopologySuite.Geometries;
 using NetTopologySuite.Triangulate;
@@ -30,10 +31,18 @@ public class StatCompute : PersistentLazySingleton<StatCompute>
         PathpointPIM.SupportMode.Mute
     };
 
-    private void Start()
+    public StatCompute()
     {
-        WalkSharedData = RouteWalkSharedData.Instance;
-        SharedData = RouteSharedData.Instance;
+        EnsureInit();
+    }
+
+    public void EnsureInit()
+    {
+        if (SharedData == null)
+        {
+            WalkSharedData = RouteWalkSharedData.Instance;
+            SharedData = RouteSharedData.Instance;
+        }
     }
 
     public class StatResults
@@ -140,6 +149,21 @@ public class StatCompute : PersistentLazySingleton<StatCompute>
             Instances = new() { };
         }
         public void AddEvent((RouteWalk, StatResults) eventLog)
+        {
+            InstanceEvents.Add(eventLog);
+        }
+    }
+
+    public class AdaptStats
+    {
+        // segment, duration, 
+        public List<(RouteWalk, RouteWalkEventLog)> InstanceEvents;
+
+        public AdaptStats()
+        {
+            InstanceEvents = new() { };
+        }
+        public void AddEvent((RouteWalk, RouteWalkEventLog) eventLog)
         {
             InstanceEvents.Add(eventLog);
         }
@@ -290,7 +314,10 @@ public class StatCompute : PersistentLazySingleton<StatCompute>
                 break;
 
             int poiIndex = errorList.FindIndex(e => e.TargetPOIId == poi.Id);
-            int segIndex = errorList.FindIndex(e => e.SegPOIStartId == poi.Id);
+            //int segIndex = errorList.FindIndex(e => e.SegPOIStartId == poi.Id);  // fix this, so we can collect also the segment info
+            int segIndex = WalkSharedData.PathpointLogList.FindIndex(p => p.SegPOIStartId == poi.Id &&
+                                                                       p.OnOffTrackEvent!= null);
+
 
             poiErrorCount = poiErrorCount + (poiIndex < 0 ? 0 : 1);
             segErrorCount = segErrorCount + (segIndex < 0 ? 0 : 1);
@@ -384,7 +411,8 @@ public class StatCompute : PersistentLazySingleton<StatCompute>
             stats.Duration.Sum += segment.DurationEvent;
             //calculate percentage of distance walked
             stats.CorrectDistance.Sum += 100 * (double)segment.DistanceCorrectlyWalked / (double)segment.DistanceWalked;
-            stats.WalkPace.Sum += ConvertPaceToMmh((double)segment.WalkingPace)??0;            
+            //stats.WalkPace.Sum += ConvertPaceToMmh((double)segment.WalkingPace)??0;
+            stats.WalkPace.Sum += ConvertPaceKph((double)segment.WalkingPace);
 
             //var errorList = eventList.FindAll(e => e.IsCorrectDecision == false);
             //stats.IncorrectDecisions.Sum += errorList.Count;
@@ -435,9 +463,7 @@ public class StatCompute : PersistentLazySingleton<StatCompute>
             if (segment != null)
             {
                 stats.Duration.Count++;
-            }
-            
-
+            }            
         }
 
         return stats;
@@ -525,15 +551,14 @@ public class StatCompute : PersistentLazySingleton<StatCompute>
             if (segment!= null)
             {
                 stats.Instances.Count++;
-            }
-            
-
+            }            
         }
 
         return stats;
     }
 
-    public CountStats CalculateCountAggregated(DecisionStats decisionStats, List<RouteWalkEventLog> eventsAtPOI, RouteWalkEventLogBase.RouteEvenLogType evenLogType)
+    public CountStats CalculateCountAggregated(DecisionStats decisionStats, List<RouteWalkEventLog> eventsAtPOI, RouteWalkEventLogBase.RouteEvenLogType evenLogType,
+                                               bool allPOIEvents = false)
     {
         var list = eventsAtPOI.FindAll(e => e.EvenLogType == evenLogType);
 
@@ -542,7 +567,7 @@ public class StatCompute : PersistentLazySingleton<StatCompute>
         // go over previous poi events
         foreach ((var walk, var decision) in decisionStats.DecisionEvents)
         {
-            var eventList = GetEventsAtPOI(walk, decision, evenLogType);
+            var eventList = GetEventsAtPOI(walk, decision, evenLogType, allPOIEvents);
 
             StatResults instanceEvent = new() { };
             foreach (var e in eventList)
@@ -569,16 +594,51 @@ public class StatCompute : PersistentLazySingleton<StatCompute>
             if (decision!= null)
             {
                 stats.Instances.Count++;
-            }
-            
-
+            }            
         }
 
         return stats;
     }
 
 
+    public AdaptStats CalculateSegAdaptHistory(int startPoiId, RouteWalkEventLog adaptation)
+    {
+        var lists = GetSegmentEvents(startPoiId, RouteWalkEventLogBase.RouteEvenLogType.Adaptation);
 
+        AdaptStats stats = new() { };
+
+        // go over previous poi events
+        foreach ((var walk, var adaptList) in lists)
+        {
+            var adapt = GetRelevantAdaptation(adaptList);
+            stats.AddEvent((walk, adapt));
+        }
+        stats.AddEvent((WalkSharedData.CurrentRouteWalk, adaptation));
+
+        return stats;
+    }
+
+    public AdaptStats CalculatePOIAdaptHistory(int poiId, RouteWalkEventLog adaptation)
+    {
+        var lists = GetPathpointEvents(poiId, RouteWalkEventLogBase.RouteEvenLogType.Adaptation);
+
+        AdaptStats stats = new() { };
+
+        // go over previous poi events
+        foreach ((var walk, var adaptList) in lists)
+        {
+            var adapt = GetRelevantAdaptation(adaptList);
+            stats.AddEvent((walk, adapt));
+        }
+        stats.AddEvent((WalkSharedData.CurrentRouteWalk, adaptation));
+
+        return stats;
+    }
+
+    public double ConvertPaceKph(double metersPerSecond)
+    {
+        return metersPerSecond * 3.6; // 1 m/s = 3.6 km/h
+    }
 
     public string ConvertPace(double metersPerSecond)
     {
@@ -606,6 +666,22 @@ public class StatCompute : PersistentLazySingleton<StatCompute>
 
     /*Data filtering*/
 
+    private RouteWalkEventLog GetRelevantAdaptation(List<RouteWalkEventLog> logEvents)
+    {
+        var adapList = logEvents.FindAll(e => e.EvenLogType == RouteWalkEventLogBase.RouteEvenLogType.Adaptation);
+        RouteWalkEventLog adaptation = null;
+        if (adapList.Count > 0)
+        {
+            adaptation = adapList.OrderBy(a => a.StartTimestamp).ToList().First();
+        }
+        else if (adapList.Count == 1)
+        {
+            adaptation = adapList.First();
+        }
+
+        return adaptation;
+    }
+
     private List<RouteWalkEventLog> GetEventsAtSegment(RouteWalk walk, RouteWalkEventLog segmentEvent, RouteWalkEventLogBase.RouteEvenLogType evenLogType)
     {
         if (segmentEvent == null)
@@ -620,17 +696,27 @@ public class StatCompute : PersistentLazySingleton<StatCompute>
         return list;
     }
 
-    private List<RouteWalkEventLog> GetEventsAtPOI(RouteWalk walk, RouteWalkEventLog poiEvent, RouteWalkEventLogBase.RouteEvenLogType evenLogType)
+    private List<RouteWalkEventLog> GetEventsAtPOI(RouteWalk walk, RouteWalkEventLog poiEvent, RouteWalkEventLogBase.RouteEvenLogType evenLogType, bool allPOIEvents = false)
     {
         if (poiEvent == null)
         {
             return new ();
         }
 
-        //var walk = WalkSharedData.PreviuosRouteWalks.Find(w => w.Id == poiEvent.RouteWalkId);
-        var list = walk.EventLogList.FindAll(e => e.StartTimestamp > poiEvent.StartTimestamp &&
+        List<RouteWalkEventLog> list = null;
+        
+        if (allPOIEvents)
+        {
+            list = walk.EventLogList.FindAll(e => e.TargetPOIId == poiEvent.TargetPOIId &&
+                                       e.EvenLogType == evenLogType);
+        }
+        else
+        {
+            list = walk.EventLogList.FindAll(e => e.StartTimestamp > poiEvent.StartTimestamp &&
                                        e.StartTimestamp < poiEvent.EndTimestamp &&
                                        e.EvenLogType == evenLogType);
+        }
+
         return list;
     }
 
@@ -670,10 +756,10 @@ public class StatCompute : PersistentLazySingleton<StatCompute>
         // If we have many events, we take the incorrect one
         if (poiEvents.Count > 1)
         {
-            decision = poiEvents.Find(e => e.IsCorrectDecision == false);
+            decision = poiEvents.Find(e => e.IsCorrectDecision == false && e.EvenLogType == RouteWalkEventLogBase.RouteEvenLogType.DecisionMade);
             if (decision == null)
             {
-                decision = poiEvents.Find(e => e.IsCorrectDecision == true);
+                decision = poiEvents.Find(e => e.IsCorrectDecision == true && e.EvenLogType == RouteWalkEventLogBase.RouteEvenLogType.DecisionMade);
             }
             else
             {

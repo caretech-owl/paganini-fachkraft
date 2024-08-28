@@ -101,11 +101,13 @@ public class RouteWalkStats : MonoBehaviour
         {
             ShowPanel(POIStats);
             RenderPOIStats();
+            OnPOICardSelected(true);
         }
         else if (walkEventType == RouteWalkItemEvent.RouteWalkEventType.SegmentSelected)
         {
             ShowPanel(SegmentStats);
             RenderSegmentStats();
+            OnSegmentCardSelected(true);
         }
         else
         {
@@ -114,31 +116,47 @@ public class RouteWalkStats : MonoBehaviour
 
         Debug.Log($"Item selected ({CurrentIndex}) POIId: {poi?.Id} Event: {walkEventType}");
 
-        OnPOICardSelected(true);
+        
     }
 
 
     public void OnPOICardSelected(bool value)
     {
-        if (!value) return;
-
+        if (!value && POICardGroup.AnyTogglesOn())
+        {            
+            return;
+        }
+            
         foreach ( var activeToggle in POICardGroup.ActiveToggles())
         {
             var card = activeToggle.GetComponent<StatCard>();
             Debug.Log(activeToggle.name + " - " + card.GetCardTitle());
             RenderPOIDetails(activeToggle.name, card.GetCardTitle());
-        }               
+        }
+
+        if (!POICardGroup.AnyTogglesOn())
+        {
+            POIDetailsViz.RenderBlankState();
+        }
     }
 
     public void OnSegmentCardSelected(bool value)
     {
-        if (!value) return;
+        if (!value && SegCardGroup.AnyTogglesOn())
+        {
+            return;
+        }
 
         foreach (var activeToggle in SegCardGroup.ActiveToggles())
         {
             var card = activeToggle.GetComponent<StatCard>();
             Debug.Log(activeToggle.name + " - " + card.GetCardTitle());
             RenderSegmentDetails(activeToggle.name, card.GetCardTitle());
+        }
+
+        if (!SegCardGroup.AnyTogglesOn())
+        {
+            SegDetailsViz.RenderBlankState();
         }
     }
 
@@ -153,15 +171,15 @@ public class RouteWalkStats : MonoBehaviour
         }
         else if (name == "DurationCard")
         {
-            POIDetailsViz.RenderChart(StatsData.POIDurationHistory);
+            POIDetailsViz.RenderChart(title, StatsData.POIDurationHistory, units: "Sek");
         }
         else if (name == "PauseCard")
         {            
-            POIDetailsViz.RenderChart(StatsData.POIPauseHistory);            
+            POIDetailsViz.RenderChart(title, StatsData.POIPauseHistory, units: "Sek");            
         }
         else if (name == "OfftrackCard" || name == "RecoveryCard")
         {
-            POIDetailsViz.RenderChartAggregated(StatsData.POIOfftrackCountHistory);
+            POIDetailsViz.RenderChartAggregated(title, StatsData.POIOfftrackCountHistory, units: "Fehler");
         }
     }
 
@@ -172,31 +190,31 @@ public class RouteWalkStats : MonoBehaviour
 
         if (name == "DistanceCard")
         {
-            SegDetailsViz.RenderChart(StatsData.SegDistanceHistory);
+            SegDetailsViz.RenderChart(title, StatsData.SegDistanceHistory, units : "%");
         }
         else if (name == "PauseCard")
         {
-            SegDetailsViz.RenderChart(StatsData.SegPauseHistory);
+            SegDetailsViz.RenderChart(title, StatsData.SegPauseHistory, units : "Sek");
         }
         else if (name == "DurationCard")
         {
-            SegDetailsViz.RenderChart(StatsData.SegDurationHistory);
+            SegDetailsViz.RenderChart(title, StatsData.SegDurationHistory, units: "Sek");
         }
         else if (name == "StopsCard")
         {
-            SegDetailsViz.RenderChart(StatsData.SegStopsHistory);
+            SegDetailsViz.RenderChart(title, StatsData.SegStopsHistory, units: "Sek");
         }
         else if (name == "WalkPaceCard")
         {
-            SegDetailsViz.RenderChart(StatsData.SegWalkPaceHistory);
+            SegDetailsViz.RenderChart(title, StatsData.SegWalkPaceHistory, units: "Km/h");
         }
         else if (name == "NudgesCard")
         {
-            SegDetailsViz.RenderChart(StatsData.SegNudgesHistory);
+            SegDetailsViz.RenderChart(title, StatsData.SegNudgesHistory, units: "Sek");
         }
         else if (name == "OfftrackCard" || name == "RecoveryCard")
         {
-            SegDetailsViz.RenderChartAggregated(StatsData.SegOfftrackCountHistory);
+            SegDetailsViz.RenderChartAggregated(title, StatsData.SegOfftrackCountHistory, units: "Fehler");
         }
     }
 
@@ -208,6 +226,7 @@ public class RouteWalkStats : MonoBehaviour
 
         // Render Adaptation component
         AdaptModeStats.RenderAdaptPOIStats(CurrentPOI, poiEvents);
+        AdaptModeStats.OnAdaptPOICardSelected(true);
 
         //1. Select the main Decision Event
         RouteWalkEventLog decision = WalkStatCompute.FilterRelevantDecision(poiEvents);
@@ -241,7 +260,7 @@ public class RouteWalkStats : MonoBehaviour
         // pause
         var pauseList = eventsAtPOI.FindAll(e => e.EvenLogType == RouteWalkEventLogBase.RouteEvenLogType.Paused);
         var pauseTimeStats = WalkStatCompute.CalculateTimeAggregated(stats, eventsAtPOI, RouteWalkEventLogBase.RouteEvenLogType.Paused);
-        POIPauseCard.FillCardTimeAggregated(pauseList, pauseTimeStats.Duration);        
+        POIPauseCard.FillCardTimeAggregated(pauseList, pauseTimeStats);        
 
         // recovery modes
         errorList = poiEvents.FindAll(e => e.EvenLogType == RouteWalkEventLogBase.RouteEvenLogType.Offtrack);
@@ -279,7 +298,7 @@ public class RouteWalkStats : MonoBehaviour
         StatsData.POICorrectHistory = stats.DecisionEvents.Select(e => (e.walk, e.log == null ? (bool?)null : e.log.IsCorrectDecision)).ToList();
         StatsData.POIPauseHistory = pauseTimeStats.TimeEvents.Select(e => (e.walk, e.stat == null ? (double?)null : e.stat.Sum / 1000))
                                                            .ToList();
-        var offtrackCountStats = WalkStatCompute.CalculateCountAggregated(stats, poiEvents, RouteWalkEventLogBase.RouteEvenLogType.Offtrack);
+        var offtrackCountStats = WalkStatCompute.CalculateCountAggregated(stats, poiEvents, RouteWalkEventLogBase.RouteEvenLogType.Offtrack, allPOIEvents: true);
         StatsData.POIOfftrackCountHistory = offtrackCountStats.InstanceEvents;
     }
 
@@ -295,18 +314,24 @@ public class RouteWalkStats : MonoBehaviour
 
         // We take the first walk over that path
         var segEvent = WalkSharedData.RouteWalkEventList.Find(e => e.SegPOIStartId == CurrentPOI.Id &&
-                                                                    e.SegReachedPOIEndId == nextPOI.Id);
+                                                                    e.SegReachedPOIEndId == nextPOI.Id &&
+                                                                    e.EvenLogType == RouteWalkEventLogBase.RouteEvenLogType.POIReached);
         
         if (segEvent == null)
         {
             ShowSegData(SegmentNoData);
+
+            AdaptModeStats.RenderAdaptSegmentStats(CurrentPOI, nextPOI, null);
+            AdaptModeStats.OnAdaptSegmentCardSelected(true);
             return;
         }
 
-        var eventsAtSeg = WalkSharedData.RouteWalkEventList.FindAll(e => e.StartTimestamp > segEvent.StartTimestamp &&
+        var eventsAtSeg = WalkSharedData.RouteWalkEventList.FindAll(e => e.StartTimestamp >= segEvent.StartTimestamp &&
                                                                     e.StartTimestamp < segEvent.EndTimestamp);
 
-        AdaptModeStats.RenderSegmentStats(nextPOI, eventsAtSeg);
+        AdaptModeStats.RenderAdaptSegmentStats(CurrentPOI, nextPOI, eventsAtSeg);
+        AdaptModeStats.OnAdaptSegmentCardSelected(true);
+
         ShowSegData(SegmentData);
 
         var stats = WalkStatCompute.CalculateSegmentStats(WalkSharedData.CurrentRouteWalk, segEvent);
@@ -323,8 +348,8 @@ public class RouteWalkStats : MonoBehaviour
         SegDistanceCard.FillCardGoodValueNumber(correctlyWalkedPerc, stats.CorrectDistance, valueUnit : "%");
 
         // pace
-        var pace = WalkStatCompute.ConvertPace((double)segEvent.WalkingPace); // convert to min / km
-        SegPaceCard.FillCardGoodValueNumber((double)segEvent.WalkingPace, stats.WalkPace, fmtText: pace);
+        var pace = WalkStatCompute.ConvertPaceKph((double)segEvent.WalkingPace); 
+        SegPaceCard.FillCardGoodValueNumber(pace, stats.WalkPace, decimals: 1, valueUnit: "km/h");
 
         // offtrack
 
@@ -334,17 +359,17 @@ public class RouteWalkStats : MonoBehaviour
         // pause
         var pauseList = eventsAtSeg.FindAll(e => e.EvenLogType == RouteWalkEventLogBase.RouteEvenLogType.Paused);
         var pauseTimeStats = WalkStatCompute.CalculateTimeAggregated(stats, eventsAtSeg, RouteWalkEventLogBase.RouteEvenLogType.Paused);
-        SegPauseCard.FillCardTimeAggregated(pauseList, pauseTimeStats.Duration);
+        SegPauseCard.FillCardTimeAggregated(pauseList, pauseTimeStats);
 
         // stop
         var stopList = eventsAtSeg.FindAll(e => e.EvenLogType == RouteWalkEventLogBase.RouteEvenLogType.Stopped);
         var stopTimeStats = WalkStatCompute.CalculateTimeAggregated(stats, eventsAtSeg, RouteWalkEventLogBase.RouteEvenLogType.Stopped);
-        SegStopsCard.FillCardTimeAggregated(stopList, stopTimeStats.Duration);
+        SegStopsCard.FillCardTimeAggregated(stopList, stopTimeStats);
 
         // attention nudges        
         var sleepList = eventsAtSeg.FindAll(e => e.EvenLogType == RouteWalkEventLogBase.RouteEvenLogType.Sleep);
         var sleepTimeStats = WalkStatCompute.CalculateTimeAggregated(stats, eventsAtSeg, RouteWalkEventLogBase.RouteEvenLogType.Sleep);
-        SegNudgeCard.FillCardTimeAggregated(sleepList, sleepTimeStats.Duration, isLowerBetter: false);
+        SegNudgeCard.FillCardTimeAggregated(sleepList, sleepTimeStats, isLowerBetter: false);
 
         // offtrack
         var errorList = eventsAtSeg.FindAll(e => e.EvenLogType == RouteWalkEventLogBase.RouteEvenLogType.Offtrack);
@@ -370,7 +395,7 @@ public class RouteWalkStats : MonoBehaviour
                                                            .ToList();
         StatsData.SegDurationHistory = stats.SegmentEvents.Select(e => (e.walk, e.log == null ? (double?)null : e.log.DurationEvent / 1000))
                                                            .ToList();
-        StatsData.SegWalkPaceHistory = stats.SegmentEvents.Select(e => (e.walk, e.log == null ? (double?)null : e.log.WalkingPace))
+        StatsData.SegWalkPaceHistory = stats.SegmentEvents.Select(e => (e.walk, e.log == null ? (double?)null : WalkStatCompute.ConvertPaceKph((double)e.log.WalkingPace)))
                                                            .ToList();
         StatsData.SegPauseHistory = pauseTimeStats.TimeEvents.Select(e => (e.walk, e.stat == null ? (double?)null : e.stat.Sum / 1000))
                                                            .ToList();
