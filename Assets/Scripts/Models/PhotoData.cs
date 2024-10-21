@@ -21,8 +21,9 @@ public class PhotoData : BaseModel<PhotoData>
     public PhotoData(IPhotoDataAPI photoAPI)
     {
         Id = photoAPI.photo_id;
-        if (photoAPI.photo != null && photoAPI.photo.Trim() != "")
-            Photo = Convert.FromBase64String(photoAPI.photo);
+        // if (photoAPI.photo != null && photoAPI.photo.Trim() != "")
+        //     Photo = Convert.FromBase64String(photoAPI.photo);
+        Photo = PictureUtils.ConvertBase64ToByteArray(photoAPI.photo);        
         LastUpdate = DateUtils.ConvertUTCStringToTsMilliseconds(photoAPI.last_update, "yyyy-MM-dd'T'HH:mm:ss");
 
         FromAPI = true;

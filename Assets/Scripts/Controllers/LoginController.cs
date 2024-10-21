@@ -105,7 +105,7 @@ public class LoginController : MonoBehaviour
         
     }
 
-    private void GetProfileSucceed(SocialWorkerAPI profile)
+    private void GetProfileSucceed(SocialWorkerAPIResult profile)
     {
         AppState.CurrenSocialWorker = new SocialWorker(profile);
         SceneSwitcher.LoadUserManager();

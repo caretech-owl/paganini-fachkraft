@@ -98,7 +98,11 @@ public class BaseModel<T> where T : BaseModel<T>, new()
     public static T Get(object pk)
     {
         var conn = DBConnector.Instance.GetConnection();
-        return conn.Get<T>(pk);
+        try {
+            return conn.Get<T>(pk);
+        } catch (InvalidOperationException e) {
+            return null;
+        }        
     }
 
     /// <summary>

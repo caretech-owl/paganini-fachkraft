@@ -22,6 +22,8 @@ namespace PaganiniRestAPI
         public const string SwUsersList = BaseUrl + "sw/users";
         public const string SwUsers = SwUsersList + "/{0}";
 
+        public const string SwUserPIN = SwUsers + "/pin";
+
         public const string SwWaysList =  SwUsers + "/ways";
         public const string SwWays = BaseUrl + "sw/ways/{0}";
 
@@ -84,7 +86,7 @@ namespace PaganiniRestAPI
             RESTAPI.Instance.Get<AuthTokenAPI>(Path.Authenticate, successCallback, errorCallback, headers);
         }
 
-        public static void GetProfile(UnityAction<SocialWorkerAPI> successCallback, UnityAction<string> errorCallback)
+        public static void GetProfile(UnityAction<SocialWorkerAPIResult> successCallback, UnityAction<string> errorCallback)
         {
             Dictionary<string, string> headers = new Dictionary<string, string>
             {
@@ -93,7 +95,7 @@ namespace PaganiniRestAPI
 
             string url = Path.SwProfile;
 
-            RESTAPI.Instance.Get<SocialWorkerAPI>(url, successCallback, errorCallback, headers);
+            RESTAPI.Instance.Get<SocialWorkerAPIResult>(url, successCallback, errorCallback, headers);
         }
     }
 
@@ -121,6 +123,22 @@ namespace PaganiniRestAPI
 
             RESTAPI.Instance.Get<UserAPIList>(Path.SwUsersList, successCallback, errorCallback, headers);
         }
+
+        public static void GeneratePIN(Int32 id, UnityAction<UserPinAPI> successCallback, UnityAction<string> errorCallback)
+        {
+            Dictionary<string, string> headers = new Dictionary<string, string>
+            {
+                { "apitoken", AppState.APIToken }                
+            };
+
+            string url = string.Format(Path.SwUserPIN, id);
+
+            
+            // empty body
+            var body = new BaseAPI();
+            RESTAPI.Instance.Post<UserPinAPI>(url, body, successCallback, errorCallback, headers);
+        }
+
 
     }
 

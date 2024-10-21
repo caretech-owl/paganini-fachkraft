@@ -14,6 +14,9 @@ public class UserListPrefab : MonoBehaviour
     public GameObject BlankState;
 
     public UserItemEvent OnItemSelected;
+    public UserItemEvent OnSettingSelected;
+
+    private Transform optionTransform = null;
 
     // Start is called before the first frame update
     void Start()
@@ -38,19 +41,48 @@ public class UserListPrefab : MonoBehaviour
             GameObject child = content.GetChild(i).gameObject;
 
             // Destroy the child game object
-            Destroy(child);
+            if (!child.name.Contains("Option"))
+            {
+                Destroy(child);
+            }
+            else 
+            {
+                optionTransform = child.transform;
+            }
         }
     }
 
-    public void AddItem(User u)
+    public void AddItemSimple(User u)
     {
         var neu = Instantiate(ItemPrefab, Content.transform);
 
         UserItemPrefab item = neu.GetComponent<UserItemPrefab>();
         item.OnSelected = OnItemSelected;
+        item.OnSettingSelected = OnSettingSelected;
         item.FillUser(u);
 
     }
 
+    public void AddItem(User u)
+    {
+        // Instantiate the new item
+        var neu = Instantiate(ItemPrefab);
+
+        UserPicItem item = neu.GetComponent<UserPicItem>();
+        item.OnSelected = OnItemSelected;
+        item.FillUser(u);
+
+        // Insert the new item before the "Option"
+        if (optionTransform != null)
+        {
+            neu.transform.SetParent(Content.transform, false);
+            neu.transform.SetSiblingIndex(optionTransform.GetSiblingIndex());
+        }
+        else
+        {
+            // If "Option" doesn't exist, just add it as the last child
+            neu.transform.SetParent(Content.transform, false);
+        }
+    }
 
 }
