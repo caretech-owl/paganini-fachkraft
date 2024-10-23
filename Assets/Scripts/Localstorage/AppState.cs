@@ -11,6 +11,7 @@ public class AppState
 
     public static int ScreenSleepTimeout = Screen.sleepTimeout;
 
+    public static string CurrentMenuOption = null;
     public static User CurrentUser = null;
     public static Route CurrentRoute = null;
     public static Way CurrentWay = null;
@@ -23,7 +24,7 @@ public class AppState
         public static bool ShowPracticeModeInTimeline = true;
         public static bool UpdatedModeInTimeline = false;
         public static Pathpoint UpdatedModePOI = null;
-    }
+    }    
 
     public static void ResetValues()
     {

@@ -15,6 +15,13 @@ public class MainMenu : MonoBehaviour
     public RawImage SWPhoto;
     public TMPro.TMP_Text SWName;
 
+    public static class MenuOptions{
+        public const string LOGOUT = "OptionLogout";
+        public const string SWITCH_USER = "OptionSwitchUser";
+        public const string SW_PROFILE = "OptionSWProfile";
+    }
+
+
     // Start is called before the first frame update
     void Start()
     {
@@ -26,6 +33,7 @@ public class MainMenu : MonoBehaviour
         RenderPicture(AppState.CurrenSocialWorker.ProfilePic);
         SWName.text = AppState.CurrenSocialWorker.Firstname + " " + AppState.CurrenSocialWorker.Surname;
 
+        SetupMenuOptions();
 
     }
 
@@ -77,10 +85,54 @@ public class MainMenu : MonoBehaviour
 
     }    
 
+    public void SetCurrentOption(string option)
+    {
+        AppState.CurrentMenuOption = option;
+
+        foreach (MainMenuOption menuOption in Menu.GetComponentsInChildren<MainMenuOption>())
+        {
+            if (menuOption.name == option){
+                menuOption.EnableOption(false);
+            }
+            
+        }
+    }
+
+    // Attach OptionSelected to all the MainMenuOption buttons in the menu
+    private void SetupMenuOptions()
+    {
+        foreach (MainMenuOption option in Menu.GetComponentsInChildren<MainMenuOption>())
+        {
+            option.OnOptionSelected.AddListener(OptionSelected);
+
+            if (option.name == AppState.CurrentMenuOption)
+            {
+                option.EnableOption(false);
+            }            
+        }
+    }
+
+    // Save the name of the option selected
+    private void OptionSelected(string option)
+    {
+        AppState.CurrentMenuOption = option;
+    }
+
+
     private void OnDestroy()
     {
         ButtonOpen.onClick.RemoveAllListeners();
         ButtonClose.onClick.RemoveAllListeners();
+
+        if (SWPhoto.texture != null)
+        {
+            DestroyImmediate(SWPhoto.texture, true);
+        }
+
+        foreach (MainMenuOption option in Menu.GetComponentsInChildren<MainMenuOption>())
+        {
+            option.OnOptionSelected.RemoveAllListeners();
+        }
     }
 
     private void RenderCanOpen(bool canOpen){

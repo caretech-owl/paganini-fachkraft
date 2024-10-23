@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class UserProfilePrefab : MonoBehaviour
+public class UserProfileView : MonoBehaviour
 {
 
     public TMPro.TMP_Text UserName;

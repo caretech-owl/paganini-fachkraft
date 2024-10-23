@@ -63,7 +63,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   m_Material: {fileID: 0}
-  m_Color: {r: 0.96862745, g: 0.96862745, b: 0.96862745, a: 1}
+  m_Color: {r: 0.9490196, g: 0.9490196, b: 0.9490196, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -153,6 +153,12 @@ MonoBehaviour:
   CellStatus: {fileID: 0}
   CellText: {fileID: 5541569172661467650}
   Icon: {fileID: 0}
+  StatusCleaning: {r: 0, g: 0, b: 0, a: 0}
+  StatusDiscussion: {r: 0, g: 0, b: 0, a: 0}
+  StatusAdaptation: {r: 0, g: 0, b: 0, a: 0}
+  StatusTraining: {r: 0, g: 0, b: 0, a: 0}
+  StatusDiscarded: {r: 0, g: 0, b: 0, a: 0}
+  StatusCompleted: {r: 0, g: 0, b: 0, a: 0}
 --- !u!1 &5541569172661467648
 GameObject:
   m_ObjectHideFlags: 0
@@ -221,8 +227,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: TEXT
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 142c2ddb665de41df9d3e851a24ac22f, type: 2}
-  m_sharedMaterial: {fileID: 7595629214201676813, guid: 142c2ddb665de41df9d3e851a24ac22f, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: c50986a038e6146e4bdc67610bf42a3b, type: 2}
+  m_sharedMaterial: {fileID: -2345321288824047370, guid: c50986a038e6146e4bdc67610bf42a3b, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -246,8 +252,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 18
-  m_fontSizeBase: 18
+  m_fontSize: 24
+  m_fontSizeBase: 24
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
