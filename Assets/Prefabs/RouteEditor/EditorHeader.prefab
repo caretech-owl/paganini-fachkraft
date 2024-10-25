@@ -498,6 +498,14 @@ PrefabInstance:
       propertyPath: m_Name
       value: TextSubtitle
       objectReference: {fileID: 0}
+    - target: {fileID: 4136446415043833921, guid: a93b37c323c684e6490302335e0a2f69, type: 3}
+      propertyPath: m_fontAsset
+      value: 
+      objectReference: {fileID: 11400000, guid: a3ede465601494eb9a1c576a2abd8cfd, type: 2}
+    - target: {fileID: 4136446415043833921, guid: a93b37c323c684e6490302335e0a2f69, type: 3}
+      propertyPath: m_sharedMaterial
+      value: 
+      objectReference: {fileID: -42061584970086935, guid: a3ede465601494eb9a1c576a2abd8cfd, type: 2}
     - target: {fileID: 8214600101566560729, guid: a93b37c323c684e6490302335e0a2f69, type: 3}
       propertyPath: m_Pivot.x
       value: 0

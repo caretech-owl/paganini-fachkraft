@@ -782,7 +782,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4f3d8737913f94867a57c93000daf764, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  Label: {fileID: 0}
+  OnOptionSelected:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!114 &1454756296755330236
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1889,6 +1891,22 @@ PrefabInstance:
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: 3286163911610860551, guid: 8cd0dd7becfbc4bc2b826db6fafd907e, type: 3}
+    - target: {fileID: 7437509872436851138, guid: 1f861f2b15de846b39d6db31fb951781, type: 3}
+      propertyPath: m_Color.a
+      value: 0.9490196
+      objectReference: {fileID: 0}
+    - target: {fileID: 7437509872436851138, guid: 1f861f2b15de846b39d6db31fb951781, type: 3}
+      propertyPath: m_Color.b
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7437509872436851138, guid: 1f861f2b15de846b39d6db31fb951781, type: 3}
+      propertyPath: m_Color.g
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7437509872436851138, guid: 1f861f2b15de846b39d6db31fb951781, type: 3}
+      propertyPath: m_Color.r
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1f861f2b15de846b39d6db31fb951781, type: 3}
 --- !u!114 &3389829100837466750 stripped
@@ -2287,6 +2305,22 @@ PrefabInstance:
       propertyPath: m_Sprite
       value: 
       objectReference: {fileID: 3286163911610860551, guid: 1b561ecfc5a344356bf3b199bd517e92, type: 3}
+    - target: {fileID: 7437509872436851138, guid: 1f861f2b15de846b39d6db31fb951781, type: 3}
+      propertyPath: m_Color.a
+      value: 0.9490196
+      objectReference: {fileID: 0}
+    - target: {fileID: 7437509872436851138, guid: 1f861f2b15de846b39d6db31fb951781, type: 3}
+      propertyPath: m_Color.b
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7437509872436851138, guid: 1f861f2b15de846b39d6db31fb951781, type: 3}
+      propertyPath: m_Color.g
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7437509872436851138, guid: 1f861f2b15de846b39d6db31fb951781, type: 3}
+      propertyPath: m_Color.r
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 1f861f2b15de846b39d6db31fb951781, type: 3}
 --- !u!224 &1775360693253845857 stripped
