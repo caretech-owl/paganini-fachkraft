@@ -36,13 +36,15 @@ public class User : BaseModel<User>
         this.Canread = profil.user_canread;
         this.Activatetts = profil.user_activatetts;
         this.Vibration = profil.user_vibration;
-        this.Contact = profil.user_contact;
+        this.Contact = profil.user_contact;        
 
         if (profil.user_workshop != null)
         {
             AtWorkshop = new Workshop(profil.user_workshop);
             WorkshopId = AtWorkshop.Id;        
         }
+
+        this.FromAPI = true;        
     }
 
     public UserAPI ToAPI()
@@ -59,6 +61,9 @@ public class User : BaseModel<User>
             user_vibration = this.Vibration,
             user_contact = this.Contact
         };
+
+        user.IsNew = !FromAPI;
+
         return user;
     }
 

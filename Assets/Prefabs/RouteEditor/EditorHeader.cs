@@ -2,10 +2,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class EditorHeader : MonoBehaviour
 {
     public TMPro.TMP_Text HeaderText;
+    public ToggleGroup StatusIconGroup;
 
     private RouteSharedData SharedData;
     private Route.RouteStatus CurrentStatus;
@@ -39,17 +41,18 @@ public class EditorHeader : MonoBehaviour
         {
             return;
         }
-        else if (SharedData.CurrentRoute.Status == Route.RouteStatus.New)
+
+        HeaderText.text = SharedData.CurrentRoute.Name;
+
+        // activate the icon based on the status
+        foreach (Transform child in StatusIconGroup.transform)
         {
-            HeaderText.text = "Cleaning";
-        }
-        else if (SharedData.CurrentRoute.Status == Route.RouteStatus.DraftPrepared)
-        {
-            HeaderText.text = "Diskussion";
-        }
-        else if (SharedData.CurrentRoute.Status == Route.RouteStatus.Training)
-        {
-            HeaderText.text = "Training";
-        }
+            Toggle toggle = child.GetComponent<Toggle>();
+            if (toggle != null && toggle.name.Contains(SharedData.CurrentRoute.Status.ToString()))
+            {
+                toggle.isOn = true;
+                break;
+            }
+        }        
     }
 }

@@ -26,7 +26,7 @@ public class RouteStepChange : MonoBehaviour
     void Awake()
     {
         SharedData = RouteSharedData.Instance;
-        SharedData.OnDataUploadError.AddListener(RouteSharedData_OnDataUploadError);
+        SharedData.OnDataUploadError += RouteSharedData_OnDataUploadError;
     }
 
 
@@ -133,7 +133,7 @@ public class RouteStepChange : MonoBehaviour
         SharedData.UploadWayDefinition();
     }
 
-    private void RouteSharedData_OnDataUploadError(string message) {
+    private void RouteSharedData_OnDataUploadError(object e, string message) {
         LoadView(ErrorState);
     }
 
@@ -142,6 +142,11 @@ public class RouteStepChange : MonoBehaviour
         DataState.SetActive(view == DataState);
         ErrorState.SetActive(view == ErrorState);
         DeleteState.SetActive(view == DeleteState);
+    }
+
+    private void OnDestroy()
+    {
+        SharedData.OnDataUploadError -= RouteSharedData_OnDataUploadError;
     }
 
 }

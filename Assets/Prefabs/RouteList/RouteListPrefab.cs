@@ -18,6 +18,7 @@ public class RouteListPrefab : MonoBehaviour
 
     [Header("Events")]
     public RouteItemEvent OnItemSelected;
+    public RouteItemEvent OnItemEdit;
 
     private int dataCount;
 
@@ -65,6 +66,7 @@ public class RouteListPrefab : MonoBehaviour
 
             RouteItemPrefab item = neu.GetComponent<RouteItemPrefab>();
             item.OnSelected = OnItemSelected;
+            item.OnRouteEdit = OnItemEdit;
             item.FillWayRoute(w, route);
 
             dataCount++;
@@ -114,9 +116,5 @@ public class RouteListPrefab : MonoBehaviour
         BlankState.SetActive(view == BlankState);
         LoadingState.SetActive(view == LoadingState);
     }
-
-
-
-
 
 }

@@ -14,6 +14,28 @@ public class SceneSwitcher : MonoBehaviour
 
     public static void LoadUserManager()
     {
+        AppState.CurrentMenuOption = MainMenu.MenuOptions.SWITCH_USER;
+        AppState.CurrentDeepLink = UserManagerController.DEEP_LINK_USER_SELECTION;
+        SceneManager.LoadScene(UserManageScene);
+
+        // Restore default screen dimming timeout
+        Screen.sleepTimeout = AppState.ScreenSleepTimeout;
+    }
+
+    public static void LoadUserProfile()
+    {
+        AppState.CurrentMenuOption = null;
+        AppState.CurrentDeepLink = UserManagerController.DEEP_LINK_USER_PROFILE;
+        SceneManager.LoadScene(UserManageScene);
+
+        // Restore default screen dimming timeout
+        Screen.sleepTimeout = AppState.ScreenSleepTimeout;
+    }
+
+    public static void LoadSWProfile()
+    {
+        AppState.CurrentMenuOption = null;
+        AppState.CurrentDeepLink = UserManagerController.DEEP_LINK_SW_PROFILE;
         SceneManager.LoadScene(UserManageScene);
 
         // Restore default screen dimming timeout

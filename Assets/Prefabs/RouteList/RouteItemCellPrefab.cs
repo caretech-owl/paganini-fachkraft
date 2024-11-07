@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
 using static Route;
@@ -8,15 +10,18 @@ public class RouteItemCellPrefab : MonoBehaviour
     public GameObject CellStatus;
     public TMPro.TMP_Text CellText;
     public LandmarkIcon Icon;
+    public Slider ProgressSlider;
 
-    public  Color StatusCleaning;
-    public  Color StatusDiscussion;
-    public  Color StatusAdaptation;
-    public  Color StatusTraining;
-    public  Color StatusDiscarded;
-    public  Color StatusCompleted;
+    [Header("Status Icons")]
+    public  GameObject StatusCleaning;
+    public  GameObject StatusDiscussion;
+    public  GameObject StatusTraining;
+    public  GameObject StatusDiscarded;
+    public  GameObject StatusCompleted;
 
-    private Dictionary<RouteStatus, Color> StatusColor;
+    [Header("Completion Colors")]
+    public Color WalkCompletedColor;
+    public Color WalkIncompletedColor;
 
     void Awake () {
         
@@ -47,12 +52,32 @@ public class RouteItemCellPrefab : MonoBehaviour
         CellText.text = text;
     }
 
+    public void SetProgress(double progress)
+    {
+        ProgressSlider.value = (float)progress;
+        SetCellText(Math.Round(progress * 100).ToString());
+    }
+
     public void SetCellStatus(RouteStatus status)
     {
-        SetupColors();
-        //CellStatus.SetActive(status);
+        StatusCleaning.SetActive(status == RouteStatus.New);
+        StatusDiscussion.SetActive(status == RouteStatus.DraftPrepared);
+        StatusTraining.SetActive(status == RouteStatus.Training);
+        StatusCompleted.SetActive(status == RouteStatus.Completed);
+        StatusDiscarded.SetActive(status == RouteStatus.Discarded);
+    }    
+
+    public void SetCompletedStatus(bool completed, bool renderEmpty = false)
+    {
         Image image = CellStatus.GetComponent<Image>();
-        image.color = StatusColor[status];
+
+        if (renderEmpty)
+        {
+            image.gameObject.SetActive(false);
+            return;
+        }
+
+        image.color = completed? WalkCompletedColor : WalkIncompletedColor;
     }
 
     public void SetCellIcon(LandmarkIcon.LandmarkType iconType)
@@ -66,18 +91,13 @@ public class RouteItemCellPrefab : MonoBehaviour
         
     }
 
-    private void SetupColors() {
-        if (StatusColor != null) return;
-
-        StatusColor = new Dictionary<RouteStatus, Color>()
-            {
-                { RouteStatus.New,  StatusCleaning},
-                { RouteStatus.DraftPrepared, StatusDiscussion},
-                { RouteStatus.DraftNegotiated, StatusAdaptation },
-                { RouteStatus.Training, StatusTraining},
-                { RouteStatus.Completed, StatusCompleted },
-                { RouteStatus.Discarded, StatusDiscarded},
-            };
+    private void SetupColors(RouteStatus status) {
+        
+        StatusCleaning.SetActive(status == RouteStatus.New);
+        StatusDiscussion.SetActive(status == RouteStatus.DraftPrepared);
+        StatusTraining.SetActive(status == RouteStatus.Training);
+        StatusCompleted.SetActive(status == RouteStatus.Completed);
+        StatusDiscarded.SetActive(status == RouteStatus.Discarded);
     }
 
 

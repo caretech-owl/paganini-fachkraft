@@ -7,11 +7,12 @@ public class AppState
 {
 
     public static string APIToken = null;
-    public static SocialWorker CurrenSocialWorker = null;
+    public static Observable<SocialWorker> CurrentSocialWorker = new Observable<SocialWorker>();
 
     public static int ScreenSleepTimeout = Screen.sleepTimeout;
 
     public static string CurrentMenuOption = null;
+    public static string CurrentDeepLink = null;
     public static User CurrentUser = null;
     public static Route CurrentRoute = null;
     public static Way CurrentWay = null;
@@ -29,7 +30,7 @@ public class AppState
     public static void ResetValues()
     {
         APIToken = null;
-        CurrenSocialWorker = null;
+        CurrentSocialWorker.Reset();
 
         ScreenSleepTimeout = Screen.sleepTimeout;
 

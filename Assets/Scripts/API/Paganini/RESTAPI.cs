@@ -121,6 +121,8 @@ public class RESTAPI : PersistentLazySingleton<RESTAPI>
 
         yield return request.SendWebRequest();
 
+        Debug.Log(request.method + " " + request.url);
+
         try
         {
             if (request.isNetworkError || (request.responseCode != 200 && request.responseCode != 201 && request.responseCode != 204))

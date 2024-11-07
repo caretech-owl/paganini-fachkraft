@@ -5,12 +5,13 @@ using UnityEngine;
 public class RouteExplorerController : MonoBehaviour
 {
     public GameObject RouteListView;
-    public TMPro.TMP_Text WelcomeText;
     private RouteListPrefab RouteList;
 
     private void Awake()
     {
         DBConnector.Instance.Startup();
+
+        AppState.CurrentMenuOption = null;
     }
 
     // Start is called before the first frame update
@@ -39,6 +40,10 @@ public class RouteExplorerController : MonoBehaviour
         foreach (var way in list)
         {
             way.Routes = Route.GetRouteListByWay(way.Id);
+            foreach (var route in way.Routes)
+            {
+                route.LastRouteWalk = RouteWalk.Get(route.LastRouteWalkId);
+            }
             RouteList.AddItem(way);
         }
         RouteList.FinishLoading();
@@ -170,10 +175,20 @@ public class RouteExplorerController : MonoBehaviour
                         {
                             localRoute.LastRouteWalkId = rres.last_routewalk.rw_id;
                             localRoute.Insert();
-                        }
-                        
 
-                    }                    
+                            RouteWalk rw = new RouteWalk(rres.last_routewalk);
+                            rw.Insert();
+                        }                        
+
+                    }  
+
+                    // we insert the last route walk locally (if there a new one from the api)
+                    if (rres.last_routewalk != null)
+                    {
+                        RouteWalk rw = new RouteWalk(rres.last_routewalk);
+                        rw.Insert();
+                    }         
+
                 }
             }            
         }

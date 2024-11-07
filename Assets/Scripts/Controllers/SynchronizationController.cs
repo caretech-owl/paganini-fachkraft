@@ -126,9 +126,9 @@ public class SynchronizationController : MonoBehaviour
         // TODO: The social worker profile should be
         // available in the environment. This should
         // be the name of the logged in user
-        FTS._deviceName = $"{AppState.CurrenSocialWorker.Firstname} {AppState.CurrenSocialWorker.Surname},SWR";
+        FTS._deviceName = $"{AppState.CurrentSocialWorker.Data.Firstname} {AppState.CurrentSocialWorker.Data.Surname},SWR";
 
-        SyncState.Instance.TabletName = $"{AppState.CurrenSocialWorker.Firstname} {AppState.CurrenSocialWorker.Surname}";
+        SyncState.Instance.TabletName = $"{AppState.CurrentSocialWorker.Data.Firstname} {AppState.CurrentSocialWorker.Data.Surname}";
     }
 
 
@@ -174,7 +174,7 @@ public class SynchronizationController : MonoBehaviour
         Screen.sleepTimeout = SleepTimeout.NeverSleep;
 
         SyncState.Instance.ClearValues();
-        SyncState.Instance.TabletName = $"{AppState.CurrenSocialWorker.Firstname} {AppState.CurrenSocialWorker.Surname}";
+        SyncState.Instance.TabletName = $"{AppState.CurrentSocialWorker.Data.Firstname} {AppState.CurrentSocialWorker.Data.Surname}";
 
     }
 

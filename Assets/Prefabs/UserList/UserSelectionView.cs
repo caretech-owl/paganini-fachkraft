@@ -34,7 +34,7 @@ public class UserSelectionView : MonoBehaviour
     }
 
     public void InitialiseView(){
-        OrganisationTitle.text = AppState.CurrenSocialWorker.AtWorkshop.Name;
+        OrganisationTitle.text = AppState.CurrentSocialWorker.Data.AtWorkshop.Name;
         UserList = UserListView.GetComponent<UserListPrefab>();
 
         PaganiniRestAPI.User.GetAll(GetUserSucceeded, GetUserFailed);
@@ -58,6 +58,7 @@ public class UserSelectionView : MonoBehaviour
     /// <param name="users"></param>             
     private void UpdateLocalUserList(UserAPIList users)
     {        
+        User.DeleteNonDirtyCopies();
         foreach (var userRes in users.users)
         {
             var localUser = User.Get(userRes.user_id);
@@ -65,17 +66,17 @@ public class UserSelectionView : MonoBehaviour
 
             if (localUser == null)
             {
-                apiUser.WorkshopId = AppState.CurrenSocialWorker.AtWorkshop.Id;
+                apiUser.WorkshopId = AppState.CurrentSocialWorker.Data.AtWorkshop.Id;
                 apiUser.Insert();
             }
             else
             {
+                apiUser.WorkshopId = AppState.CurrentSocialWorker.Data.AtWorkshop.Id;
                 if (localUser.ProfilePic != null)
-                {
-                    apiUser.WorkshopId = AppState.CurrenSocialWorker.AtWorkshop.Id;
-                    apiUser.ProfilePic = localUser.ProfilePic;
-                    apiUser.Insert();
+                {                    
+                    apiUser.ProfilePic = localUser.ProfilePic;                    
                 }
+                apiUser.InsertDirty();
             }
         }
     }    
@@ -85,7 +86,7 @@ public class UserSelectionView : MonoBehaviour
     /// </summary>
     private void DisplayUserList()
     {
-        List<User> list = User.GetAll( u => u.WorkshopId == AppState.CurrenSocialWorker.AtWorkshop.Id);      
+        List<User> list = User.GetAll( u => u.WorkshopId == AppState.CurrentSocialWorker.Data.AtWorkshop.Id);      
 
         foreach (var item in list)
         {

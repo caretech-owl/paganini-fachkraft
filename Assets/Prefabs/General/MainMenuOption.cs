@@ -15,7 +15,7 @@ public class MainMenuOption : MonoBehaviour
     public UnityEvent<string> OnOptionSelected;
 
     // Start is called before the first frame update
-    void Start()
+    void Awake()
     {
         OptionButton = GetComponent<Button>();
         OptionButton.onClick.AddListener(OptionSelected);

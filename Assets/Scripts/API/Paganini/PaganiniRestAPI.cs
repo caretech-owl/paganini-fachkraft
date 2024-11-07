@@ -97,6 +97,19 @@ namespace PaganiniRestAPI
 
             RESTAPI.Instance.Get<SocialWorkerAPIResult>(url, successCallback, errorCallback, headers);
         }
+
+        public static void Update(SocialWorkerAPIUpdate user, UnityAction<SocialWorkerAPIResult> successCallback, UnityAction<string> errorCallback)
+        {
+            Dictionary<string, string> headers = new Dictionary<string, string>
+            {
+                { "apitoken", AppState.APIToken }
+            };
+
+            string url = Path.SwProfile;  
+            RESTAPI.Instance.PutMultipart<SocialWorkerAPIResult>(url, user, user.files, successCallback, errorCallback, headers);
+
+        }
+        
     }
 
     public class User
@@ -124,6 +137,24 @@ namespace PaganiniRestAPI
             RESTAPI.Instance.Get<UserAPIList>(Path.SwUsersList, successCallback, errorCallback, headers);
         }
 
+        public static void CreateOrUpdate(UserAPI user, UnityAction<UserAPIResult> successCallback, UnityAction<string> errorCallback)
+        {
+            Dictionary<string, string> headers = new Dictionary<string, string>
+            {
+                { "apitoken", AppState.APIToken }
+            };
+
+            if (user.IsNew)
+            {
+                RESTAPI.Instance.Post<UserAPIResult>(Path.SwUsersList, user, successCallback, errorCallback, headers);
+            }
+            else
+            {
+                string url = string.Format(Path.SwUsers, user.user_id);     
+                RESTAPI.Instance.Put<UserAPIResult>(url, user, successCallback, errorCallback, headers);
+            }
+        }
+
         public static void GeneratePIN(Int32 id, UnityAction<UserPinAPI> successCallback, UnityAction<string> errorCallback)
         {
             Dictionary<string, string> headers = new Dictionary<string, string>
@@ -132,13 +163,11 @@ namespace PaganiniRestAPI
             };
 
             string url = string.Format(Path.SwUserPIN, id);
-
             
             // empty body
             var body = new BaseAPI();
             RESTAPI.Instance.Post<UserPinAPI>(url, body, successCallback, errorCallback, headers);
-        }
-
+        }        
 
     }
 

@@ -24,6 +24,9 @@ public class Route : BaseModel<Route>
     public bool? IsPIMUpdated { set; get; }
 
     public int RouteWalkCount { set; get; }
+    public System.DateTime RouteWalkStart { set; get; }
+    public System.DateTime RouteWalkEnd { set; get; }
+    public System.DateTime FirstRouteWalkDate { set; get; }
     public int? LastRouteWalkId { set; get; }
     public long? LastUpdate { set; get; }
 
@@ -86,7 +89,16 @@ public class Route : BaseModel<Route>
         {
             LastRouteWalkId = erw.last_routewalk.rw_id;
             LastRouteWalk = new RouteWalk(erw.last_routewalk);
+
+            RouteWalkStart = LastRouteWalk.StartDateTime;
+            RouteWalkEnd = LastRouteWalk.EndDateTime;
         }
+
+        if (erw.first_training_date!=null)
+        {
+            FirstRouteWalkDate = (DateTime)DateUtils.ConvertUTCStringToUTCDate(erw.first_training_date, "yyyy-MM-dd'T'HH:mm:ss");
+        }
+
     }
 
     public RouteAPI ToAPI()

@@ -27,8 +27,8 @@ public class RouteSharedData : PersistentLazySingleton<RouteSharedData>
     public event EventHandler OnDataPartiallyDownloaded;
     public event EventHandler OnDataDownloaded;
     public event EventHandler OnDataUploaded;
-    public SharedDataErrorHandler OnDataUploadError;
-    public SharedDataErrorHandler OnDataDownloadError;
+    public EventHandler<string> OnDataUploadError;
+    public EventHandler<string> OnDataDownloadError;
 
     public enum EditorMode
     {
@@ -174,7 +174,7 @@ public class RouteSharedData : PersistentLazySingleton<RouteSharedData>
     {
         Debug.Log(errorMessage);
 
-        OnDataUploadError?.Invoke("Error discarding route: " + errorMessage);
+        OnDataUploadError?.Invoke(this, "Error discarding route: " + errorMessage);
     }
 
     #endregion
@@ -765,7 +765,7 @@ public class RouteSharedData : PersistentLazySingleton<RouteSharedData>
     {
         Debug.Log(errorMessage);
 
-        OnDataUploadError?.Invoke(errorMessage);
+        OnDataUploadError?.Invoke(this, errorMessage);
     }
 
     /// <summary>
@@ -776,7 +776,7 @@ public class RouteSharedData : PersistentLazySingleton<RouteSharedData>
     {
         Debug.Log(errorMessage);
 
-        OnDataDownloadError?.Invoke(errorMessage);
+        OnDataDownloadError?.Invoke(this, errorMessage);
     }
 
 

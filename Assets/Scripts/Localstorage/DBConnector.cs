@@ -45,7 +45,7 @@ public class DBConnector : PersistentLazySingleton<DBConnector>
 
     private void CreateTables()
     {
-        this.connection.CreateTable<User>();
+        this.connection.CreateTable<SocialWorker>();
         this.connection.CreateTable<Pathpoint>();
         this.connection.CreateTable<AuthToken>();
         this.connection.CreateTable<Route>();
@@ -62,7 +62,7 @@ public class DBConnector : PersistentLazySingleton<DBConnector>
 
     public void TruncateTables()
     {
-        this.connection.DeleteAll<User>();
+        this.connection.DeleteAll<SocialWorker>();
         this.connection.DeleteAll<AuthToken>();
         this.connection.DeleteAll<Pathpoint>();
         this.connection.DeleteAll<Route>();
@@ -81,7 +81,7 @@ public class DBConnector : PersistentLazySingleton<DBConnector>
     {
         try
         {
-            this.connection.DropTable<User>();
+            this.connection.DropTable<SocialWorker>();
         }
         catch { }
         try

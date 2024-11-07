@@ -77,22 +77,22 @@ public class ServerCommunication : PersistentLazySingleton<ServerCommunication>
 
         yield return www.SendWebRequest();
 
-        if (www.isNetworkError)
+        if (www.result == UnityWebRequest.Result.ConnectionError)
         {
             Debug.LogError(www.error);
             callbackOnFail?.Invoke("NetworkError");
         }
-        else if (www.isHttpError && www.responseCode >= 500)
+        else if (www.result == UnityWebRequest.Result.ProtocolError && www.responseCode >= 500)
         {
             Debug.LogError(www.error);
             callbackOnFail?.Invoke("ServerError");
         }
-        else if (www.isHttpError && www.responseCode == 401)
+        else if (www.result == UnityWebRequest.Result.ProtocolError && www.responseCode == 401)
         {
             Debug.LogError(www.error);
             callbackOnFail?.Invoke("Unauthorised");
         }
-        else if (www.isHttpError)
+        else if (www.result == UnityWebRequest.Result.ProtocolError)
         {
             Debug.LogError(www.error);
             callbackOnFail?.Invoke(www.error);

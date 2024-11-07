@@ -17,6 +17,7 @@ public interface IRouteAPI
     public RouteStatusAPI status { get; set; }
 
     public int routewalk_count { get; set; }
+    public string first_training_date { get; set; }
     public RouteWalkAPIResult last_routewalk { get; set; }
 
 
@@ -33,6 +34,7 @@ public class RouteAPIBase : BaseAPI
     public string erw_start_time { get; set; }
     public string erw_end_time { get; set; }
     public int? erw_socialworker_id { get; set; }
+    public string first_training_date { get; set; }
     public RouteStatusAPI status { get; set; }
 }
 

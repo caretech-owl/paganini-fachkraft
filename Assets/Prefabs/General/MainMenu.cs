@@ -11,9 +11,15 @@ public class MainMenu : MonoBehaviour
     public Button ButtonClose;
     public GameObject Menu;
 
+    public GameObject MenuOverlay;
+
     // SW Profile information
     public RawImage SWPhoto;
     public TMPro.TMP_Text SWName;
+
+    public RawImage UserPhoto;
+    public TMPro.TMP_Text UserName;   
+
 
     public static class MenuOptions{
         public const string LOGOUT = "OptionLogout";
@@ -30,12 +36,15 @@ public class MainMenu : MonoBehaviour
 
         CloseMenu();
 
-        RenderPicture(AppState.CurrenSocialWorker.ProfilePic);
-        SWName.text = AppState.CurrenSocialWorker.Firstname + " " + AppState.CurrenSocialWorker.Surname;
+        UpdateSWProfile();
+
+        UpdateUserProfile();
 
         SetupMenuOptions();
 
+        //AppState.CurrentSocialWorker.OnDataChanged.AddListener(UpdateSWProfile);
     }
+
 
     // public events
     public void Logout()
@@ -46,44 +55,52 @@ public class MainMenu : MonoBehaviour
     }    
 
     public void SwitchUser(){
+        AppState.CurrentMenuOption = MenuOptions.SWITCH_USER;
+        SceneSwitcher.LoadUserManager();        
+    }
 
+    public void OpenUserProfile(){
+        AppState.CurrentMenuOption = null;
+        SceneSwitcher.LoadUserProfile();
     }
 
     public void OpenSWProfile(){
-        //SceneSwitcher.LoadUserProfile();
+        AppState.CurrentMenuOption = null;
+        SceneSwitcher.LoadSWProfile();
     }
 
     // private events
+
+    private void UpdateSWProfile()
+    {
+        if (gameObject.activeSelf) {
+            PictureUtils.RenderPicture(SWPhoto, AppState.CurrentSocialWorker.Data.ProfilePic);
+            SWName.text = AppState.CurrentSocialWorker.Data.Firstname + " " + AppState.CurrentSocialWorker.Data.Surname;
+        }        
+    }
+
+    private void UpdateUserProfile(){
+        if (AppState.CurrentUser!=null){
+            PictureUtils.RenderPicture(UserPhoto, AppState.CurrentUser.ProfilePic);
+            UserName.text = AppState.CurrentUser.Mnemonic_token;
+        }        
+    }
+
     private void OpenMenu()
     {
-        Menu.SetActive(true);  
-        RenderCanOpen(false);      
+        Menu.SetActive(true);
+        MenuOverlay.SetActive(true);  
+        RenderCanOpen(false);     
+
+        UpdateSWProfile(); 
     }
 
-    private void CloseMenu()
+    public void CloseMenu()
     {
         Menu.SetActive(false);
+        MenuOverlay.SetActive(false);
         RenderCanOpen(true);        
-    }
-
-
-  private void RenderPicture(byte[] imageBytes)
-    {
-        if (SWPhoto.texture != null)
-        {
-            DestroyImmediate(SWPhoto.texture, true);
-        }
-
-        Texture2D texture = new Texture2D(2, 2);
-        texture.LoadImage(imageBytes);
-
-        // Set the aspect ratio of the image
-        SWPhoto.GetComponent<AspectRatioFitter>().aspectRatio = (float)texture.width / (float)texture.height;
-
-        SWPhoto.texture = texture;
-        SWPhoto.gameObject.SetActive(true);
-
-    }    
+    }  
 
     public void SetCurrentOption(string option)
     {
@@ -118,16 +135,22 @@ public class MainMenu : MonoBehaviour
         AppState.CurrentMenuOption = option;
     }
 
-
     private void OnDestroy()
     {
         ButtonOpen.onClick.RemoveAllListeners();
         ButtonClose.onClick.RemoveAllListeners();
 
+        //AppState.CurrentSocialWorker.OnDataChanged.RemoveListener(UpdateSWProfile);
+
         if (SWPhoto.texture != null)
         {
             DestroyImmediate(SWPhoto.texture, true);
         }
+
+        if (UserPhoto.texture != null)
+        {
+            DestroyImmediate(UserPhoto.texture, true);
+        }        
 
         foreach (MainMenuOption option in Menu.GetComponentsInChildren<MainMenuOption>())
         {
